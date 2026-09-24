@@ -46,3 +46,11 @@ app.*.map.json
 
 # Local Supabase configuration values
 config/supabase.local.json
+
+# Local server-only secrets for Supabase Edge Functions
+supabase/functions/.env
+supabase/functions/.env.local
+
+# Database backups and dumps
+supabase/backups/
+
