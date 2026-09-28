@@ -23,7 +23,7 @@ class TransfersPage extends StatefulWidget {
   const TransfersPage({
     super.key,
     this.initialMode = TransfersViewMode.receivingQueue,
-    this.initialTransferId = 'PO-2024-0847',
+    this.initialTransferId = 'TR-0847',
     this.onTitleChanged,
     this.onNavigateToOverview,
   });
@@ -82,74 +82,14 @@ class _TransferItem {
 class _TransfersPageState extends State<TransfersPage> {
   late TransfersViewMode _mode;
   late String _transferId;
-  int _selectedTab = 0; // 0: All, 1: In Transit, 2: Pending, 3: Completed, 4: Draft
-  String _selectedTransferId = 'TR-1022';
+  int _selectedTab =
+      0; // 0: All, 1: In Transit, 2: Pending, 3: Completed, 4: Draft
+  String? _selectedTransferId;
   final Set<String> _selectedRowIds = {};
   final _searchController = TextEditingController();
   bool _isAiCardDismissed = false;
 
-  final List<_StockTransfer> _transfers = const [
-    _StockTransfer(
-      id: 'TR-1022',
-      fromLocation: 'Central Warehouse',
-      toLocation: 'Delhi Flagship Store',
-      itemsSummary: '180 units',
-      createdDate: 'Feb 10, 2027',
-      createdTimestamp: 'Feb 10, 2027, 10:24 AM',
-      eta: '1 Day',
-      status: 'In Transit',
-      statusBg: Color(0xFFEAF1FB),
-      statusColor: Color(0xFF2662BA),
-      items: [
-        _TransferItem(
-          name: 'Oxford Linen Shirt',
-          variant: 'Black / M',
-          quantity: '180 pcs',
-          imageAsset: 'Assets/oxford_linen_shirt.jpg',
-        ),
-      ],
-    ),
-    _StockTransfer(
-      id: 'TR-1025',
-      fromLocation: 'Zone B Warehouse',
-      toLocation: 'Central Warehouse',
-      itemsSummary: '300 units',
-      createdDate: 'Feb 12, 2027',
-      createdTimestamp: 'Feb 12, 2027, 03:40 PM',
-      eta: '—',
-      status: 'Pending',
-      statusBg: Color(0xFFFBF0DF),
-      statusColor: Color(0xFF9E6516),
-      items: [
-        _TransferItem(
-          name: 'Raw Denim Jeans',
-          variant: 'Indigo / L',
-          quantity: '300 pcs',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-      ],
-    ),
-    _StockTransfer(
-      id: 'TR-1029',
-      fromLocation: 'Surat Hub',
-      toLocation: 'Central Warehouse',
-      itemsSummary: '120 units',
-      createdDate: 'Feb 08, 2027',
-      createdTimestamp: 'Feb 08, 2027, 11:15 AM',
-      eta: '—',
-      status: 'Completed',
-      statusBg: Color(0xFFE9F6EE),
-      statusColor: Color(0xFF1F7A46),
-      items: [
-        _TransferItem(
-          name: 'Combed Cotton Jersey',
-          variant: 'Natural / 280gsm',
-          quantity: '120 pcs',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-      ],
-    ),
-  ];
+  final List<_StockTransfer> _transfers = [];
 
   _StockTransfer? get _selectedTransfer {
     try {
@@ -187,7 +127,8 @@ class _TransfersPageState extends State<TransfersPage> {
 
       // 2. Search Query Filter
       if (query.isNotEmpty) {
-        final matchesQuery = transfer.id.toLowerCase().contains(query) ||
+        final matchesQuery =
+            transfer.id.toLowerCase().contains(query) ||
             transfer.fromLocation.toLowerCase().contains(query) ||
             transfer.toLocation.toLowerCase().contains(query) ||
             transfer.itemsSummary.toLowerCase().contains(query) ||
@@ -204,8 +145,11 @@ class _TransfersPageState extends State<TransfersPage> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -238,7 +182,7 @@ class _TransfersPageState extends State<TransfersPage> {
             },
             onLogReceipt: () {
               setState(() {
-                _transferId = 'PO-2024-0847';
+                _transferId = 'TR-0847';
                 _mode = TransfersViewMode.receiveTransfer;
                 widget.onTitleChanged?.call('Receiving Workflow');
               });
@@ -264,7 +208,9 @@ class _TransfersPageState extends State<TransfersPage> {
             onCompleteReceiving: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Receipt $_transferId completed and posted to inventory.'),
+                  content: Text(
+                    'Receipt $_transferId completed and posted to inventory.',
+                  ),
                   backgroundColor: const Color(0xFF181513),
                   behavior: SnackBarBehavior.floating,
                 ),
@@ -456,7 +402,8 @@ class _TransfersPageState extends State<TransfersPage> {
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(8),
-              onTap: () => _showFeedback('Create stock transfer workflow initialized.'),
+              onTap: () =>
+                  _showFeedback('Create stock transfer workflow initialized.'),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -494,11 +441,23 @@ class _TransfersPageState extends State<TransfersPage> {
   // ========================================================
   Widget _buildTabsRow() {
     final tabs = [
-      {'label': 'All', 'count': '3'},
-      {'label': 'In Transit', 'count': '1'},
-      {'label': 'Pending', 'count': '1'},
-      {'label': 'Completed', 'count': '1'},
-      {'label': 'Draft', 'count': '0'},
+      {'label': 'All', 'count': '${_transfers.length}'},
+      {
+        'label': 'In Transit',
+        'count': '${_transfers.where((t) => t.status == "In Transit").length}',
+      },
+      {
+        'label': 'Pending',
+        'count': '${_transfers.where((t) => t.status == "Pending").length}',
+      },
+      {
+        'label': 'Completed',
+        'count': '${_transfers.where((t) => t.status == "Completed").length}',
+      },
+      {
+        'label': 'Draft',
+        'count': '${_transfers.where((t) => t.status == "Draft").length}',
+      },
     ];
 
     return Container(
@@ -517,7 +476,10 @@ class _TransfersPageState extends State<TransfersPage> {
             return InkWell(
               onTap: () => setState(() => _selectedTab = index),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
@@ -535,8 +497,9 @@ class _TransfersPageState extends State<TransfersPage> {
                       tab['label']!,
                       style: GoogleFonts.inter(
                         fontSize: 13.5,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                         color: isSelected
                             ? const Color(0xFF1E1C1A)
                             : const Color(0xFF7E766B),
@@ -763,20 +726,30 @@ class _TransfersPageState extends State<TransfersPage> {
                 children: [
                   // Table Header Row
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: const BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(color: Color(0xFFEDE5DA), width: 1.0),
+                        bottom: BorderSide(
+                          color: Color(0xFFEDE5DA),
+                          width: 1.0,
+                        ),
                       ),
                     ),
                     child: Row(
                       children: [
                         _buildCheckbox(
-                          value: _selectedRowIds.length == transfers.length && transfers.isNotEmpty,
+                          value:
+                              _selectedRowIds.length == transfers.length &&
+                              transfers.isNotEmpty,
                           onChanged: (val) {
                             setState(() {
                               if (val == true) {
-                                _selectedRowIds.addAll(transfers.map((t) => t.id));
+                                _selectedRowIds.addAll(
+                                  transfers.map((t) => t.id),
+                                );
                               } else {
                                 _selectedRowIds.clear();
                               }
@@ -830,7 +803,10 @@ class _TransfersPageState extends State<TransfersPage> {
                         },
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 150),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             color: isRowSelected
                                 ? const Color(0xFFFDF7EE)
@@ -1003,7 +979,7 @@ class _TransfersPageState extends State<TransfersPage> {
               children: [
                 Text(
                   transfers.isEmpty
-                      ? 'No transfers found'
+                      ? '0 transfers'
                       : 'Showing 1–${transfers.length} of ${transfers.length} transfers',
                   style: GoogleFonts.inter(
                     fontSize: 12.5,
@@ -1011,68 +987,72 @@ class _TransfersPageState extends State<TransfersPage> {
                     color: const Color(0xFF7E766B),
                   ),
                 ),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFDFD4C5)),
+                if (transfers.isNotEmpty)
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFDFD4C5)),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              '10 per page',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF1E1C1A),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(
+                              Icons.keyboard_arrow_down_rounded,
+                              size: 14,
+                              color: Color(0xFF8A8275),
+                            ),
+                          ],
+                        ),
                       ),
-                      child: Row(
-                        children: [
-                          Text(
-                            '10 per page',
+                      const SizedBox(width: 10),
+                      const Icon(
+                        Icons.chevron_left_rounded,
+                        size: 18,
+                        color: Color(0xFF8A8275),
+                      ),
+                      const SizedBox(width: 6),
+                      Container(
+                        width: 26,
+                        height: 26,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(5),
+                          border: Border.all(color: const Color(0xFFBA8A55)),
+                        ),
+                        child: Center(
+                          child: Text(
+                            '1',
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF1E1C1A),
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFBA8A55),
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.keyboard_arrow_down_rounded,
-                            size: 14,
-                            color: Color(0xFF8A8275),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Icon(
-                      Icons.chevron_left_rounded,
-                      size: 18,
-                      color: Color(0xFF8A8275),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(5),
-                        border: Border.all(color: const Color(0xFFBA8A55)),
-                      ),
-                      child: Center(
-                        child: Text(
-                          '1',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFFBA8A55),
                           ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    const Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: Color(0xFF8A8275),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 18,
+                        color: Color(0xFF8A8275),
+                      ),
+                    ],
+                  ),
               ],
             ),
           ),
@@ -1135,203 +1115,57 @@ class _TransfersPageState extends State<TransfersPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: AI Auto-Replenishment + More options
+          // Header: AI Auto-Replenishment
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.auto_awesome_outlined,
-                    size: 18,
-                    color: Color(0xFFBA8A55),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'AI Auto-Replenishment',
-                    style: GoogleFonts.cormorantGaramond(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF946A36),
-                    ),
-                  ),
-                ],
+              const Icon(
+                Icons.auto_awesome_outlined,
+                size: 18,
+                color: Color(0xFFBA8A55),
               ),
-              IconButton(
-                icon: const Icon(Icons.more_horiz_rounded, size: 18),
-                color: const Color(0xFF7E766B),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: () => _showFeedback('AI replenishment settings'),
+              const SizedBox(width: 8),
+              Text(
+                'AI Auto-Replenishment',
+                style: GoogleFonts.cormorantGaramond(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF946A36),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
 
-          // Inset Recommendation Box
+          // Inset Honest Box
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: const Color(0xFFFAF7F2),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0xFFEADBCA)),
             ),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: Container(
-                    width: 48,
-                    height: 48,
+                Text(
+                  'No transfers yet',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
                     color: const Color(0xFF1E1C1A),
-                    child: Image.asset(
-                      'Assets/oxford_linen_shirt.jpg',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => const Icon(
-                        Icons.checkroom_rounded,
-                        color: Color(0xFFBA8A55),
-                        size: 24,
-                      ),
-                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Oxford Linen Shirt — Black/M',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF1E1C1A),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      RichText(
-                        text: TextSpan(
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF5E574E),
-                            height: 1.4,
-                          ),
-                          children: const [
-                            TextSpan(
-                              text:
-                                  'Indira Nagar Store is projected to stock out in ',
-                            ),
-                            TextSpan(
-                              text: '5 days',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: Color(0xFF1E1C1A),
-                              ),
-                            ),
-                            TextSpan(
-                              text:
-                                  ' due to high velocity. Central Warehouse has 42 units of excess stock.',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 6),
+                Text(
+                  'Add another location before creating an inter-location transfer.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF5E574E),
+                    height: 1.4,
                   ),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Metrics Rows
-          _buildMetricsRow('Proposed Transfer', '18 units'),
-          const SizedBox(height: 8),
-          _buildMetricsRow('Estimated Transit', '2 Days'),
-          const SizedBox(height: 18),
-
-          // Primary CTA: Prepare Transfer
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF322316), Color(0xFF1C1814)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF2E2014).withOpacity(0.18),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () => _showFeedback(
-                    'Transfer proposal for 18 units prepared and sent to dispatch queue.'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.near_me_outlined,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Prepare Transfer',
-                        style: GoogleFonts.inter(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // Secondary CTA: Dismiss Recommendation
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFEADBCA)),
-            ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () {
-                  setState(() => _isAiCardDismissed = true);
-                  _showFeedback('Recommendation dismissed.');
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: Center(
-                    child: Text(
-                      'Dismiss Recommendation',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1E1C1A),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
             ),
           ),
         ],
@@ -1571,30 +1405,6 @@ class _TransfersPageState extends State<TransfersPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMetricsRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w400,
-            color: const Color(0xFF7E766B),
-          ),
-        ),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E1C1A),
-          ),
-        ),
-      ],
     );
   }
 

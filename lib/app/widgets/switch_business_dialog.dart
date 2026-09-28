@@ -3,6 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/business/current_business_service.dart';
+
 class _BusinessWorkspace {
   const _BusinessWorkspace({
     required this.id,
@@ -28,7 +30,7 @@ class _BusinessWorkspace {
 class SwitchBusinessDialog extends StatefulWidget {
   const SwitchBusinessDialog({
     super.key,
-    this.initialBusinessId = 'mumbai',
+    this.initialBusinessId = '',
     this.onBusinessSelected,
     this.onCreateNewBusiness,
   });
@@ -39,7 +41,7 @@ class SwitchBusinessDialog extends StatefulWidget {
 
   static Future<void> show(
     BuildContext context, {
-    String initialBusinessId = 'mumbai',
+    String initialBusinessId = '',
     ValueChanged<String>? onBusinessSelected,
     VoidCallback? onCreateNewBusiness,
   }) {
@@ -65,43 +67,35 @@ class _SwitchBusinessDialogState extends State<SwitchBusinessDialog> {
   late String _selectedId;
   final _searchController = TextEditingController();
 
-  final List<_BusinessWorkspace> _businesses = const [
-    _BusinessWorkspace(
-      id: 'mumbai',
-      name: 'ThreadStock Mumbai',
-      role: 'Owner',
-      roleBg: Color(0xFFE3F3EB),
-      roleColor: Color(0xFF1F7A46),
-      locationCountText: '3 locations',
-      statusText: 'Active Now',
-      isActiveNow: true,
-    ),
-    _BusinessWorkspace(
-      id: 'delhi',
-      name: 'ThreadStock Delhi',
-      role: 'Manager',
-      roleBg: Color(0xFFE8EFFC),
-      roleColor: Color(0xFF2A5DA8),
-      locationCountText: '2 locations',
-      statusText: 'Last active 2 hours ago',
-      isActiveNow: false,
-    ),
-    _BusinessWorkspace(
-      id: 'bengaluru',
-      name: 'ThreadStock Bengaluru',
-      role: 'Viewer',
-      roleBg: Color(0xFFF0EDE8),
-      roleColor: Color(0xFF6B6357),
-      locationCountText: '1 location',
-      statusText: 'Last active 3 days ago',
-      isActiveNow: false,
-    ),
-  ];
+  List<_BusinessWorkspace> _businesses = [];
 
   @override
   void initState() {
     super.initState();
-    _selectedId = widget.initialBusinessId;
+    final currentBiz = CurrentBusinessService.instance.currentBusiness;
+    final currentBizId =
+        CurrentBusinessService.instance.currentBusinessId ??
+        widget.initialBusinessId;
+    _selectedId = currentBizId;
+    if (currentBiz != null) {
+      final locText = currentBiz.locationRange.isNotEmpty
+          ? '${currentBiz.locationRange} location(s)'
+          : '1 location';
+      _businesses = [
+        _BusinessWorkspace(
+          id: currentBiz.id,
+          name: currentBiz.legalName.isNotEmpty
+              ? currentBiz.legalName
+              : 'ThreadStock Workspace',
+          role: 'Owner',
+          roleBg: const Color(0xFFE3F3EB),
+          roleColor: const Color(0xFF1F7A46),
+          locationCountText: locText,
+          statusText: 'Active Now',
+          isActiveNow: true,
+        ),
+      ];
+    }
     _searchController.addListener(() {
       setState(() {});
     });
@@ -205,10 +199,7 @@ class _SwitchBusinessDialogState extends State<SwitchBusinessDialog> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFFEADBCA),
-              width: 1.0,
-            ),
+            border: Border.all(color: const Color(0xFFEADBCA), width: 1.0),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x1E000000),
@@ -277,7 +268,8 @@ class _SwitchBusinessDialogState extends State<SwitchBusinessDialog> {
 
                     // Close Button (✕)
                     InkWell(
-                      onTap: () => Navigator.of(context, rootNavigator: true).pop(),
+                      onTap: () =>
+                          Navigator.of(context, rootNavigator: true).pop(),
                       borderRadius: BorderRadius.circular(16),
                       child: Container(
                         width: 30,
@@ -381,10 +373,7 @@ class _SwitchBusinessDialogState extends State<SwitchBusinessDialog> {
               const SizedBox(height: 20),
 
               // Divider
-              const Divider(
-                height: 1,
-                color: Color(0xFFF2EBE1),
-              ),
+              const Divider(height: 1, color: Color(0xFFF2EBE1)),
 
               // 4. Bottom Footer: Need a new workspace? Create New Business →
               Padding(

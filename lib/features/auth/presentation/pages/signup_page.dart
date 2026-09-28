@@ -1,4 +1,6 @@
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -6,6 +8,7 @@ import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../core/auth/auth_service.dart';
 import '../../../../core/business/app_bootstrap_service.dart';
+import '../../../../core/navigation/navigation_guard.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -17,7 +20,9 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _mobileController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
@@ -27,7 +32,9 @@ class _SignupPageState extends State<SignupPage> {
   @override
   void dispose() {
     _fullNameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
+    _mobileController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -51,26 +58,36 @@ class _SignupPageState extends State<SignupPage> {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
       final fullName = _fullNameController.text.trim();
+      final username = _usernameController.text.trim().toLowerCase();
+      final mobile = _mobileController.text.trim();
 
       final response = await AuthService.instance.signUp(
         email: email,
         password: password,
         fullName: fullName,
+        username: username.isEmpty ? null : username,
+        phone: mobile.isEmpty ? null : mobile,
       );
 
       if (!mounted) return;
 
       if (response.session == null) {
         // Confirmation email required
-        Navigator.of(context).pushReplacementNamed(
+        await NavigationGuard.safePushReplacementNamed(
+          context,
           AppRoutes.checkEmail,
           arguments: email,
+          source: 'SignupPage._handleSignup.checkEmail',
         );
       } else {
         // User session immediately active -> bootstrap & route to onboarding or dashboard
         final bootstrap = await AppBootstrapService.bootstrap();
         if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed(bootstrap.initialRoute);
+        await NavigationGuard.safePushReplacementNamed(
+          context,
+          bootstrap.initialRoute,
+          source: 'SignupPage._handleSignup.sessionActive',
+        );
       }
     } on AuthException catch (e) {
       if (mounted) {
@@ -274,6 +291,96 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       const SizedBox(height: 16),
 
+                      // Username input
+                      Text(
+                        'Username',
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: primaryTextColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        key: const Key('signup_username_input'),
+                        controller: _usernameController,
+                        keyboardType: TextInputType.text,
+                        textInputAction: TextInputAction.next,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'[a-zA-Z0-9_]')),
+                          LengthLimitingTextInputFormatter(30),
+                        ],
+                        onChanged: (v) {
+                          final lower = v.toLowerCase();
+                          if (v != lower) {
+                            _usernameController.value =
+                                _usernameController.value.copyWith(
+                                  text: lower,
+                                  selection: TextSelection.collapsed(
+                                      offset: lower.length),
+                                );
+                          }
+                        },
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: primaryTextColor,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'e.g. azhar_merchant',
+                          hintStyle: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: secondaryTextColor.withValues(alpha: 0.6),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.alternate_email_rounded,
+                            size: 19,
+                            color: secondaryTextColor,
+                          ),
+                          filled: true,
+                          fillColor: isDark
+                              ? const Color(0xFF282522)
+                              : const Color(0xFFFAF7F2),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: borderColor),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: borderColor),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: ThreadStockTheme.champagne,
+                              width: 1.6,
+                            ),
+                          ),
+                          helperText:
+                              'Lowercase, letters/numbers/underscore, 3–30 chars.',
+                          helperStyle: GoogleFonts.inter(
+                              fontSize: 11, color: secondaryTextColor),
+                        ),
+                        validator: (val) {
+                          if (val == null || val.trim().isEmpty) {
+                            return 'Choose a username.';
+                          }
+                          final v2 = val.trim();
+                          if (v2.length < 3) {
+                            return 'Username must be at least 3 characters.';
+                          }
+                          if (!RegExp(r'^[a-z0-9_]+$').hasMatch(v2)) {
+                            return 'Only lowercase letters, numbers and _ allowed.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
                       // Email input
                       Text(
                         'Email Address',
@@ -335,6 +442,80 @@ class _SignupPageState extends State<SignupPage> {
                           }
                           if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(val.trim())) {
                             return 'Enter a valid email address.';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Mobile number (optional)
+                      Text(
+                        'Mobile Number (optional)',
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: primaryTextColor,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextFormField(
+                        key: const Key('signup_mobile_input'),
+                        controller: _mobileController,
+                        keyboardType: TextInputType.phone,
+                        textInputAction: TextInputAction.next,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'[\d\+\s\-\(\)]')),
+                        ],
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
+                          color: primaryTextColor,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: '+91 98765 43210',
+                          hintStyle: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: secondaryTextColor.withValues(alpha: 0.6),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.phone_outlined,
+                            size: 19,
+                            color: secondaryTextColor,
+                          ),
+                          filled: true,
+                          fillColor: isDark
+                              ? const Color(0xFF282522)
+                              : const Color(0xFFFAF7F2),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: borderColor),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: borderColor),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: ThreadStockTheme.champagne,
+                              width: 1.6,
+                            ),
+                          ),
+                          helperText: 'Include country code, e.g. +91',
+                          helperStyle: GoogleFonts.inter(
+                              fontSize: 11, color: secondaryTextColor),
+                        ),
+                        validator: (val) {
+                          if (val == null || val.trim().isEmpty) {
+                            return null; // optional
+                          }
+                          final digits = val.replaceAll(RegExp(r'\D'), '');
+                          if (digits.length < 6 || digits.length > 15) {
+                            return 'Enter a valid mobile number with country code.';
                           }
                           return null;
                         },

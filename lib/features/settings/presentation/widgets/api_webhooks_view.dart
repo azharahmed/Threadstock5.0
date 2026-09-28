@@ -81,7 +81,9 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
   }
 
   void _copyApiKey() {
-    Clipboard.setData(const ClipboardData(text: 'ts_live_9f82d1c748209bb41a3a9b'));
+    Clipboard.setData(
+      const ClipboardData(text: 'ts_live_9f82d1c748209bb41a3a9b'),
+    );
     _showFeedback('API key copied to clipboard');
   }
 
@@ -294,7 +296,9 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
                   );
                 });
                 Navigator.pop(ctx);
-                _showFeedback('Added webhook for ${eventController.text.trim()}');
+                _showFeedback(
+                  'Added webhook for ${eventController.text.trim()}',
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF181513),
@@ -350,18 +354,12 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Left Column: API Access Credentials & Configured Webhooks (~55%)
-                      Expanded(
-                        flex: 55,
-                        child: _buildLeftColumn(),
-                      ),
+                      Expanded(flex: 55, child: _buildLeftColumn()),
 
                       const SizedBox(width: 24),
 
                       // Right Column: Usage This Month & Developer Reference (~45%)
-                      Expanded(
-                        flex: 45,
-                        child: _buildRightColumn(),
-                      ),
+                      Expanded(flex: 45, child: _buildRightColumn()),
                     ],
                   ),
                 ],
@@ -443,7 +441,7 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
                     widget.onSelectSection!('purchasing_defaults');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Purchasing Defaults > Central Warehouse (Zone A)',
+                      'Settings > Purchasing Defaults',
                       'Configure buying, receiving and cost settings for your business.',
                     );
                   }
@@ -452,7 +450,7 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
                     widget.onSelectSection!('transfer_settings');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Transfer Settings > Central Warehouse (Zone A)',
+                      'Settings > Transfer Settings',
                       'Configure stock transfer workflows, transit times and receiving preferences.',
                     );
                   }
@@ -461,7 +459,7 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
                     widget.onSelectSection!('import_export');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Import / Export Center > Central Warehouse (Zone A)',
+                      'Settings > Import / Export Center',
                       'Import and export your business data with ease. Manage files, track history, and ensure data accuracy.',
                     );
                   }
@@ -470,7 +468,7 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
                     widget.onSelectSection!('audit_log');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > System Audit Log > Central Warehouse (Zone A)',
+                      'Settings > System Audit Log',
                       'Track all system changes, user actions, and important events across ThreadStock.',
                     );
                   }
@@ -501,7 +499,9 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
           color: isSelected ? const Color(0xFF7A481B) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF7A481B) : const Color(0xFFDFD4C5),
+            color: isSelected
+                ? const Color(0xFF7A481B)
+                : const Color(0xFFDFD4C5),
           ),
         ),
         child: Text(
@@ -610,7 +610,10 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFDF7EC),
                   borderRadius: BorderRadius.circular(6),
@@ -745,11 +748,7 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
               const SizedBox(width: 40),
 
               // Subtle vertical line
-              Container(
-                width: 1,
-                height: 32,
-                color: const Color(0xFFEDE5D8),
-              ),
+              Container(width: 1, height: 32, color: const Color(0xFFEDE5D8)),
 
               const SizedBox(width: 40),
 
@@ -858,7 +857,10 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF181513),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -1033,9 +1035,13 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
                             setState(() => _webhooks.removeAt(i));
                             _showFeedback('Removed webhook');
                           } else if (action == 'test') {
-                            _showFeedback('Triggered test event to ${_webhooks[i].destinationUrl}');
+                            _showFeedback(
+                              'Triggered test event to ${_webhooks[i].destinationUrl}',
+                            );
                           } else {
-                            _showFeedback('Webhook details: ${_webhooks[i].event}');
+                            _showFeedback(
+                              'Webhook details: ${_webhooks[i].event}',
+                            );
                           }
                         },
                         itemBuilder: (ctx) => [
@@ -1179,7 +1185,9 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
               value: 0.4523,
               minHeight: 8,
               backgroundColor: const Color(0xFFECE6DD),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFB58E58)),
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Color(0xFFB58E58),
+              ),
             ),
           ),
 
@@ -1299,7 +1307,8 @@ class _ApiWebhooksViewState extends State<ApiWebhooksView> {
           _buildResourceLinkCard(
             title: 'Rate Limiting & Best Practices',
             subtitle: 'Usage limits, error handling, and guides',
-            onTap: () => _showFeedback('Opening rate limits & best practices guide...'),
+            onTap: () =>
+                _showFeedback('Opening rate limits & best practices guide...'),
           ),
         ],
       ),

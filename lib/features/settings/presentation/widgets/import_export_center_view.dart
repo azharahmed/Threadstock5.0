@@ -66,7 +66,7 @@ class ImportExportCenterView extends StatefulWidget {
 
 class _ImportExportCenterViewState extends State<ImportExportCenterView> {
   int _activeTabIndex = 2; // "Import / Export" is index 2
-  String _selectedWarehouse = 'Central Warehouse (Zone A)';
+  String _selectedWarehouse = 'All Locations';
 
   final List<String> _tabs = const [
     'Purchasing Defaults',
@@ -76,11 +76,7 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
     'Audit Log',
   ];
 
-  final List<String> _warehouses = const [
-    'Central Warehouse (Zone A)',
-    'Delhi Flagship (Zone B)',
-    'Mumbai Boutique (Zone C)',
-  ];
+  final List<String> _warehouses = const ['All Locations'];
 
   final List<ImportServiceItem> _importServices = const [
     ImportServiceItem(
@@ -114,22 +110,22 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
 
   final List<ImportLogRecord> _logs = const [
     ImportLogRecord(
-      fileName: 'products_delhi_v2.csv',
+      fileName: 'products_batch_v2.csv',
       type: 'Products',
       records: '1,204 rows',
       status: 'Complete',
       isSuccess: true,
       date: 'Oct 24, 11:24 AM',
-      user: 'Alex Mercer',
+      user: 'Admin User',
     ),
     ImportLogRecord(
-      fileName: 'inventory_counts_mumbai.xlsx',
+      fileName: 'inventory_counts_hub.xlsx',
       type: 'Inventory',
       records: '450 rows',
       status: 'Failed (Line 42)',
       isSuccess: false,
       date: 'Oct 23, 04:12 PM',
-      user: 'Priya Sharma',
+      user: 'Store Manager',
     ),
   ];
 
@@ -484,7 +480,7 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                     widget.onSelectSection!('purchasing_defaults');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Purchasing Defaults > Central Warehouse (Zone A)',
+                      'Settings > Purchasing Defaults',
                       'Configure buying, receiving and cost settings for your business.',
                     );
                   }
@@ -493,7 +489,7 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                     widget.onSelectSection!('transfer_settings');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Transfer Settings > Central Warehouse (Zone A)',
+                      'Settings > Transfer Settings',
                       'Configure stock transfer workflows, transit times and receiving preferences.',
                     );
                   }
@@ -502,7 +498,7 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                     widget.onSelectSection!('api_webhooks');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > API & Webhooks > Central Warehouse (Zone A)',
+                      'Settings > API & Webhooks',
                       'Manage API access, configure webhooks, and integrate with external systems.',
                     );
                   }
@@ -511,7 +507,7 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                     widget.onSelectSection!('audit_log');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > System Audit Log > Central Warehouse (Zone A)',
+                      'Settings > System Audit Log',
                       'Track all system changes, user actions, and important events across ThreadStock.',
                     );
                   }
@@ -542,7 +538,9 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
           color: isSelected ? const Color(0xFF7A481B) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF7A481B) : const Color(0xFFDFD4C5),
+            color: isSelected
+                ? const Color(0xFF7A481B)
+                : const Color(0xFFDFD4C5),
           ),
         ),
         child: Text(
@@ -634,7 +632,10 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   side: const BorderSide(color: Color(0xFFDFD4C5)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -654,10 +655,12 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                   spacing: 16,
                   runSpacing: 16,
                   children: _importServices
-                      .map((item) => SizedBox(
-                            width: (constraints.maxWidth - 16) / 2,
-                            child: _buildImportItemCard(item),
-                          ))
+                      .map(
+                        (item) => SizedBox(
+                          width: (constraints.maxWidth - 16) / 2,
+                          child: _buildImportItemCard(item),
+                        ),
+                      )
                       .toList(),
                 );
               }
@@ -665,10 +668,9 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
               return Row(
                 children: [
                   for (int i = 0; i < _importServices.length; i++) ...[
-                    Expanded(
-                      child: _buildImportItemCard(_importServices[i]),
-                    ),
-                    if (i < _importServices.length - 1) const SizedBox(width: 16),
+                    Expanded(child: _buildImportItemCard(_importServices[i])),
+                    if (i < _importServices.length - 1)
+                      const SizedBox(width: 16),
                   ],
                 ],
               );
@@ -697,11 +699,7 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
               color: const Color(0xFFFAF2E6),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              item.icon,
-              size: 18,
-              color: const Color(0xFF7A481B),
-            ),
+            child: Icon(item.icon, size: 18, color: const Color(0xFF7A481B)),
           ),
           const SizedBox(height: 12),
           Text(
@@ -825,7 +823,10 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   side: const BorderSide(color: Color(0xFFDFD4C5)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -845,10 +846,12 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                   spacing: 16,
                   runSpacing: 16,
                   children: _exportServices
-                      .map((item) => SizedBox(
-                            width: (constraints.maxWidth - 16) / 2,
-                            child: _buildExportItemCard(item),
-                          ))
+                      .map(
+                        (item) => SizedBox(
+                          width: (constraints.maxWidth - 16) / 2,
+                          child: _buildExportItemCard(item),
+                        ),
+                      )
                       .toList(),
                 );
               }
@@ -856,10 +859,9 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
               return Row(
                 children: [
                   for (int i = 0; i < _exportServices.length; i++) ...[
-                    Expanded(
-                      child: _buildExportItemCard(_exportServices[i]),
-                    ),
-                    if (i < _exportServices.length - 1) const SizedBox(width: 16),
+                    Expanded(child: _buildExportItemCard(_exportServices[i])),
+                    if (i < _exportServices.length - 1)
+                      const SizedBox(width: 16),
                   ],
                 ],
               );
@@ -890,11 +892,7 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
               color: const Color(0xFFFAF2E6),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              item.icon,
-              size: 18,
-              color: const Color(0xFF7A481B),
-            ),
+            child: Icon(item.icon, size: 18, color: const Color(0xFF7A481B)),
           ),
           const SizedBox(height: 12),
           Text(
@@ -933,8 +931,9 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                         fmt,
                         style: GoogleFonts.inter(
                           fontSize: 11,
-                          fontWeight:
-                              isFmtSelected ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight: isFmtSelected
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                           color: isFmtSelected
                               ? const Color(0xFF181513)
                               : const Color(0xFF7E766B),
@@ -1042,7 +1041,8 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                 ),
               ),
               OutlinedButton.icon(
-                onPressed: () => _showFeedback('Loading complete activity log...'),
+                onPressed: () =>
+                    _showFeedback('Loading complete activity log...'),
                 icon: const Icon(
                   Icons.open_in_new_rounded,
                   size: 15,
@@ -1057,7 +1057,10 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   side: const BorderSide(color: Color(0xFFDFD4C5)),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -1278,7 +1281,9 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         onSelected: (action) {
-                          _showFeedback('Selected $action for ${_logs[i].fileName}');
+                          _showFeedback(
+                            'Selected $action for ${_logs[i].fileName}',
+                          );
                         },
                         itemBuilder: (ctx) => [
                           PopupMenuItem(
@@ -1323,11 +1328,7 @@ class _ImportExportCenterViewState extends State<ImportExportCenterView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.info_outline,
-            size: 24,
-            color: Color(0xFF7A481B),
-          ),
+          const Icon(Icons.info_outline, size: 24, color: Color(0xFF7A481B)),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

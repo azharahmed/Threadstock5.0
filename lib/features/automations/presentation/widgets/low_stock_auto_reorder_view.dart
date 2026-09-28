@@ -24,7 +24,8 @@ class LowStockAutoReorderView extends StatefulWidget {
   final void Function(String skuGroup)? onViewProductSkus;
 
   @override
-  State<LowStockAutoReorderView> createState() => _LowStockAutoReorderViewState();
+  State<LowStockAutoReorderView> createState() =>
+      _LowStockAutoReorderViewState();
 }
 
 class _ActivityLogItem {
@@ -138,10 +139,7 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
                   const SizedBox(width: 20),
 
                   // Right Column (~27% width)
-                  SizedBox(
-                    width: 280,
-                    child: _buildAutomationActionsCard(),
-                  ),
+                  SizedBox(width: 280, child: _buildAutomationActionsCard()),
                 ],
               )
             else
@@ -191,7 +189,9 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
               decoration: BoxDecoration(
-                color: _isPaused ? const Color(0xFFF3ECE1) : const Color(0xFFEAF7EE),
+                color: _isPaused
+                    ? const Color(0xFFF3ECE1)
+                    : const Color(0xFFEAF7EE),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -199,7 +199,9 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
                 style: GoogleFonts.inter(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
-                  color: _isPaused ? const Color(0xFF8C5A2B) : const Color(0xFF1E7E45),
+                  color: _isPaused
+                      ? const Color(0xFF8C5A2B)
+                      : const Color(0xFF1E7E45),
                   letterSpacing: 0.4,
                 ),
               ),
@@ -243,7 +245,10 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
                 footer: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1.5,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEAF7EE),
                         borderRadius: BorderRadius.circular(3.5),
@@ -251,7 +256,11 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.arrow_upward_rounded, size: 10, color: Color(0xFF1E7E45)),
+                          const Icon(
+                            Icons.arrow_upward_rounded,
+                            size: 10,
+                            color: Color(0xFF1E7E45),
+                          ),
                           const SizedBox(width: 1),
                           Text(
                             '98%',
@@ -322,7 +331,10 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
                 label: 'Auto-Ordered Value',
                 value: '₹3,40,000',
                 footer: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEAF7EE),
                     borderRadius: BorderRadius.circular(3.5),
@@ -354,7 +366,10 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
                 footer: Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFDE8E8),
                         borderRadius: BorderRadius.circular(3.5),
@@ -489,11 +504,15 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
                 ],
               ),
               InkWell(
-                onTap: widget.onEditConfiguration ??
+                onTap:
+                    widget.onEditConfiguration ??
                     () => _showToast('Opening configuration editor...'),
                 borderRadius: BorderRadius.circular(6),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(6),
@@ -692,7 +711,8 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
                 ),
               ),
               InkWell(
-                onTap: widget.onViewAllActivity ??
+                onTap:
+                    widget.onViewAllActivity ??
                     () => _showToast('Navigating to full activity logs...'),
                 borderRadius: BorderRadius.circular(4),
                 child: Row(
@@ -753,7 +773,10 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
             itemBuilder: (context, index) {
               final log = _activityLogs[index];
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     // Date & Time
@@ -819,7 +842,10 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2.5,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFEAF7EE),
                             borderRadius: BorderRadius.circular(4),
@@ -849,7 +875,9 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
                     ),
                     // 3 dots action menu
                     InkWell(
-                      onTap: () => _showToast('Log entry options for ${log.actionTaken}'),
+                      onTap: () => _showToast(
+                        'Log entry options for ${log.actionTaken}',
+                      ),
                       borderRadius: BorderRadius.circular(4),
                       child: const Padding(
                         padding: EdgeInsets.all(4),
@@ -910,7 +938,8 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
 
           // Button 1: Edit Automation (Dark Solid)
           InkWell(
-            onTap: widget.onEditAutomation ??
+            onTap:
+                widget.onEditAutomation ??
                 () => _showToast('Opening Automation Rule Builder...'),
             borderRadius: BorderRadius.circular(8),
             child: Container(
@@ -952,7 +981,9 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
               if (widget.onPauseAutomation != null) {
                 widget.onPauseAutomation!();
               } else {
-                _showToast(_isPaused ? 'Automation paused' : 'Automation resumed');
+                _showToast(
+                  _isPaused ? 'Automation paused' : 'Automation resumed',
+                );
               }
             },
             borderRadius: BorderRadius.circular(8),
@@ -991,8 +1022,11 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
 
           // Button 3: View Run Logs (White Outline)
           InkWell(
-            onTap: widget.onViewRunLogs ??
-                () => _showToast('Fetching complete run logs for Low Stock Auto-Reorder...'),
+            onTap:
+                widget.onViewRunLogs ??
+                () => _showToast(
+                  'Fetching complete run logs for Low Stock Auto-Reorder...',
+                ),
             borderRadius: BorderRadius.circular(8),
             child: Container(
               width: double.infinity,
@@ -1027,7 +1061,8 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
 
           // Button 4: Delete Automation (Red Outline)
           InkWell(
-            onTap: widget.onDeleteAutomation ??
+            onTap:
+                widget.onDeleteAutomation ??
                 () => _showToast('Delete confirmation triggered'),
             borderRadius: BorderRadius.circular(8),
             child: Container(
@@ -1062,7 +1097,7 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
           const SizedBox(height: 22),
 
           // Metadata key-values
-          _buildMetaRow('Created by', 'Alex Mercer'),
+          _buildMetaRow('Created by', 'Store Admin'),
           const SizedBox(height: 12),
           _buildMetaRow('Created on', 'Aug 12, 2026'),
           const SizedBox(height: 12),
@@ -1143,7 +1178,8 @@ class _LowStockAutoReorderViewState extends State<LowStockAutoReorderView> {
           ),
           const SizedBox(width: 16),
           InkWell(
-            onTap: widget.onViewRecommendations ??
+            onTap:
+                widget.onViewRecommendations ??
                 () => _showToast('Opening safety stock recommendations...'),
             borderRadius: BorderRadius.circular(8),
             child: Container(

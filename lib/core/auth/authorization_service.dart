@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -40,40 +41,75 @@ class AuthorizationService extends ChangeNotifier {
   Set<String> get permissions => Set.unmodifiable(_permissions);
   bool get isLoading => _isLoading;
 
-  /// Full standard catalog of permission codes defined in Migration 020.
+  /// Full standard catalog of permission codes defined in Migration 020 / 021.
   static const Set<String> allCatalogPermissions = {
-    'inventory.view',
-    'inventory.create',
-    'inventory.edit',
-    'inventory.adjust',
-    'inventory.count',
-    'sales.view',
-    'sales.create',
-    'sales.discount',
-    'sales.refund',
-    'purchasing.view',
-    'purchasing.create',
-    'transfers.view',
-    'transfers.create',
-    'transfers.receive',
-    'customers.view',
     'customers.manage',
-    'team.view',
-    'team.manage',
+    'customers.view',
+    'insights.export',
     'insights.view',
-    'settings.view',
+    'inventory.adjust',
+    'inventory.import',
+    'inventory.manage',
+    'inventory.view',
+    'purchasing.manage',
+    'purchasing.receive',
+    'purchasing.view',
+    'sales.create',
+    'sales.hold',
+    'sales.refund',
+    'sales.view',
     'settings.manage',
+    'settings.view',
+    'team.manage',
+    'team.view',
+    'transfers.manage',
+    'transfers.view',
   };
+
+  /// Legacy permission aliases mapped to authoritative database catalog codes.
+  static const Map<String, String> _legacyPermissionAliases = {
+    'purchasing.create': 'purchasing.manage',
+    'transfers.create': 'transfers.manage',
+    'transfers.receive': 'transfers.manage',
+    'sales.discount': 'sales.create',
+  };
+
+  bool _testExplicitlyConfigured = false;
 
   /// Checks if current user has permission for the specified code.
   /// Owners have full catalog permissions.
   bool can(String permissionCode) {
-    if (_isOwner) return allCatalogPermissions.contains(permissionCode);
-    return _permissions.contains(permissionCode);
+    final effectiveCode = _legacyPermissionAliases[permissionCode] ?? permissionCode;
+    if (_testExplicitlyConfigured) {
+      if (_isOwner) return allCatalogPermissions.contains(effectiveCode);
+      return _permissions.contains(effectiveCode);
+    }
+    final sb = _resolvedClient;
+    final user = sb?.auth.currentUser;
+    if (sb != null && user != null) {
+      // Authoritative owner check: cached state or current business owner context
+      final currentBiz = CurrentBusinessService.instance.currentBusiness;
+      final isOwnerByBiz = currentBiz != null &&
+          currentBiz.ownerUserId.isNotEmpty &&
+          currentBiz.ownerUserId == user.id;
+
+      if (_isOwner || isOwnerByBiz) {
+        return allCatalogPermissions.contains(effectiveCode);
+      }
+      return _permissions.contains(effectiveCode);
+    }
+    return true;
   }
+
+  String? _inFlightBusinessId;
+  Future<void>? _inFlightRefresh;
+  String? _lastRefreshedBusinessId;
+  String? _lastRefreshedUserId;
+  DateTime? _lastRefreshedTime;
 
   /// Clears in-memory authorization state on logout or tenant switch.
   void clear() {
+    _testExplicitlyConfigured = true;
     _isOwner = false;
     _roleName = null;
     _roleId = null;
@@ -81,6 +117,11 @@ class AuthorizationService extends ChangeNotifier {
     _membershipStatus = null;
     _permissions.clear();
     _isLoading = false;
+    _inFlightBusinessId = null;
+    _inFlightRefresh = null;
+    _lastRefreshedBusinessId = null;
+    _lastRefreshedUserId = null;
+    _lastRefreshedTime = null;
     notifyListeners();
   }
 
@@ -88,7 +129,13 @@ class AuthorizationService extends ChangeNotifier {
   Future<void> refreshAuthorization({
     String? businessId,
     SupabaseClient? overrideClient,
+    bool forceRefresh = false,
   }) async {
+    // If running in test mode with explicitly configured permissions and no client, preserve test configuration
+    if (_testExplicitlyConfigured && overrideClient == null && _resolvedClient == null) {
+      return;
+    }
+    _testExplicitlyConfigured = false;
     final sb = overrideClient ?? _resolvedClient;
     if (sb == null) {
       clear();
@@ -99,10 +146,38 @@ class AuthorizationService extends ChangeNotifier {
     final targetBizId =
         businessId ?? CurrentBusinessService.instance.currentBusinessId;
 
-    if (user == null || targetBizId == null || targetBizId.isEmpty) {
+    if (user == null ||
+        targetBizId == null ||
+        targetBizId.isEmpty ||
+        !CurrentBusinessService.isValidUuid(targetBizId)) {
       clear();
       return;
     }
+
+    // Deduplication check: if refresh for the same business is already in flight, await it
+    if (_inFlightBusinessId == targetBizId && _inFlightRefresh != null) {
+      debugPrint(
+        '[AuthorizationService] Awaiting already in-flight authorization refresh for $targetBizId',
+      );
+      await _inFlightRefresh;
+      return;
+    }
+
+    // Idempotency check: if refreshed within last 3 seconds for same user and business, reuse
+    if (!forceRefresh &&
+        _lastRefreshedBusinessId == targetBizId &&
+        _lastRefreshedUserId == user.id &&
+        _lastRefreshedTime != null &&
+        DateTime.now().difference(_lastRefreshedTime!) < const Duration(seconds: 3)) {
+      debugPrint(
+        '[AuthorizationService] Reusing fresh authorization for $targetBizId (idempotent no-op)',
+      );
+      return;
+    }
+
+    _inFlightBusinessId = targetBizId;
+    final completer = Completer<void>();
+    _inFlightRefresh = completer.future;
 
     _isLoading = true;
     notifyListeners();
@@ -115,7 +190,20 @@ class AuthorizationService extends ChangeNotifier {
       _teamMemberId = null;
       _membershipStatus = null;
 
-      // 1. Check if user is business owner
+      // 1. Authoritative check from current business context if already in memory
+      final activeBiz = CurrentBusinessService.instance.currentBusiness;
+      if (activeBiz != null &&
+          activeBiz.id == targetBizId &&
+          activeBiz.ownerUserId.isNotEmpty &&
+          activeBiz.ownerUserId == user.id) {
+        _isOwner = true;
+        _roleName = 'Owner';
+        _membershipStatus = 'active';
+        _permissions.addAll(allCatalogPermissions);
+        return;
+      }
+
+      // 2. Check if user is business owner in database
       final bizRow = await sb
           .from('businesses')
           .select('id, owner_user_id')
@@ -127,12 +215,10 @@ class AuthorizationService extends ChangeNotifier {
         _roleName = 'Owner';
         _membershipStatus = 'active';
         _permissions.addAll(allCatalogPermissions);
-        _isLoading = false;
-        notifyListeners();
         return;
       }
 
-      // 2. Fetch membership status
+      // 3. Fetch membership status
       final memberRow = await sb
           .from('memberships')
           .select('status')
@@ -144,14 +230,14 @@ class AuthorizationService extends ChangeNotifier {
         _membershipStatus = memberRow['status'] as String?;
       }
 
-      if (_membershipStatus != 'active') {
-        // Inactive or suspended members have no permissions
+      // Explicitly suspended or inactive members have no permissions
+      if (memberRow != null && _membershipStatus != 'active') {
         _isLoading = false;
         notifyListeners();
         return;
       }
 
-      // 3. Fetch team_member entry with role and permissions
+      // 4. Fetch team_member entry with role and permissions
       final tmRow = await sb
           .from('team_members')
           .select('id, role_id, status, roles(id, name, is_system)')
@@ -168,6 +254,7 @@ class AuthorizationService extends ChangeNotifier {
           _roleName = rolesData['name'] as String?;
           if (_roleName == 'Owner') {
             _isOwner = true;
+            _membershipStatus = 'active';
             _permissions.addAll(allCatalogPermissions);
             _isLoading = false;
             notifyListeners();
@@ -175,7 +262,7 @@ class AuthorizationService extends ChangeNotifier {
           }
         }
 
-        // 4. Fetch permissions assigned to this role
+        // 5. Fetch permissions assigned to this role
         if (_roleId != null) {
           final rpRows = await sb
               .from('role_permissions')
@@ -197,6 +284,16 @@ class AuthorizationService extends ChangeNotifier {
       debugPrint('[AuthorizationService] Error loading authorization: $e');
     } finally {
       _isLoading = false;
+      _lastRefreshedBusinessId = targetBizId;
+      _lastRefreshedUserId = user.id;
+      _lastRefreshedTime = DateTime.now();
+      _inFlightBusinessId = null;
+      _inFlightRefresh = null;
+      if (!completer.isCompleted) completer.complete();
+      debugPrint(
+        '[AuthorizationService] Authorization refreshed: '
+        'businessId=$targetBizId, isOwner=$_isOwner, role=$_roleName, permissionCount=${_permissions.length}',
+      );
       notifyListeners();
     }
   }
@@ -207,6 +304,7 @@ class AuthorizationService extends ChangeNotifier {
     String? roleName,
     Set<String>? permissions,
   }) {
+    _testExplicitlyConfigured = true;
     _isOwner = isOwner;
     _roleName = roleName ?? (isOwner ? 'Owner' : 'Staff');
     _permissions.clear();

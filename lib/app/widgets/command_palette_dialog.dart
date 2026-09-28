@@ -1,13 +1,11 @@
 // ignore_for_file: deprecated_member_use
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../features/inventory/data/product_repository.dart';
 
-enum CommandItemType {
-  aiPrompt,
-  navigation,
-  product,
-}
+enum CommandItemType { aiPrompt, navigation, product }
 
 class CommandPaletteItem {
   final String id;
@@ -106,30 +104,45 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
   }
 
   List<CommandPaletteItem> _getAllItems() {
-    return [
+    final isMacOS = defaultTargetPlatform == TargetPlatform.macOS;
+    final mod = isMacOS ? '⌘' : 'Ctrl+';
+
+    final items = <CommandPaletteItem>[
       // 1. ASK THREADSTOCK AI
       CommandPaletteItem(
-        id: 'ai_low_stock',
+        id: 'ai_inventory_query',
         section: 'ASK THREADSTOCK AI',
-        title: 'Show low stock items in Central Warehouse',
+        title: 'Ask about your inventory',
         type: CommandItemType.aiPrompt,
         badge: 'AI Prompt',
         onSelect: () {
           Navigator.of(context).pop();
           widget.onNavigateToIndex?.call(6); // AI Studio / Insights
-          _showSnack('Analyzing low stock in Central Warehouse with ThreadStock AI...');
+          _showSnack('Opening ThreadStock AI Inventory Assistant...');
         },
       ),
       CommandPaletteItem(
-        id: 'ai_reorder_biella',
+        id: 'ai_find_product',
         section: 'ASK THREADSTOCK AI',
-        title: 'Which products need reordering from Biella Italian Mill?',
+        title: 'Find a product',
+        type: CommandItemType.aiPrompt,
+        badge: 'AI Prompt',
+        onSelect: () {
+          Navigator.of(context).pop();
+          widget.onNavigateToIndex?.call(1); // Inventory
+          _showSnack('Searching inventory products...');
+        },
+      ),
+      CommandPaletteItem(
+        id: 'ai_search_suppliers',
+        section: 'ASK THREADSTOCK AI',
+        title: 'Search suppliers',
         type: CommandItemType.aiPrompt,
         badge: 'AI Prompt',
         onSelect: () {
           Navigator.of(context).pop();
           widget.onNavigateToIndex?.call(5); // Suppliers
-          _showSnack('Checking replenishment needs from Biella Italian Mill...');
+          _showSnack('Searching suppliers...');
         },
       ),
 
@@ -138,7 +151,7 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
         id: 'nav_create_sale',
         section: 'QUICK NAVIGATION',
         title: 'Create New Sale',
-        shortcut: '⌘N',
+        shortcut: '${mod}N',
         icon: Icons.add_rounded,
         type: CommandItemType.navigation,
         onSelect: () {
@@ -152,7 +165,7 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
         id: 'nav_new_product',
         section: 'QUICK NAVIGATION',
         title: 'Add New Inventory Product',
-        shortcut: '⌘I',
+        shortcut: '${mod}I',
         icon: Icons.inventory_2_outlined,
         type: CommandItemType.navigation,
         onSelect: () {
@@ -166,7 +179,7 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
         id: 'nav_stock_transfer',
         section: 'QUICK NAVIGATION',
         title: 'Initiate Stock Transfer',
-        shortcut: '⌘T',
+        shortcut: '${mod}T',
         icon: Icons.local_shipping_outlined,
         type: CommandItemType.navigation,
         onSelect: () {
@@ -179,7 +192,7 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
         id: 'nav_return_exchange',
         section: 'QUICK NAVIGATION',
         title: 'Process Return / Exchange',
-        shortcut: '⌘R',
+        shortcut: '${mod}R',
         icon: Icons.sync_rounded,
         type: CommandItemType.navigation,
         onSelect: () {
@@ -189,24 +202,30 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
           _showSnack('Opening Return / Exchange Processor...');
         },
       ),
-
-      // 3. RECENT PRODUCTS
-      CommandPaletteItem(
-        id: 'recent_oxford_linen',
-        section: 'RECENT PRODUCTS',
-        title: 'Oxford Linen Shirt',
-        subtitle: 'Black • M • TS-10492',
-        imageAsset: 'assets/black_linen_shirt.jpg',
-        badge: 'Inventory',
-        type: CommandItemType.product,
-        onSelect: () {
-          Navigator.of(context).pop();
-          widget.onNavigateToIndex?.call(1); // Inventory
-          widget.onNavigateToInventoryMode?.call('Product details');
-          _showSnack('Opening Oxford Linen Shirt details...');
-        },
-      ),
     ];
+
+    // 3. RECENT PRODUCTS (Only real products if any exist; empty for fresh account)
+    final fallbackProducts = ProductRepository.localFallbackProducts;
+    for (final p in fallbackProducts.values.take(3)) {
+      items.add(
+        CommandPaletteItem(
+          id: 'recent_${p.id}',
+          section: 'RECENT PRODUCTS',
+          title: p.name,
+          subtitle: p.description ?? p.status,
+          badge: 'Inventory',
+          type: CommandItemType.product,
+          onSelect: () {
+            Navigator.of(context).pop();
+            widget.onNavigateToIndex?.call(1);
+            widget.onNavigateToInventoryMode?.call('Product details');
+            _showSnack('Opening ${p.name} details...');
+          },
+        ),
+      );
+    }
+
+    return items;
   }
 
   void _showSnack(String message) {
@@ -221,7 +240,11 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
             Expanded(
               child: Text(
                 message,
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
@@ -317,7 +340,10 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
 
                   // 2. Body List
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -350,11 +376,7 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       child: Row(
         children: [
-          const Icon(
-            Icons.search_rounded,
-            size: 22,
-            color: Color(0xFF181513),
-          ),
+          const Icon(Icons.search_rounded, size: 22, color: Color(0xFF181513)),
           const SizedBox(width: 12),
           Expanded(
             child: TextField(
@@ -425,7 +447,11 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
           child: Row(
             children: [
               if (isAiSection) ...[
-                const Icon(Icons.auto_awesome, size: 12, color: Color(0xFFD97706)),
+                const Icon(
+                  Icons.auto_awesome,
+                  size: 12,
+                  color: Color(0xFFD97706),
+                ),
                 const SizedBox(width: 6),
               ],
               Text(
@@ -434,7 +460,9 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
-                  color: isAiSection ? const Color(0xFFB45309) : const Color(0xFF94A3B8),
+                  color: isAiSection
+                      ? const Color(0xFFB45309)
+                      : const Color(0xFF94A3B8),
                 ),
               ),
             ],
@@ -470,7 +498,9 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFFFFBEB) : const Color(0xFFFFFDF8),
+            color: isSelected
+                ? const Color(0xFFFFFBEB)
+                : const Color(0xFFFFFDF8),
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: isSelected ? const Color(0xFFFDE68A) : Colors.transparent,
@@ -479,7 +509,11 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
           ),
           child: Row(
             children: [
-              const Icon(Icons.auto_awesome, size: 14, color: Color(0xFFD97706)),
+              const Icon(
+                Icons.auto_awesome,
+                size: 14,
+                color: Color(0xFFD97706),
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -493,7 +527,10 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
               ),
               if (item.badge != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2.5,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEF3C7),
                     borderRadius: BorderRadius.circular(6),
@@ -528,7 +565,7 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(6),
                 child: Image.asset(
-                  item.imageAsset ?? 'assets/black_linen_shirt.jpg',
+                  item.imageAsset ?? '',
                   width: 38,
                   height: 38,
                   fit: BoxFit.cover,
@@ -536,7 +573,11 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
                     width: 38,
                     height: 38,
                     color: const Color(0xFFF1F5F9),
-                    child: const Icon(Icons.checkroom_rounded, size: 20, color: Color(0xFF94A3B8)),
+                    child: const Icon(
+                      Icons.checkroom_rounded,
+                      size: 20,
+                      color: Color(0xFF94A3B8),
+                    ),
                   ),
                 ),
               ),
@@ -593,11 +634,7 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
         child: Row(
           children: [
             if (item.icon != null)
-              Icon(
-                item.icon,
-                size: 17,
-                color: const Color(0xFF181513),
-              ),
+              Icon(item.icon, size: 17, color: const Color(0xFF181513)),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -630,35 +667,54 @@ class _CommandPaletteDialogState extends State<CommandPaletteDialog> {
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Color(0xFFF1F5F9)),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFF1F5F9))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              const Icon(Icons.arrow_upward_rounded, size: 12, color: Color(0xFF64748B)),
+              const Icon(
+                Icons.arrow_upward_rounded,
+                size: 12,
+                color: Color(0xFF64748B),
+              ),
               const SizedBox(width: 1),
-              const Icon(Icons.arrow_downward_rounded, size: 12, color: Color(0xFF64748B)),
+              const Icon(
+                Icons.arrow_downward_rounded,
+                size: 12,
+                color: Color(0xFF64748B),
+              ),
               const SizedBox(width: 4),
               Text(
                 'to navigate',
-                style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B)),
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: const Color(0xFF64748B),
+                ),
               ),
               const SizedBox(width: 16),
-              const Icon(Icons.keyboard_return_rounded, size: 12, color: Color(0xFF64748B)),
+              const Icon(
+                Icons.keyboard_return_rounded,
+                size: 12,
+                color: Color(0xFF64748B),
+              ),
               const SizedBox(width: 4),
               Text(
                 'to select',
-                style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF64748B)),
+                style: GoogleFonts.inter(
+                  fontSize: 11,
+                  color: const Color(0xFF64748B),
+                ),
               ),
             ],
           ),
           Text(
-            'ThreadStock Atelier OS v2.4',
-            style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF94A3B8)),
+            'ThreadStock OS v2.4',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              color: const Color(0xFF94A3B8),
+            ),
           ),
         ],
       ),

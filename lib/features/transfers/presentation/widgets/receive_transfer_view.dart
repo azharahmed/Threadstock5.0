@@ -33,18 +33,18 @@ class ReceiveItemData {
 class ReceiveTransferView extends StatefulWidget {
   const ReceiveTransferView({
     super.key,
-    this.transferId = 'PO-2024-0847',
-    this.supplier = 'Milano Tessuti',
-    this.categoriesCount = '2 Categories',
+    this.transferId = 'TR-NEW',
+    this.supplier = 'Primary Supplier',
+    this.categoriesCount = '0 Categories',
     this.expectedDelivery = 'Feb 15, 2027',
-    this.receivedBy = 'Alex Mercer (Admin)',
+    this.receivedBy = 'Store Manager (Admin)',
     this.logTimestamp = 'Feb 15, 2027  10:32 AM',
     this.status = 'In Receiving',
-    this.sourceName = 'Central Warehouse',
+    this.sourceName = 'Main Facility',
     this.sourceDetails = 'Zone A • Main Facility',
-    this.destName = 'Central Warehouse',
+    this.destName = 'Storage Facility',
     this.destDetails = 'Zone A',
-    this.createdBy = 'Alex Mercer',
+    this.createdBy = 'Store Manager',
     this.createdOn = '15 Feb 2027, 10:32 AM',
     this.overallStatus = 'In Receiving',
     this.onViewTransfer,
@@ -94,39 +94,14 @@ class _ReceiveTransferViewState extends State<ReceiveTransferView> {
   @override
   void initState() {
     super.initState();
-    _discrepancyNotesController = TextEditingController(
-      text:
-          'Box 4 had a damaged seal. Verified count for Worsted Wool Yarn is short by 8 Kgs.',
-    );
+    _discrepancyNotesController = TextEditingController();
 
-    _items = [
-      ReceiveItemData(
-        name: 'Premium Raw Silk Blend',
-        sku: 'SKU: SLK-PL-M85',
-        category: 'Category: Silk Fabrics',
-        unit: 'Meters',
-        expectedQty: 500,
-        receivedQty: 500,
-        conditionStatus: 'Good Condition',
-        imageAsset: 'Assets/mulberry_silk_fabric.jpg',
-        isSelected: true,
-      ),
-      ReceiveItemData(
-        name: 'Worsted Wool Yarn (Navy)',
-        sku: 'SKU: YRN-WOL-77',
-        category: 'Category: Wool Yarn',
-        unit: 'Kgs',
-        expectedQty: 350,
-        receivedQty: 342,
-        conditionStatus: '8 Missing',
-        imageAsset: 'Assets/navy_merino_fabric.jpg',
-        isSelected: false,
-      ),
-    ];
+    _items = [];
 
     for (int i = 0; i < _items.length; i++) {
-      _qtyControllers[i] =
-          TextEditingController(text: '${_items[i].receivedQty}');
+      _qtyControllers[i] = TextEditingController(
+        text: '${_items[i].receivedQty}',
+      );
     }
   }
 
@@ -193,7 +168,7 @@ class _ReceiveTransferViewState extends State<ReceiveTransferView> {
                   ),
                 ),
                 Text(
-                  'Central Warehouse (Zone A)',
+                  'Main Facility (Zone A)',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     color: const Color(0xFF6B7280),
@@ -437,13 +412,14 @@ class _ReceiveTransferViewState extends State<ReceiveTransferView> {
                   expectedQty: exp,
                   receivedQty: exp,
                   conditionStatus: 'Good Condition',
-                  imageAsset: 'Assets/raw_linen_fabric.jpg',
+                  imageAsset: '',
                   isSelected: true,
                 );
                 _items.add(newItem);
                 final newIdx = _items.length - 1;
-                _qtyControllers[newIdx] =
-                    TextEditingController(text: '${newItem.receivedQty}');
+                _qtyControllers[newIdx] = TextEditingController(
+                  text: '${newItem.receivedQty}',
+                );
               });
               Navigator.of(ctx).pop();
             },
@@ -517,7 +493,7 @@ class _ReceiveTransferViewState extends State<ReceiveTransferView> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'AI Auto-Match analyzed purchase order PO-2024-0847 against Milano Tessuti advance shipping notice.',
+                        'AI Auto-Match analyzed purchase order PO-0847 against supplier advance shipping notice.',
                         style: GoogleFonts.inter(
                           fontSize: 12.5,
                           color: const Color(0xFF78350F),
@@ -542,7 +518,7 @@ class _ReceiveTransferViewState extends State<ReceiveTransferView> {
                 iconColor: const Color(0xFFD97706),
                 title: 'Worsted Wool Discrepancy: -8 Kgs',
                 description:
-                    'Expected 350 Kgs, scanned 342 Kgs. Milano Tessuti freight carrier noted Box 4 seal damage at customs checkpoint.',
+                    'Expected 350 Kgs, scanned 342 Kgs. Freight carrier noted Box 4 seal damage at customs checkpoint.',
               ),
               const SizedBox(height: 12),
               _buildSuggestionRow(
@@ -684,7 +660,7 @@ class _ReceiveTransferViewState extends State<ReceiveTransferView> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Variance Notice: ${_totalVariance.abs()} unit(s) recorded as discrepancy under Milano Tessuti.',
+                        'Variance Notice: ${_totalVariance.abs()} unit(s) recorded as discrepancy under receiving manifest.',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -1386,10 +1362,42 @@ class _ReceiveTransferViewState extends State<ReceiveTransferView> {
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
 
           // Table Rows
-          for (int i = 0; i < _items.length; i++) ...[
-            _buildTableRow(i),
-            const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          ],
+          if (_items.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              alignment: Alignment.center,
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.inventory_2_outlined,
+                    size: 36,
+                    color: Color(0xFFCBD5E1),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No items to receive',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF475569),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Incoming items from approved purchase orders or transfer orders will appear here.',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            for (int i = 0; i < _items.length; i++) ...[
+              _buildTableRow(i),
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            ],
 
           // Dashed Scan Container
           Padding(
@@ -1564,8 +1572,7 @@ class _ReceiveTransferViewState extends State<ReceiveTransferView> {
                     setState(() {
                       item.receivedQty = parsed;
                       if (item.variance < 0) {
-                        item.conditionStatus =
-                            '${item.variance.abs()} Missing';
+                        item.conditionStatus = '${item.variance.abs()} Missing';
                       } else {
                         item.conditionStatus = 'Good Condition';
                       }
@@ -1584,9 +1591,7 @@ class _ReceiveTransferViewState extends State<ReceiveTransferView> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  hasVariance
-                      ? '${item.variance}'
-                      : '0',
+                  hasVariance ? '${item.variance}' : '0',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -2005,9 +2010,7 @@ class _ReceiveTransferViewState extends State<ReceiveTransferView> {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  _totalVariance == 0
-                      ? '0 Units'
-                      : '$_totalVariance Units',
+                  _totalVariance == 0 ? '0 Units' : '$_totalVariance Units',
                   style: GoogleFonts.inter(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w700,

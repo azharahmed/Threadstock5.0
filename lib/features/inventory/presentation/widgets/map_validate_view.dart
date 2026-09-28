@@ -2,13 +2,22 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../domain/models/inventory_import_draft.dart';
+
 /// Map & Validate Data — Step 2 of the inventory import wizard.
 class MapValidateView extends StatefulWidget {
+  final InventoryImportDraft? draft;
+  final Map<String, InventoryImportTargetField> columnMappings;
+  final ValueChanged<Map<String, InventoryImportTargetField>>?
+  onMappingsChanged;
   final VoidCallback? onContinue;
   final VoidCallback? onCancel;
 
   const MapValidateView({
     super.key,
+    this.draft,
+    this.columnMappings = const {},
+    this.onMappingsChanged,
     this.onContinue,
     this.onCancel,
   });
@@ -18,22 +27,84 @@ class MapValidateView extends StatefulWidget {
 }
 
 class _MapValidateViewState extends State<MapValidateView> {
-  // ---------------------------------------------------------------------------
-  // Data Model
-  // ---------------------------------------------------------------------------
-  final List<_ColumnRow> _columns = [
-    _ColumnRow('Product Name', 'Oxford Linen Shirt', 'Product Name', _MappedStatus.mapped),
-    _ColumnRow('SKU', 'TS-10492-BLK-M', 'SKU', _MappedStatus.mapped),
-    _ColumnRow('Variant', 'Black / M', 'Variant', _MappedStatus.mapped),
-    _ColumnRow('Quantity', '120', 'Available Stock', _MappedStatus.mapped),
-    _ColumnRow('Unit Cost', '980', 'Unit Cost', _MappedStatus.mapped),
-    _ColumnRow('Selling Price', '2490', 'Selling Price', _MappedStatus.mapped),
-    _ColumnRow('Category', 'Shirts', 'Category', _MappedStatus.mapped),
-    _ColumnRow('Barcode', '8901234567890', 'Barcode', _MappedStatus.mapped),
-    _ColumnRow('Location', 'A-01-03', 'Location', _MappedStatus.review),
-    _ColumnRow('Supplier', 'Biella Italian Mills', 'Supplier', _MappedStatus.mapped),
-    _ColumnRow('Notes', '—', 'Notes', _MappedStatus.skipped),
-  ];
+  late Map<String, InventoryImportTargetField> _mappings;
+
+  @override
+  void initState() {
+    super.initState();
+    _mappings = Map<String, InventoryImportTargetField>.from(
+      widget.columnMappings,
+    );
+    if (_mappings.isEmpty && widget.draft != null) {
+      for (final header in widget.draft!.headers) {
+        _mappings[header] = InventoryImportColumnMapper.suggest(header);
+      }
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MapValidateView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.draft?.fileName != widget.draft?.fileName ||
+        oldWidget.columnMappings != widget.columnMappings) {
+      _mappings = Map<String, InventoryImportTargetField>.from(
+        widget.columnMappings,
+      );
+    }
+  }
+
+  List<_ColumnRow> get _columns {
+    final draft = widget.draft;
+    if (draft == null) {
+      return const [];
+    }
+    return [
+      for (var i = 0; i < draft.headers.length; i++)
+        _ColumnRow(
+          draft.headers[i],
+          _sampleForColumn(draft, i),
+          _mappings[draft.headers[i]] ?? InventoryImportTargetField.skip,
+        ),
+    ];
+  }
+
+  String _sampleForColumn(InventoryImportDraft draft, int index) {
+    for (final row in draft.rows) {
+      if (index < row.length && row[index].trim().isNotEmpty) {
+        return row[index];
+      }
+    }
+    return '—';
+  }
+
+  void _updateMapping(String header, InventoryImportTargetField field) {
+    setState(() {
+      _mappings[header] = field;
+    });
+    widget.onMappingsChanged?.call(
+      Map<String, InventoryImportTargetField>.from(_mappings),
+    );
+  }
+
+  int get _mappedCount => _mappings.values
+      .where((v) => v != InventoryImportTargetField.skip)
+      .length;
+
+  int get _reviewCount => _mappings.values
+      .where((v) => v == InventoryImportTargetField.skip)
+      .length;
+
+  bool get _canContinue {
+    final draft = widget.draft;
+    if (draft == null || draft.headers.isEmpty) {
+      return false;
+    }
+    final hasSku = _mappings.values.contains(InventoryImportTargetField.sku);
+    final hasName = _mappings.values.contains(
+      InventoryImportTargetField.productName,
+    );
+    return hasSku || hasName;
+  }
 
   // ---------------------------------------------------------------------------
   // Build
@@ -72,7 +143,10 @@ class _MapValidateViewState extends State<MapValidateView> {
                   children: [
                     Expanded(flex: 58, child: _buildColumnMappingCard()),
                     const SizedBox(width: 20),
-                    SizedBox(width: 340, child: _buildValidationSummaryColumn()),
+                    SizedBox(
+                      width: 340,
+                      child: _buildValidationSummaryColumn(),
+                    ),
                   ],
                 );
               }
@@ -147,7 +221,12 @@ class _MapValidateViewState extends State<MapValidateView> {
     );
   }
 
-  Widget _buildStep(int number, String label, {bool isDone = false, bool isActive = false}) {
+  Widget _buildStep(
+    int number,
+    String label, {
+    bool isDone = false,
+    bool isActive = false,
+  }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -157,7 +236,9 @@ class _MapValidateViewState extends State<MapValidateView> {
           decoration: BoxDecoration(
             color: isDone
                 ? const Color(0xFF22C55E)
-                : (isActive ? const Color(0xFF2563EB) : const Color(0xFFF1EBE3)),
+                : (isActive
+                      ? const Color(0xFF2563EB)
+                      : const Color(0xFFF1EBE3)),
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
@@ -205,6 +286,13 @@ class _MapValidateViewState extends State<MapValidateView> {
   // ---------------------------------------------------------------------------
 
   Widget _buildFileInfoBar() {
+    final draft = widget.draft;
+    final fileName = draft?.fileName ?? 'No file selected';
+    final ext = (draft?.fileExtension ?? '').toUpperCase();
+    final rowLabel = draft == null
+        ? 'Choose a file on the previous step to map columns.'
+        : '${draft.totalRows} data rows · ${draft.headers.length} columns detected';
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
@@ -214,7 +302,6 @@ class _MapValidateViewState extends State<MapValidateView> {
       ),
       child: Row(
         children: [
-          // Excel icon
           Container(
             width: 36,
             height: 36,
@@ -224,9 +311,9 @@ class _MapValidateViewState extends State<MapValidateView> {
             ),
             alignment: Alignment.center,
             child: Text(
-              'X',
+              ext.isEmpty ? '?' : (ext == 'CSV' ? 'CSV' : 'X'),
               style: GoogleFonts.inter(
-                fontSize: 16,
+                fontSize: ext == 'CSV' ? 9 : 16,
                 fontWeight: FontWeight.w700,
                 color: Colors.white,
               ),
@@ -238,7 +325,7 @@ class _MapValidateViewState extends State<MapValidateView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ThreadStock_Inventory_Jan2027.xlsx',
+                  fileName,
                   style: GoogleFonts.inter(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -247,19 +334,14 @@ class _MapValidateViewState extends State<MapValidateView> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Uploaded on 14 Jan 2027, 10:32 AM  •  2,456 rows',
+                  rowLabel,
                   style: GoogleFonts.inter(
-                    fontSize: 12,
+                    fontSize: 12.5,
                     color: const Color(0xFF7E766B),
                   ),
                 ),
               ],
             ),
-          ),
-          _buildOutlineButton(
-            icon: Icons.sync_rounded,
-            label: 'Replace File',
-            onTap: () {},
           ),
         ],
       ),
@@ -288,7 +370,11 @@ class _MapValidateViewState extends State<MapValidateView> {
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
-            child: const Icon(Icons.auto_awesome_rounded, size: 17, color: Color(0xFFB5860D)),
+            child: const Icon(
+              Icons.auto_awesome_rounded,
+              size: 17,
+              color: Color(0xFFB5860D),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -464,12 +550,18 @@ class _MapValidateViewState extends State<MapValidateView> {
       decoration: BoxDecoration(
         border: isLast
             ? null
-            : const Border(bottom: BorderSide(color: Color(0xFFF4EDE5), width: 0.8)),
+            : const Border(
+                bottom: BorderSide(color: Color(0xFFF4EDE5), width: 0.8),
+              ),
       ),
       child: Row(
         children: [
           // Drag handle
-          const Icon(Icons.drag_indicator_rounded, size: 16, color: Color(0xFFCBC2B7)),
+          const Icon(
+            Icons.drag_indicator_rounded,
+            size: 16,
+            color: Color(0xFFCBC2B7),
+          ),
           const SizedBox(width: 4),
 
           // File Column name
@@ -500,50 +592,54 @@ class _MapValidateViewState extends State<MapValidateView> {
           ),
 
           // Mapped To dropdown
-          Expanded(
-            flex: 30,
-            child: _buildMappedToDropdown(row),
-          ),
+          Expanded(flex: 30, child: _buildMappedToDropdown(row)),
 
           // Status chip
-          SizedBox(
-            width: 80,
-            child: _buildStatusChip(row.status),
-          ),
+          SizedBox(width: 80, child: _buildStatusChip(row.status)),
         ],
       ),
     );
   }
 
   Widget _buildMappedToDropdown(_ColumnRow row) {
-    return InkWell(
-      onTap: () {},
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFAF7F2),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: row.status == _MappedStatus.review
-                ? const Color(0xFFE8C97A)
-                : const Color(0xFFE8DFD3),
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF7F2),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: row.status == _MappedStatus.review
+              ? const Color(0xFFE8C97A)
+              : const Color(0xFFE8DFD3),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                row.mappedTo,
-                style: GoogleFonts.inter(
-                  fontSize: 13,
-                  color: const Color(0xFF3D3530),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<InventoryImportTargetField>(
+          value: row.mappedField,
+          isExpanded: true,
+          isDense: true,
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 16,
+            color: Color(0xFF9E8E7E),
+          ),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: const Color(0xFF3D3530),
+          ),
+          items: InventoryImportTargetField.values
+              .map(
+                (field) => DropdownMenuItem(
+                  value: field,
+                  child: Text(field.label, overflow: TextOverflow.ellipsis),
                 ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF9E8E7E)),
-          ],
+              )
+              .toList(),
+          onChanged: (field) {
+            if (field != null) {
+              _updateMapping(row.fileColumn, field);
+            }
+          },
         ),
       ),
     );
@@ -555,7 +651,11 @@ class _MapValidateViewState extends State<MapValidateView> {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle_rounded, size: 15, color: Color(0xFF22C55E)),
+            const Icon(
+              Icons.check_circle_rounded,
+              size: 15,
+              color: Color(0xFF22C55E),
+            ),
             const SizedBox(width: 5),
             Text(
               'Mapped',
@@ -571,7 +671,11 @@ class _MapValidateViewState extends State<MapValidateView> {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.warning_amber_rounded, size: 15, color: Color(0xFFD97706)),
+            const Icon(
+              Icons.warning_amber_rounded,
+              size: 15,
+              color: Color(0xFFD97706),
+            ),
             const SizedBox(width: 5),
             Text(
               'Review',
@@ -623,7 +727,11 @@ class _MapValidateViewState extends State<MapValidateView> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.auto_awesome_rounded, size: 15, color: Color(0xFFB5860D)),
+            const Icon(
+              Icons.auto_awesome_rounded,
+              size: 15,
+              color: Color(0xFFB5860D),
+            ),
             const SizedBox(width: 7),
             Text(
               'Auto Map',
@@ -656,6 +764,10 @@ class _MapValidateViewState extends State<MapValidateView> {
   }
 
   Widget _buildValidationSummaryCard() {
+    final totalRows = widget.draft?.totalRows ?? 0;
+    final mapped = _mappedCount;
+    final skipped = _reviewCount;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -676,53 +788,66 @@ class _MapValidateViewState extends State<MapValidateView> {
           ),
           const SizedBox(height: 4),
           Text(
-            'We analyzed 2,456 rows from your file.',
+            totalRows == 0
+                ? 'No file loaded yet.'
+                : 'Detected $totalRows rows · $mapped columns mapped · $skipped skipped.',
             style: GoogleFonts.inter(
               fontSize: 12.5,
               color: const Color(0xFF7E766B),
             ),
           ),
           const SizedBox(height: 16),
-
-          // Progress bar
           _buildValidationProgressBar(),
           const SizedBox(height: 14),
-
-          // Legend
           Row(
             children: [
               _buildLegendDot(const Color(0xFF22C55E)),
               const SizedBox(width: 4),
               Text(
-                '2,315 Ready',
-                style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF3D3530)),
+                '$mapped Mapped',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: const Color(0xFF3D3530),
+                ),
               ),
               const Spacer(),
               _buildLegendDot(const Color(0xFFF59E0B)),
               const SizedBox(width: 4),
               Text(
-                '98 Review',
-                style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF3D3530)),
+                '$skipped Skipped',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: const Color(0xFF3D3530),
+                ),
               ),
               const Spacer(),
               _buildLegendDot(const Color(0xFFEF4444)),
               const SizedBox(width: 4),
               Text(
-                '43 Invalid',
-                style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF3D3530)),
+                '0 Invalid',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: const Color(0xFF3D3530),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
           const Divider(color: Color(0xFFF0E8DF), height: 1),
           const SizedBox(height: 14),
-
-          // Stats row
           Row(
             children: [
-              _buildStatColumn('2,315', 'Valid rows', const Color(0xFF22C55E)),
-              _buildStatColumn('98', 'Need review', const Color(0xFFF59E0B)),
-              _buildStatColumn('43', 'Invalid rows', const Color(0xFFEF4444)),
+              _buildStatColumn(
+                '$totalRows',
+                'Data rows',
+                const Color(0xFF22C55E),
+              ),
+              _buildStatColumn(
+                '$mapped',
+                'Mapped fields',
+                const Color(0xFFF59E0B),
+              ),
+              _buildStatColumn('$skipped', 'Skipped', const Color(0xFFEF4444)),
             ],
           ),
         ],
@@ -741,14 +866,8 @@ class _MapValidateViewState extends State<MapValidateView> {
               flex: 94,
               child: Container(color: const Color(0xFF22C55E)),
             ),
-            Flexible(
-              flex: 4,
-              child: Container(color: const Color(0xFFF59E0B)),
-            ),
-            Flexible(
-              flex: 2,
-              child: Container(color: const Color(0xFFEF4444)),
-            ),
+            Flexible(flex: 4, child: Container(color: const Color(0xFFF59E0B))),
+            Flexible(flex: 2, child: Container(color: const Color(0xFFEF4444))),
           ],
         ),
       ),
@@ -773,7 +892,9 @@ class _MapValidateViewState extends State<MapValidateView> {
               Icon(
                 value == '2,315'
                     ? Icons.check_circle_rounded
-                    : (value == '98' ? Icons.warning_amber_rounded : Icons.cancel_rounded),
+                    : (value == '98'
+                          ? Icons.warning_amber_rounded
+                          : Icons.cancel_rounded),
                 size: 16,
                 color: color,
               ),
@@ -854,7 +975,10 @@ class _MapValidateViewState extends State<MapValidateView> {
                 onTap: () {},
                 borderRadius: BorderRadius.circular(6),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFAF7F2),
                     borderRadius: BorderRadius.circular(6),
@@ -888,7 +1012,9 @@ class _MapValidateViewState extends State<MapValidateView> {
       decoration: BoxDecoration(
         border: isLast
             ? null
-            : const Border(bottom: BorderSide(color: Color(0xFFF4EDE5), width: 0.8)),
+            : const Border(
+                bottom: BorderSide(color: Color(0xFFF4EDE5), width: 0.8),
+              ),
       ),
       child: Row(
         children: [
@@ -910,7 +1036,11 @@ class _MapValidateViewState extends State<MapValidateView> {
             ),
           ),
           const SizedBox(width: 8),
-          const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF9E8E7E)),
+          const Icon(
+            Icons.chevron_right_rounded,
+            size: 16,
+            color: Color(0xFF9E8E7E),
+          ),
         ],
       ),
     );
@@ -927,12 +1057,14 @@ class _MapValidateViewState extends State<MapValidateView> {
         SizedBox(
           width: double.infinity,
           child: InkWell(
-            onTap: widget.onContinue,
+            onTap: _canContinue ? widget.onContinue : null,
             borderRadius: BorderRadius.circular(10),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1816),
+                color: _canContinue
+                    ? const Color(0xFF1A1816)
+                    : const Color(0xFF9E8E7E),
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
@@ -940,7 +1072,7 @@ class _MapValidateViewState extends State<MapValidateView> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Continue with 2,315 valid rows',
+                    'Continue with ${widget.draft?.totalRows ?? 0} rows',
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -948,7 +1080,11 @@ class _MapValidateViewState extends State<MapValidateView> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward_rounded, size: 16, color: Colors.white),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
                 ],
               ),
             ),
@@ -979,43 +1115,6 @@ class _MapValidateViewState extends State<MapValidateView> {
       ],
     );
   }
-
-  // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
-
-  Widget _buildOutlineButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFD5C9BC)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 15, color: const Color(0xFF5C4F44)),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFF5C4F44),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1027,8 +1126,17 @@ enum _MappedStatus { mapped, review, skipped }
 class _ColumnRow {
   final String fileColumn;
   final String sampleData;
-  final String mappedTo;
-  final _MappedStatus status;
+  final InventoryImportTargetField mappedField;
 
-  const _ColumnRow(this.fileColumn, this.sampleData, this.mappedTo, this.status);
+  const _ColumnRow(this.fileColumn, this.sampleData, this.mappedField);
+
+  _MappedStatus get status {
+    if (mappedField == InventoryImportTargetField.skip) {
+      return _MappedStatus.skipped;
+    }
+    if (sampleData == '—') {
+      return _MappedStatus.review;
+    }
+    return _MappedStatus.mapped;
+  }
 }

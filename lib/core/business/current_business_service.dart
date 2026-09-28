@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/business/domain/models/business.dart';
+import '../auth/authorization_service.dart';
 import '../config/app_preferences_service.dart';
 
 class CurrentBusinessService extends ChangeNotifier {
@@ -31,17 +32,25 @@ class CurrentBusinessService extends ChangeNotifier {
   String? get currentLocationId => _currentLocationId;
 
   void setCurrentLocationId(String? id) {
-    if (id == null || id.isEmpty || id == 'none') {
-      _currentLocationId = null;
-      return;
+    final nextId = (id == null || id.isEmpty || id == 'none') ? null : id;
+    if (_currentLocationId != nextId) {
+      _currentLocationId = nextId;
+      if (_currentBusinessId != null && _currentBusinessId!.isNotEmpty) {
+        AppPreferencesService.instance
+            .setCurrentLocationId(_currentBusinessId!, nextId);
+      }
+      notifyListeners();
     }
-    _currentLocationId = id;
   }
 
   void setCurrentBusinessId(String? id) {
     if (_currentBusinessId != id) {
       _currentBusinessId = id;
+      _currentLocationId = id != null
+          ? AppPreferencesService.instance.getCurrentLocationId(id)
+          : null;
       AppPreferencesService.instance.setCurrentBusinessId(id);
+      AuthorizationService.instance.refreshAuthorization(businessId: id);
       notifyListeners();
     }
   }
@@ -49,7 +58,10 @@ class CurrentBusinessService extends ChangeNotifier {
   void setCurrentBusiness(Business business) {
     _currentBusinessId = business.id;
     _currentBusiness = business;
+    _currentLocationId =
+        AppPreferencesService.instance.getCurrentLocationId(business.id);
     AppPreferencesService.instance.setCurrentBusinessId(business.id);
+    AuthorizationService.instance.refreshAuthorization(businessId: business.id);
     notifyListeners();
   }
 
@@ -76,9 +88,37 @@ class CurrentBusinessService extends ChangeNotifier {
     return '1';
   }
 
+  /// Validates standard 8-4-4-4-12 UUID format.
+  /// Used to verify persisted or user-provided business IDs before passing to Supabase/PostgREST.
+  static bool isValidUuid(String? value) {
+    if (value == null) return false;
+    final trimmed = value.trim();
+    if (trimmed.length != 36) return false;
+    return RegExp(
+      r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+    ).hasMatch(trimmed);
+  }
+
+  void _logDiagnostics({
+    required String? persistedId,
+    required bool isPersistedValid,
+    required int accessibleCount,
+  }) {
+    debugPrint(
+      '==========================================================\n'
+      '[CurrentBusinessResolution Diagnostics]\n'
+      '  persisted business ID: $persistedId\n'
+      '  persisted ID valid UUID?: $isPersistedValid\n'
+      '  accessible business count: $accessibleCount\n'
+      '  selected current business ID: $_currentBusinessId\n'
+      '  current location ID: $_currentLocationId\n'
+      '==========================================================',
+    );
+  }
+
   /// Resolves the current business ID from Supabase using strict server-authoritative precedence:
-  /// 1. Persisted last_business_id — revalidated against Supabase (must be owner or active member).
-  ///    Stale/suspended IDs are rejected and cleared.
+  /// 1. Persisted last_business_id — validated UUID and revalidated against Supabase.
+  ///    Malformed or invalid UUIDs are discarded immediately without throwing.
   /// 2. Active memberships (where memberships.status == 'active').
   /// 3. Owned completed businesses.
   /// 4. Incomplete owned onboarding business.
@@ -86,9 +126,26 @@ class CurrentBusinessService extends ChangeNotifier {
   ///
   /// CRITICAL: Startup must NEVER create a business automatically.
   Future<String?> resolveCurrentBusinessId({bool forceRefresh = false}) async {
+    final persistedId = AppPreferencesService.instance.currentBusinessId;
+    final isPersistedValid = isValidUuid(persistedId);
+
+    // If persisted ID is malformed (e.g. legacy demo/synthetic ID), clear it immediately
+    if (persistedId != null && persistedId.isNotEmpty && !isPersistedValid) {
+      debugPrint(
+        '[CurrentBusinessService] Discarding malformed cached business ID "$persistedId". Purging stale preference.',
+      );
+      await AppPreferencesService.instance.setCurrentBusinessId(null);
+    }
+
+    if (!isValidUuid(_currentBusinessId)) {
+      _currentBusinessId = null;
+      _currentBusiness = null;
+    }
+
     if (!forceRefresh &&
         _currentBusinessId != null &&
-        _currentBusinessId!.isNotEmpty) {
+        _currentBusinessId!.isNotEmpty &&
+        isValidUuid(_currentBusinessId)) {
       return _currentBusinessId;
     }
 
@@ -104,63 +161,153 @@ class CurrentBusinessService extends ChangeNotifier {
     final currentUserId = user.id;
 
     try {
-      // 1. Revalidate persisted last_business_id if present
-      final persistedId = AppPreferencesService.instance.currentBusinessId;
-      if (persistedId != null && persistedId.isNotEmpty) {
-        // Check if user is owner of persisted business
-        final ownedRow = await sb
-            .from('businesses')
-            .select()
-            .eq('id', persistedId)
-            .eq('owner_user_id', currentUserId)
-            .maybeSingle();
+      debugPrint(
+        '[CurrentBusinessService] Starting business resolution...\n'
+        '  persisted business ID: $persistedId\n'
+        '  persisted ID valid UUID?: $isPersistedValid',
+      );
 
-        if (ownedRow != null) {
-          final biz = Business.fromJson(Map<String, dynamic>.from(ownedRow));
-          _currentBusiness = biz;
-          _currentBusinessId = biz.id;
-          notifyListeners();
-          return biz.id;
-        }
+      // 1. Revalidate persisted last_business_id if present and valid UUID
+      if (persistedId != null && persistedId.isNotEmpty && isPersistedValid) {
+        try {
+          // Check if user is owner of persisted business
+          final ownedRow = await sb
+              .from('businesses')
+              .select()
+              .eq('id', persistedId)
+              .eq('owner_user_id', currentUserId)
+              .maybeSingle();
 
-        // Check if user is an active member of persisted business
-        final memberRow = await sb
-            .from('memberships')
-            .select('business_id, status, businesses(*)')
-            .eq('business_id', persistedId)
-            .eq('user_id', currentUserId)
-            .eq('status', 'active')
-            .maybeSingle();
+          if (ownedRow != null) {
+            // Check onboarding status of persisted business
+            final sessionRow = await sb
+                .from('onboarding_sessions')
+                .select('status')
+                .eq('business_id', persistedId)
+                .maybeSingle();
+            final isPersistedComplete =
+                sessionRow != null && sessionRow['status'] == 'complete';
 
-        if (memberRow != null) {
-          final bizData = memberRow['businesses'];
-          if (bizData is Map) {
-            final biz = Business.fromJson(Map<String, dynamic>.from(bizData));
+            if (!isPersistedComplete) {
+              // Persisted business is incomplete. Check if user has an owned COMPLETED business.
+              // A completed business ALWAYS takes precedence over an abandoned/in-progress onboarding.
+              final allOwned = await sb
+                  .from('businesses')
+                  .select()
+                  .eq('owner_user_id', currentUserId)
+                  .order('created_at', ascending: false);
+
+              if (allOwned.isNotEmpty) {
+                final allBizIds = allOwned
+                    .map((r) => r['id'] as String)
+                    .where((id) => isValidUuid(id))
+                    .toList();
+                if (allBizIds.isNotEmpty) {
+                  final completedSessions = await sb
+                      .from('onboarding_sessions')
+                      .select('business_id, status')
+                      .inFilter('business_id', allBizIds)
+                      .eq('status', 'complete');
+
+                  if (completedSessions.isNotEmpty) {
+                    final completedIdSet = completedSessions
+                        .map((s) => s['business_id'] as String)
+                        .toSet();
+                    // Prioritize: 1. LaunchGrid 2. First owned business that is completed
+                    final completedRow = allOwned.firstWhere(
+                      (r) =>
+                          (r['legal_name'] as String?)?.toLowerCase() ==
+                              'launchgrid' &&
+                          completedIdSet.contains(r['id']),
+                      orElse: () => allOwned.firstWhere(
+                        (r) => completedIdSet.contains(r['id']),
+                      ),
+                    );
+                    final completedBiz = Business.fromJson(
+                      Map<String, dynamic>.from(completedRow),
+                    );
+                    _currentBusiness = completedBiz;
+                    _currentBusinessId = completedBiz.id;
+                    await AppPreferencesService.instance
+                        .setCurrentBusinessId(completedBiz.id);
+                    notifyListeners();
+                    _logDiagnostics(
+                      persistedId: persistedId,
+                      isPersistedValid: isPersistedValid,
+                      accessibleCount: allOwned.length,
+                    );
+                    return completedBiz.id;
+                  }
+                }
+              }
+            }
+
+            final biz = Business.fromJson(Map<String, dynamic>.from(ownedRow));
             _currentBusiness = biz;
             _currentBusinessId = biz.id;
             notifyListeners();
+            _logDiagnostics(
+              persistedId: persistedId,
+              isPersistedValid: isPersistedValid,
+              accessibleCount: 1,
+            );
             return biz.id;
-          } else {
-            final bRow = await sb
-                .from('businesses')
-                .select()
-                .eq('id', persistedId)
-                .maybeSingle();
-            if (bRow != null) {
-              final biz = Business.fromJson(Map<String, dynamic>.from(bRow));
+          }
+
+          // Check if user is an active member of persisted business
+          final memberRow = await sb
+              .from('memberships')
+              .select('business_id, status, businesses(*)')
+              .eq('business_id', persistedId)
+              .eq('user_id', currentUserId)
+              .eq('status', 'active')
+              .maybeSingle();
+
+          if (memberRow != null) {
+            final bizData = memberRow['businesses'];
+            if (bizData is Map) {
+              final biz = Business.fromJson(Map<String, dynamic>.from(bizData));
               _currentBusiness = biz;
               _currentBusinessId = biz.id;
               notifyListeners();
+              _logDiagnostics(
+                persistedId: persistedId,
+                isPersistedValid: isPersistedValid,
+                accessibleCount: 1,
+              );
               return biz.id;
+            } else {
+              final bRow = await sb
+                  .from('businesses')
+                  .select()
+                  .eq('id', persistedId)
+                  .maybeSingle();
+              if (bRow != null) {
+                final biz = Business.fromJson(Map<String, dynamic>.from(bRow));
+                _currentBusiness = biz;
+                _currentBusinessId = biz.id;
+                notifyListeners();
+                _logDiagnostics(
+                  persistedId: persistedId,
+                  isPersistedValid: isPersistedValid,
+                  accessibleCount: 1,
+                );
+                return biz.id;
+              }
             }
           }
-        }
 
-        // Persisted business ID is not authorized or membership suspended/deleted
-        debugPrint(
-          '[CurrentBusinessService] Persisted business $persistedId is no longer authorized. Purging.',
-        );
-        await AppPreferencesService.instance.setCurrentBusinessId(null);
+          // Persisted business ID is not authorized or membership suspended/deleted
+          debugPrint(
+            '[CurrentBusinessService] Persisted business $persistedId is no longer authorized. Purging.',
+          );
+          await AppPreferencesService.instance.setCurrentBusinessId(null);
+        } catch (persistedError) {
+          debugPrint(
+            '[CurrentBusinessService] Error validating persisted business $persistedId: $persistedError. Clearing and continuing discovery.',
+          );
+          await AppPreferencesService.instance.setCurrentBusinessId(null);
+        }
       }
 
       // 2. Query active memberships for this user
@@ -179,10 +326,15 @@ class CurrentBusinessService extends ChangeNotifier {
             _currentBusinessId = biz.id;
             await AppPreferencesService.instance.setCurrentBusinessId(biz.id);
             notifyListeners();
+            _logDiagnostics(
+              persistedId: persistedId,
+              isPersistedValid: isPersistedValid,
+              accessibleCount: memberRows.length,
+            );
             return biz.id;
           } else {
             final bId = row['business_id'] as String?;
-            if (bId != null) {
+            if (bId != null && isValidUuid(bId)) {
               final bRow = await sb
                   .from('businesses')
                   .select()
@@ -194,6 +346,11 @@ class CurrentBusinessService extends ChangeNotifier {
                 _currentBusinessId = biz.id;
                 await AppPreferencesService.instance.setCurrentBusinessId(biz.id);
                 notifyListeners();
+                _logDiagnostics(
+                  persistedId: persistedId,
+                  isPersistedValid: isPersistedValid,
+                  accessibleCount: memberRows.length,
+                );
                 return biz.id;
               }
             }
@@ -211,32 +368,47 @@ class CurrentBusinessService extends ChangeNotifier {
       if (ownedRows.isNotEmpty) {
         final bizIds = ownedRows
             .map((r) => r['id'] as String)
+            .where((id) => isValidUuid(id))
             .toList();
 
-        // Check onboarding completion for owned businesses
-        final sessions = await sb
-            .from('onboarding_sessions')
-            .select('business_id, status')
-            .inFilter('business_id', bizIds);
-
         final completedBizIds = <String>{};
-        for (final s in sessions) {
-          if (s['status'] == 'complete') {
-            completedBizIds.add(s['business_id'] as String);
+        if (bizIds.isNotEmpty) {
+          // Check onboarding completion for owned businesses
+          final sessions = await sb
+              .from('onboarding_sessions')
+              .select('business_id, status')
+              .inFilter('business_id', bizIds);
+
+          for (final s in sessions) {
+            if (s['status'] == 'complete') {
+              completedBizIds.add(s['business_id'] as String);
+            }
           }
         }
 
-        // 3a. Prefer completed owned business
-        for (final row in ownedRows) {
-          final id = row['id'] as String;
-          if (completedBizIds.contains(id)) {
-            final biz = Business.fromJson(Map<String, dynamic>.from(row));
-            _currentBusiness = biz;
-            _currentBusinessId = biz.id;
-            await AppPreferencesService.instance.setCurrentBusinessId(biz.id);
-            notifyListeners();
-            return biz.id;
-          }
+        final totalAccessible = memberRows.length + ownedRows.length;
+
+        // 3a. Prefer completed owned business (prefer LaunchGrid if present)
+        final completedRows = ownedRows
+            .where((r) => completedBizIds.contains(r['id']))
+            .toList();
+        if (completedRows.isNotEmpty) {
+          final targetRow = completedRows.firstWhere(
+            (r) =>
+                (r['legal_name'] as String?)?.toLowerCase() == 'launchgrid',
+            orElse: () => completedRows.first,
+          );
+          final biz = Business.fromJson(Map<String, dynamic>.from(targetRow));
+          _currentBusiness = biz;
+          _currentBusinessId = biz.id;
+          await AppPreferencesService.instance.setCurrentBusinessId(biz.id);
+          notifyListeners();
+          _logDiagnostics(
+            persistedId: persistedId,
+            isPersistedValid: isPersistedValid,
+            accessibleCount: totalAccessible,
+          );
+          return biz.id;
         }
 
         // 4. Incomplete owned onboarding business
@@ -246,6 +418,11 @@ class CurrentBusinessService extends ChangeNotifier {
         _currentBusinessId = biz.id;
         await AppPreferencesService.instance.setCurrentBusinessId(biz.id);
         notifyListeners();
+        _logDiagnostics(
+          persistedId: persistedId,
+          isPersistedValid: isPersistedValid,
+          accessibleCount: totalAccessible,
+        );
         return biz.id;
       }
 
@@ -257,6 +434,11 @@ class CurrentBusinessService extends ChangeNotifier {
       _currentBusinessId = null;
       await AppPreferencesService.instance.setCurrentBusinessId(null);
       notifyListeners();
+      _logDiagnostics(
+        persistedId: persistedId,
+        isPersistedValid: isPersistedValid,
+        accessibleCount: 0,
+      );
       return null;
     } catch (e) {
       debugPrint('[CurrentBusinessService] Error resolving business ID: $e');
@@ -304,10 +486,32 @@ class CurrentBusinessService extends ChangeNotifier {
         throw ArgumentError('Invalid currency code: $currencyCode');
       }
 
+      final currentBizId = _currentBusinessId ?? _currentBusiness?.id;
+      final onboardingBizId = existingBusinessId;
+
+      // Fail closed if IDs conflict
+      if (currentBizId != null &&
+          onboardingBizId != null &&
+          currentBizId.isNotEmpty &&
+          onboardingBizId.isNotEmpty &&
+          currentBizId != onboardingBizId) {
+        debugPrint(
+          '[CurrentBusinessService] Business ID mismatch: '
+          'currentBusinessId=$currentBizId vs onboardingBusinessId=$onboardingBizId. Failing closed.',
+        );
+        throw StateError(
+          'Business ID mismatch: current context ($currentBizId) does not match onboarding session ($onboardingBizId).',
+        );
+      }
+
       if (sb == null) {
+        final targetBizId = (currentBizId != null && isValidUuid(currentBizId))
+            ? currentBizId
+            : (onboardingBizId != null && isValidUuid(onboardingBizId))
+                ? onboardingBizId
+                : '00000000-0000-0000-0000-000000000001';
         final fallbackBusiness = Business(
-          id: existingBusinessId ??
-              'biz_${DateTime.now().millisecondsSinceEpoch}',
+          id: targetBizId,
           ownerUserId: 'mock_owner',
           legalName: cleanLegalName,
           businessType: cleanBusinessType,
@@ -328,27 +532,64 @@ class CurrentBusinessService extends ChangeNotifier {
         );
       }
 
-      var targetId = existingBusinessId ??
-          _currentBusinessId ??
-          AppPreferencesService.instance.currentBusinessId;
-      Business? business;
+      final authUserId = user.id;
 
-      if (targetId == null || targetId.isEmpty || targetId.startsWith('biz_')) {
-        final existingOwned = await sb
-            .from('businesses')
-            .select()
-            .eq('owner_user_id', user.id)
-            .order('created_at', ascending: false);
+      // The save target business ID MUST be authoritative:
+      // Prefer currentBusinessId from active context, fallback to onboardingBizId
+      String? targetId = currentBizId ?? onboardingBizId;
 
-        if (existingOwned.isNotEmpty) {
-          final firstOwned = Map<String, dynamic>.from(existingOwned.first);
-          targetId = firstOwned['id'] as String?;
+      // If targetId is malformed, reject it
+      if (targetId != null && !isValidUuid(targetId)) {
+        debugPrint(
+          '[CurrentBusinessService] Discarding invalid target business ID "$targetId".',
+        );
+        targetId = null;
+      }
+
+      // CRITICAL DUPLICATE BUSINESS PREVENTION:
+      // If targetId is not specified, check if user ALREADY owns any businesses in database.
+      // An existing user must NEVER insert a duplicate business simply because bootstrap failed.
+      if (targetId == null || targetId.isEmpty) {
+        try {
+          final ownedExisting = await sb
+              .from('businesses')
+              .select('id')
+              .eq('owner_user_id', authUserId)
+              .order('created_at', ascending: false);
+
+          if (ownedExisting.isNotEmpty) {
+            final discoveredBizId = ownedExisting.first['id'] as String;
+            debugPrint(
+              '[CurrentBusinessService] Discovered existing owned business $discoveredBizId for user $authUserId. '
+              'Switching operation from insert_business to update_business to prevent duplicate creation.',
+            );
+            targetId = discoveredBizId;
+          }
+        } catch (findErr) {
+          debugPrint(
+            '[CurrentBusinessService] Notice checking existing owned business: $findErr',
+          );
         }
       }
 
-      if (targetId != null &&
-          targetId.isNotEmpty &&
-          !targetId.startsWith('biz_')) {
+      final isUpdate =
+          targetId != null && targetId.isNotEmpty && isValidUuid(targetId);
+
+      debugPrint(
+        '==========================================================\n'
+        '[BusinessSaveTrace]\n'
+        '  auth user id: $authUserId\n'
+        '  current business id: $currentBizId\n'
+        '  onboarding business id: $onboardingBizId\n'
+        '  save target business id: $targetId\n'
+        '  operation: ${isUpdate ? "update_business" : "insert_business"}\n'
+        '==========================================================',
+      );
+
+      Business? business;
+
+      if (isUpdate) {
+        // Existing business: strictly use UPDATE, NEVER insert a duplicate row
         final response = await sb
             .from('businesses')
             .update({
@@ -365,10 +606,21 @@ class CurrentBusinessService extends ChangeNotifier {
 
         if (response != null) {
           business = Business.fromJson(response);
+        } else {
+          debugPrint(
+            'Business update failed\n'
+            'operation: update_business\n'
+            'business_id: $targetId\n'
+            'postgres_code: NOT_FOUND_OR_UNAUTHORIZED\n'
+            'message: Existing business record not found or not owned by current user.',
+          );
+          throw PostgrestException(
+            message: 'Existing business update failed: record $targetId not found or not owned by current user.',
+            code: 'UPDATE_FAILED',
+          );
         }
-      }
-
-      if (business == null) {
+      } else {
+        // Brand new merchant without existing business row: strictly INSERT
         final response = await sb
             .from('businesses')
             .insert({
@@ -385,22 +637,35 @@ class CurrentBusinessService extends ChangeNotifier {
         business = Business.fromJson(response);
       }
 
-      // Ensure onboarding_sessions row is linked
+      // Ensure onboarding_sessions row is linked without resetting completed sessions
       try {
         final existingSession = await sb
             .from('onboarding_sessions')
-            .select('status')
+            .select('status, current_step')
             .eq('business_id', business.id)
             .maybeSingle();
 
-        if (existingSession == null ||
-            existingSession['status'] != 'complete') {
+        final isAlreadyComplete = existingSession != null &&
+            (existingSession['status'] == 'complete' ||
+             (existingSession['current_step'] as num?)?.toInt() == 6);
+
+        if (existingSession == null) {
           await sb.from('onboarding_sessions').upsert({
             'business_id': business.id,
             'user_id': user.id,
             'current_step': 1,
             'status': 'in_progress',
           }, onConflict: 'business_id,user_id');
+        } else if (!isAlreadyComplete) {
+          await sb.from('onboarding_sessions').update({
+            'user_id': user.id,
+            'current_step': 1,
+            'status': 'in_progress',
+          }).eq('business_id', business.id);
+        } else {
+          debugPrint(
+            '[CurrentBusinessService] Business ${business.id} onboarding is already complete. Preserving status=complete.',
+          );
         }
       } catch (oe) {
         debugPrint(
@@ -412,13 +677,22 @@ class CurrentBusinessService extends ChangeNotifier {
       return business;
     } on PostgrestException catch (pe) {
       debugPrint(
-        '[CurrentBusinessService] PostgrestException [table: businesses]: '
-        'code=${pe.code}, message=${pe.message}, details=${pe.details}',
+        'Business save failed\n'
+        'operation: update_business\n'
+        'business_id: ${_currentBusinessId ?? existingBusinessId ?? "unknown"}\n'
+        'postgres_code: ${pe.code ?? "UNKNOWN"}\n'
+        'message: ${pe.message}\n'
+        'details: ${pe.details ?? "none"}\n'
+        'hint: ${pe.hint ?? "none"}',
       );
       rethrow;
     } catch (e, st) {
       debugPrint(
-        '[CurrentBusinessService] Unexpected error creating/updating business: $e\n$st',
+        'Business save failed\n'
+        'operation: update_business\n'
+        'business_id: ${_currentBusinessId ?? existingBusinessId ?? "unknown"}\n'
+        'message: $e\n'
+        'stackTrace: $st',
       );
       rethrow;
     } finally {

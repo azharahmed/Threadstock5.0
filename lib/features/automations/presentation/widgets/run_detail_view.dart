@@ -1,11 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../inventory/data/product_repository.dart';
+import '../../../inventory/domain/models/product.dart';
+
+class _AffectedVariantItem {
+  final String sku;
+  final String productName;
+  final String unitsLeft;
+  final String reorderLevel;
+  final String imagePath;
+
+  const _AffectedVariantItem({
+    required this.sku,
+    required this.productName,
+    required this.unitsLeft,
+    required this.reorderLevel,
+    this.imagePath = '',
+  });
+}
 
 class RunDetailView extends StatefulWidget {
   const RunDetailView({
     super.key,
     this.runId = 'RUN-1847',
+    this.productName,
+    this.productRepository,
     this.onRetryRun,
     this.onSkipAndContinue,
     this.onEditAutomationRule,
@@ -15,6 +35,8 @@ class RunDetailView extends StatefulWidget {
   });
 
   final String runId;
+  final String? productName;
+  final ProductRepository? productRepository;
   final VoidCallback? onRetryRun;
   final VoidCallback? onSkipAndContinue;
   final VoidCallback? onEditAutomationRule;
@@ -28,6 +50,73 @@ class RunDetailView extends StatefulWidget {
 
 class _RunDetailViewState extends State<RunDetailView> {
   bool _isStackTraceExpanded = false;
+  late final ProductRepository _productRepository;
+  List<Product> _loadedProducts = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _productRepository = widget.productRepository ?? ProductRepository();
+    _loadProducts();
+  }
+
+  Future<void> _loadProducts() async {
+    try {
+      final prods = await _productRepository.getProducts();
+      if (mounted) {
+        setState(() {
+          _loadedProducts = prods;
+        });
+      }
+    } catch (_) {}
+  }
+
+  List<_AffectedVariantItem> _resolveAffectedItems() {
+    if (widget.productName != null && widget.productName!.trim().isNotEmpty) {
+      final cleanName = widget.productName!.trim();
+      return [
+        _AffectedVariantItem(
+          sku: 'SKU-${widget.runId}',
+          productName: cleanName,
+          unitsLeft: '0 units left',
+          reorderLevel: '< 3 units',
+          imagePath: '',
+        ),
+      ];
+    }
+
+    final prods = _loadedProducts.isNotEmpty
+        ? _loadedProducts
+        : ProductRepository.localFallbackProducts.values.toList();
+
+    if (prods.isEmpty) {
+      return const [];
+    }
+
+    final items = <_AffectedVariantItem>[];
+    for (final p in prods.take(3)) {
+      final variants = ProductRepository.getFallbackVariants(p.id);
+      final sku = variants.isNotEmpty && variants.first.sku.isNotEmpty
+          ? variants.first.sku
+          : (p.tags.isNotEmpty
+                ? p.tags.first
+                : (p.id.length >= 8
+                      ? 'SKU-${p.id.substring(0, 8).toUpperCase()}'
+                      : 'SKU-${p.id.toUpperCase()}'));
+
+      final threshold = p.lowStockThreshold ?? 3;
+      items.add(
+        _AffectedVariantItem(
+          sku: sku,
+          productName: p.name,
+          unitsLeft: '0 units left',
+          reorderLevel: '< $threshold units',
+          imagePath: '',
+        ),
+      );
+    }
+    return items;
+  }
 
   void _showToast(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -79,10 +168,7 @@ class _RunDetailViewState extends State<RunDetailView> {
                   const SizedBox(width: 20),
 
                   // Right Column (~28% flex)
-                  SizedBox(
-                    width: 290,
-                    child: _buildErrorDetailsCard(),
-                  ),
+                  SizedBox(width: 290, child: _buildErrorDetailsCard()),
                 ],
               )
             else
@@ -229,7 +315,10 @@ class _RunDetailViewState extends State<RunDetailView> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFDE8E8),
                       borderRadius: BorderRadius.circular(4),
@@ -276,14 +365,20 @@ class _RunDetailViewState extends State<RunDetailView> {
                 width: 24,
                 height: 24,
                 decoration: BoxDecoration(
-                  color: isSuccess ? const Color(0xFFEAF7EE) : const Color(0xFFFDE8E8),
+                  color: isSuccess
+                      ? const Color(0xFFEAF7EE)
+                      : const Color(0xFFFDE8E8),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Icon(
-                    isSuccess ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                    isSuccess
+                        ? Icons.check_circle_rounded
+                        : Icons.cancel_rounded,
                     size: 20,
-                    color: isSuccess ? const Color(0xFF10B981) : const Color(0xFFDC2626),
+                    color: isSuccess
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFFDC2626),
                   ),
                 ),
               ),
@@ -291,7 +386,9 @@ class _RunDetailViewState extends State<RunDetailView> {
                 Expanded(
                   child: Container(
                     width: 2,
-                    color: isNextSuccess ? const Color(0xFF10B981) : const Color(0xFFCBD5E1),
+                    color: isNextSuccess
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFFCBD5E1),
                   ),
                 ),
             ],
@@ -328,7 +425,10 @@ class _RunDetailViewState extends State<RunDetailView> {
                           ),
                           const SizedBox(width: 10),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(4),
@@ -369,6 +469,10 @@ class _RunDetailViewState extends State<RunDetailView> {
   // 3. AFFECTED ITEMS CARD
   // ========================================================
   Widget _buildAffectedItemsCard() {
+    final items = _resolveAffectedItems();
+    final hasItems = items.isNotEmpty;
+    final totalVariants = hasItems ? items.length : 0;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -380,7 +484,9 @@ class _RunDetailViewState extends State<RunDetailView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Affected Items (18 variants)',
+            hasItems
+                ? 'Affected Items ($totalVariants variant${totalVariants == 1 ? '' : 's'})'
+                : 'Affected Items',
             style: GoogleFonts.inter(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -389,88 +495,117 @@ class _RunDetailViewState extends State<RunDetailView> {
           ),
           const SizedBox(height: 14),
 
-          // Table Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8.5),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFBF9F6),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Row(
-              children: [
-                _buildHeaderCell('SKU', flex: 18),
-                _buildHeaderCell('Product', flex: 32),
-                _buildHeaderCell('Units Left', flex: 15),
-                _buildHeaderCell('Reorder Level', flex: 15),
-              ],
-            ),
-          ),
-          const SizedBox(height: 2),
-
-          // Table Rows (3 visible items)
-          _buildItemRow(
-            imagePath: 'Assets/black_linen_shirt.jpg',
-            sku: 'UNF-OXF-BLK-M',
-            productName: 'Oxford Linen Shirt (Black / M)',
-            unitsLeft: '12 units left',
-            reorderLevel: '< 15 units',
-          ),
-          const Divider(color: Color(0xFFF2ECE4), height: 1, thickness: 1),
-          _buildItemRow(
-            imagePath: 'Assets/merino_wool_blazer.jpg',
-            sku: 'MER-WLB-NAVY-L',
-            productName: 'Merino Wool Blazer (Navy / L)',
-            unitsLeft: '2 units left',
-            reorderLevel: '< 5 units',
-          ),
-          const Divider(color: Color(0xFFF2ECE4), height: 1, thickness: 1),
-          _buildItemRow(
-            imagePath: 'Assets/silk_evening_dress.jpg',
-            sku: 'SILK-EVD-RED-S',
-            productName: 'Silk Evening Dress (Red / S)',
-            unitsLeft: '0 units left',
-            reorderLevel: '< 3 units',
-          ),
-          const SizedBox(height: 14),
-
-          // Footer
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Showing 3 of 18 affected variants',
-                style: GoogleFonts.inter(
-                  fontSize: 12.5,
-                  color: const Color(0xFF6E675F),
-                  fontWeight: FontWeight.w400,
-                ),
+          if (!hasItems) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFBF9F6),
+                borderRadius: BorderRadius.circular(6),
               ),
-              InkWell(
-                onTap: widget.onViewAllAffectedItems ??
-                    () => _showToast('Viewing full list of 18 affected variants...'),
-                borderRadius: BorderRadius.circular(4),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'View All Items',
-                      style: GoogleFonts.inter(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF8C5A2B),
-                      ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.inventory_2_outlined,
+                    size: 28,
+                    color: Color(0xFFB0A79E),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No affected inventory items found for this run.',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: const Color(0xFF6E675F),
+                      fontWeight: FontWeight.w400,
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 14,
-                      color: Color(0xFF8C5A2B),
-                    ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            // Table Header
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 8.5,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFBF9F6),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                children: [
+                  _buildHeaderCell('SKU', flex: 18),
+                  _buildHeaderCell('Product', flex: 32),
+                  _buildHeaderCell('Units Left', flex: 15),
+                  _buildHeaderCell('Reorder Level', flex: 15),
+                ],
+              ),
+            ),
+            const SizedBox(height: 2),
+
+            // Table Rows
+            for (int i = 0; i < items.length; i++) ...[
+              if (i > 0)
+                const Divider(
+                  color: Color(0xFFF2ECE4),
+                  height: 1,
+                  thickness: 1,
                 ),
+              _buildItemRow(
+                imagePath: items[i].imagePath,
+                sku: items[i].sku,
+                productName: items[i].productName,
+                unitsLeft: items[i].unitsLeft,
+                reorderLevel: items[i].reorderLevel,
               ),
             ],
-          ),
+            const SizedBox(height: 14),
+
+            // Footer
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Showing ${items.length} of $totalVariants affected variant${totalVariants == 1 ? '' : 's'}',
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    color: const Color(0xFF6E675F),
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+                InkWell(
+                  onTap:
+                      widget.onViewAllAffectedItems ??
+                      () => _showToast(
+                        'Viewing full list of $totalVariants affected variants...',
+                      ),
+                  borderRadius: BorderRadius.circular(4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'View All Items',
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF8C5A2B),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 14,
+                        color: Color(0xFF8C5A2B),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -493,7 +628,7 @@ class _RunDetailViewState extends State<RunDetailView> {
   Widget _buildItemRow({
     required String imagePath,
     required String sku,
-    required String productName,
+    String? productName,
     required String unitsLeft,
     required String reorderLevel,
   }) {
@@ -542,7 +677,7 @@ class _RunDetailViewState extends State<RunDetailView> {
           Expanded(
             flex: 32,
             child: Text(
-              productName,
+              productName ?? '—',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
@@ -589,7 +724,8 @@ class _RunDetailViewState extends State<RunDetailView> {
       children: [
         // Button 1: Retry Run
         InkWell(
-          onTap: widget.onRetryRun ??
+          onTap:
+              widget.onRetryRun ??
               () => _showToast('Retrying automation run RUN-1847...'),
           borderRadius: BorderRadius.circular(8),
           child: Container(
@@ -623,8 +759,11 @@ class _RunDetailViewState extends State<RunDetailView> {
 
         // Button 2: Skip & Continue
         InkWell(
-          onTap: widget.onSkipAndContinue ??
-              () => _showToast('Skipping RUN-1847 and returning to Run History...'),
+          onTap:
+              widget.onSkipAndContinue ??
+              () => _showToast(
+                'Skipping RUN-1847 and returning to Run History...',
+              ),
           borderRadius: BorderRadius.circular(8),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9.5),
@@ -658,7 +797,8 @@ class _RunDetailViewState extends State<RunDetailView> {
 
         // Button 3: Edit Automation Rule
         InkWell(
-          onTap: widget.onEditAutomationRule ??
+          onTap:
+              widget.onEditAutomationRule ??
               () => _showToast('Opening Low Stock Auto-Reorder rule editor...'),
           borderRadius: BorderRadius.circular(8),
           child: Container(
@@ -758,7 +898,9 @@ class _RunDetailViewState extends State<RunDetailView> {
                 ),
                 InkWell(
                   onTap: () {
-                    Clipboard.setData(const ClipboardData(text: 'ETMEOUT_SUPPLIER_API'));
+                    Clipboard.setData(
+                      const ClipboardData(text: 'ETMEOUT_SUPPLIER_API'),
+                    );
                     _showToast('Copied ETMEOUT_SUPPLIER_API to clipboard');
                   },
                   borderRadius: BorderRadius.circular(4),
@@ -781,7 +923,7 @@ class _RunDetailViewState extends State<RunDetailView> {
           const SizedBox(height: 16),
 
           // RELATED SUPPLIER
-          _buildMetaSection('RELATED SUPPLIER', 'Arrind Mills (Mumbai Hub)'),
+          _buildMetaSection('RELATED SUPPLIER', 'Primary Supplier Partner'),
           const SizedBox(height: 18),
 
           // STACK TRACE (COLLAPSIBLE)
@@ -964,8 +1106,11 @@ class _RunDetailViewState extends State<RunDetailView> {
           ),
           const SizedBox(width: 16),
           InkWell(
-            onTap: widget.onGetAiRecommendation ??
-                () => _showToast('Generating AI endpoint retry recommendation...'),
+            onTap:
+                widget.onGetAiRecommendation ??
+                () => _showToast(
+                  'Generating AI endpoint retry recommendation...',
+                ),
             borderRadius: BorderRadius.circular(8),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),

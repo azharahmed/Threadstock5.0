@@ -36,7 +36,9 @@ class _SystemIntegrationSyncViewState extends State<SystemIntegrationSyncView> {
               isError
                   ? Icons.error_outline_rounded
                   : Icons.check_circle_outline_rounded,
-              color: isError ? const Color(0xFFFCA5A5) : const Color(0xFFD5A46C),
+              color: isError
+                  ? const Color(0xFFFCA5A5)
+                  : const Color(0xFFD5A46C),
               size: 18,
             ),
             const SizedBox(width: 10),
@@ -182,8 +184,9 @@ class _SystemIntegrationSyncViewState extends State<SystemIntegrationSyncView> {
             ],
           ),
           child: Column(
-            crossAxisAlignment:
-                isNarrow ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+            crossAxisAlignment: isNarrow
+                ? CrossAxisAlignment.start
+                : CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
             children: [
               Row(
@@ -224,11 +227,7 @@ class _SystemIntegrationSyncViewState extends State<SystemIntegrationSyncView> {
         if (isNarrow) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              leftHeader,
-              const SizedBox(height: 16),
-              rightStatusCard,
-            ],
+            children: [leftHeader, const SizedBox(height: 16), rightStatusCard],
           );
         }
 
@@ -664,10 +663,7 @@ class _SystemIntegrationSyncViewState extends State<SystemIntegrationSyncView> {
           ),
 
           // Status Badge
-          SizedBox(
-            width: 120,
-            child: _buildStatusPill(statusText, statusType),
-          ),
+          SizedBox(width: 120, child: _buildStatusPill(statusText, statusType)),
 
           // Actions Menu
           SizedBox(
@@ -784,10 +780,7 @@ class _SystemIntegrationSyncViewState extends State<SystemIntegrationSyncView> {
           Container(
             width: 6.5,
             height: 6.5,
-            decoration: BoxDecoration(
-              color: dotColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
           Text(
@@ -812,9 +805,7 @@ class _SystemIntegrationSyncViewState extends State<SystemIntegrationSyncView> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: const BoxDecoration(
         color: Color(0xFFFEF2F2),
-        border: Border(
-          top: BorderSide(color: Color(0xFFFCA5A5), width: 1.0),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFFCA5A5), width: 1.0)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -864,8 +855,7 @@ class _SystemIntegrationSyncViewState extends State<SystemIntegrationSyncView> {
           const SizedBox(width: 16),
           // Solid Red Retry Sync Button
           ElevatedButton.icon(
-            onPressed:
-                _isRetryingWooCommerce ? null : _handleRetryWooCommerce,
+            onPressed: _isRetryingWooCommerce ? null : _handleRetryWooCommerce,
             icon: _isRetryingWooCommerce
                 ? const SizedBox(
                     width: 14,
@@ -1107,7 +1097,10 @@ class _SystemIntegrationSyncViewState extends State<SystemIntegrationSyncView> {
               ),
               const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 2.5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFDCFCE7),
                   borderRadius: BorderRadius.circular(6),
@@ -1291,10 +1284,7 @@ class _SystemIntegrationSyncViewState extends State<SystemIntegrationSyncView> {
             style: OutlinedButton.styleFrom(
               backgroundColor: Colors.white,
               side: const BorderSide(color: Color(0xFFDFD5C6)),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -1404,11 +1394,7 @@ class _SystemIntegrationSyncViewState extends State<SystemIntegrationSyncView> {
         borderRadius: BorderRadius.circular(8),
       ),
       child: const Center(
-        child: Icon(
-          Icons.chat_bubble_rounded,
-          size: 20,
-          color: Colors.white,
-        ),
+        child: Icon(Icons.chat_bubble_rounded, size: 20, color: Colors.white),
       ),
     );
   }
@@ -1454,9 +1440,4 @@ class _SystemIntegrationSyncViewState extends State<SystemIntegrationSyncView> {
   }
 }
 
-enum _StatusType {
-  running,
-  queued,
-  completed,
-  failed,
-}
+enum _StatusType { running, queued, completed, failed }

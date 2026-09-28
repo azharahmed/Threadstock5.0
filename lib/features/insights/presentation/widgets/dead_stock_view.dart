@@ -49,7 +49,11 @@ class _DeadStockViewState extends State<DeadStockView> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
-            const Icon(Icons.rule_folder_outlined, size: 20, color: Color(0xFF8C5E33)),
+            const Icon(
+              Icons.rule_folder_outlined,
+              size: 20,
+              color: Color(0xFF8C5E33),
+            ),
             const SizedBox(width: 10),
             Text(
               'Dead Stock Management Guidelines',
@@ -69,12 +73,25 @@ class _DeadStockViewState extends State<DeadStockView> {
             children: [
               Text(
                 'Standard Operating Thresholds for Stagnant Inventory:',
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF181512)),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF181512),
+                ),
               ),
               const SizedBox(height: 12),
-              _buildGuidelineItem('1. 60–90 Days Static', 'Flag as at-risk. Explore regional inter-store replenishment before any price cut.'),
-              _buildGuidelineItem('2. 90–120 Days Static', 'Trigger tiered markdown (10% to 15%) or bundling promotion in low-velocity nodes.'),
-              _buildGuidelineItem('3. 120+ Days Static', 'Liquidate via factory outlet channels, flash digital sales, or supplier buyback clauses.'),
+              _buildGuidelineItem(
+                '1. 60–90 Days Static',
+                'Flag as at-risk. Explore regional inter-store replenishment before any price cut.',
+              ),
+              _buildGuidelineItem(
+                '2. 90–120 Days Static',
+                'Trigger tiered markdown (10% to 15%) or bundling promotion in low-velocity nodes.',
+              ),
+              _buildGuidelineItem(
+                '3. 120+ Days Static',
+                'Liquidate via factory outlet channels, flash digital sales, or supplier buyback clauses.',
+              ),
             ],
           ),
         ),
@@ -83,7 +100,10 @@ class _DeadStockViewState extends State<DeadStockView> {
             onPressed: () => Navigator.of(ctx).pop(),
             child: Text(
               'Understood',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: const Color(0xFF8C5E33)),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF8C5E33),
+              ),
             ),
           ),
         ],
@@ -99,12 +119,20 @@ class _DeadStockViewState extends State<DeadStockView> {
         children: [
           Text(
             title,
-            style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFF181512)),
+            style: GoogleFonts.inter(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF181512),
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             desc,
-            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B6358), height: 1.3),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: const Color(0xFF6B6358),
+              height: 1.3,
+            ),
           ),
         ],
       ),
@@ -119,7 +147,11 @@ class _DeadStockViewState extends State<DeadStockView> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
-            const Icon(Icons.inventory_2_outlined, size: 20, color: Color(0xFF181512)),
+            const Icon(
+              Icons.inventory_2_outlined,
+              size: 20,
+              color: Color(0xFF181512),
+            ),
             const SizedBox(width: 10),
             Text(
               'Bulk Stagnant Stock Actions',
@@ -139,7 +171,10 @@ class _DeadStockViewState extends State<DeadStockView> {
             children: [
               Text(
                 'Apply batch actions across all 4 stagnant product categories (2,450 total units):',
-                style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6B6358)),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF6B6358),
+                ),
               ),
               const SizedBox(height: 16),
               _buildBulkActionRow(
@@ -150,7 +185,10 @@ class _DeadStockViewState extends State<DeadStockView> {
                   Navigator.of(ctx).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Bulk 15% markdown scheduled across 124 styles.', style: GoogleFonts.inter(fontSize: 13)),
+                      content: Text(
+                        'Bulk 15% markdown scheduled across 124 styles.',
+                        style: GoogleFonts.inter(fontSize: 13),
+                      ),
                       backgroundColor: const Color(0xFF181512),
                     ),
                   );
@@ -159,13 +197,17 @@ class _DeadStockViewState extends State<DeadStockView> {
               const SizedBox(height: 10),
               _buildBulkActionRow(
                 icon: Icons.sync_alt_rounded,
-                title: 'Consolidate to Delhi Flagship',
-                subtitle: 'Moves 180+ days shirts & knitwear to high-demand node',
+                title: 'Consolidate to High-Demand Node',
+                subtitle:
+                    'Moves 180+ days shirts & knitwear to high-demand node',
                 onTap: () {
                   Navigator.of(ctx).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Inter-store dispatch batch created for Delhi.', style: GoogleFonts.inter(fontSize: 13)),
+                      content: Text(
+                        'Inter-store dispatch batch created.',
+                        style: GoogleFonts.inter(fontSize: 13),
+                      ),
                       backgroundColor: const Color(0xFF181512),
                     ),
                   );
@@ -179,7 +221,10 @@ class _DeadStockViewState extends State<DeadStockView> {
             onPressed: () => Navigator.of(ctx).pop(),
             child: Text(
               'Cancel',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: const Color(0xFF6B6358)),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF6B6358),
+              ),
             ),
           ),
         ],
@@ -222,16 +267,27 @@ class _DeadStockViewState extends State<DeadStockView> {
                 children: [
                   Text(
                     title,
-                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF181512)),
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF181512),
+                    ),
                   ),
                   Text(
                     subtitle,
-                    style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B6358)),
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      color: const Color(0xFF6B6358),
+                    ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Color(0xFF9CA3AF)),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: Color(0xFF9CA3AF),
+            ),
           ],
         ),
       ),
@@ -289,8 +345,12 @@ class _DeadStockViewState extends State<DeadStockView> {
                 period,
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  fontWeight: period == _selectedPeriod ? FontWeight.w600 : FontWeight.w400,
-                  color: period == _selectedPeriod ? const Color(0xFF8C5E33) : const Color(0xFF181512),
+                  fontWeight: period == _selectedPeriod
+                      ? FontWeight.w600
+                      : FontWeight.w400,
+                  color: period == _selectedPeriod
+                      ? const Color(0xFF8C5E33)
+                      : const Color(0xFF181512),
                 ),
               ),
             );
@@ -306,7 +366,11 @@ class _DeadStockViewState extends State<DeadStockView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.calendar_today_outlined, size: 14, color: Color(0xFF6B6358)),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 14,
+                  color: Color(0xFF6B6358),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   _selectedPeriod,
@@ -317,7 +381,11 @@ class _DeadStockViewState extends State<DeadStockView> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF6B6358)),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Color(0xFF6B6358),
+                ),
               ],
             ),
           ),
@@ -342,8 +410,12 @@ class _DeadStockViewState extends State<DeadStockView> {
                 cat,
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  fontWeight: cat == _selectedCategory ? FontWeight.w600 : FontWeight.w400,
-                  color: cat == _selectedCategory ? const Color(0xFF8C5E33) : const Color(0xFF181512),
+                  fontWeight: cat == _selectedCategory
+                      ? FontWeight.w600
+                      : FontWeight.w400,
+                  color: cat == _selectedCategory
+                      ? const Color(0xFF8C5E33)
+                      : const Color(0xFF181512),
                 ),
               ),
             );
@@ -359,7 +431,11 @@ class _DeadStockViewState extends State<DeadStockView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.shield_outlined, size: 14, color: Color(0xFF6B6358)),
+                const Icon(
+                  Icons.shield_outlined,
+                  size: 14,
+                  color: Color(0xFF6B6358),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   _selectedCategory,
@@ -370,7 +446,11 @@ class _DeadStockViewState extends State<DeadStockView> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF6B6358)),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Color(0xFF6B6358),
+                ),
               ],
             ),
           ),
@@ -418,7 +498,11 @@ class _DeadStockViewState extends State<DeadStockView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.inventory_2_outlined, size: 16, color: Colors.white),
+                const Icon(
+                  Icons.inventory_2_outlined,
+                  size: 16,
+                  color: Colors.white,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Bulk Actions',
@@ -513,11 +597,41 @@ class _DeadStockViewState extends State<DeadStockView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('2,000', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
-                      Text('1,500', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
-                      Text('1,000', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
-                      Text('500', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
-                      Text('0', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
+                      Text(
+                        '2,000',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: const Color(0xFF6B6358),
+                        ),
+                      ),
+                      Text(
+                        '1,500',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: const Color(0xFF6B6358),
+                        ),
+                      ),
+                      Text(
+                        '1,000',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: const Color(0xFF6B6358),
+                        ),
+                      ),
+                      Text(
+                        '500',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: const Color(0xFF6B6358),
+                        ),
+                      ),
+                      Text(
+                        '0',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: const Color(0xFF6B6358),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -535,7 +649,10 @@ class _DeadStockViewState extends State<DeadStockView> {
                               children: [
                                 // Background Grid Lines
                                 CustomPaint(
-                                  size: Size(constraints.maxWidth, constraints.maxHeight),
+                                  size: Size(
+                                    constraints.maxWidth,
+                                    constraints.maxHeight,
+                                  ),
                                   painter: _ChartGridPainter(),
                                 ),
 
@@ -545,11 +662,14 @@ class _DeadStockViewState extends State<DeadStockView> {
                                   xRatio: 1.0 / 6.0,
                                   yRatio: 650.0 / 2000.0,
                                   radius: 24,
-                                  fillColor: const Color(0xFFBFDBFE).withOpacity(0.85),
+                                  fillColor: const Color(
+                                    0xFFBFDBFE,
+                                  ).withOpacity(0.85),
                                   borderColor: const Color(0xFF3B82F6),
                                   label: 'Knitwear',
                                   labelColor: const Color(0xFF1E3A8A),
-                                  tooltip: 'Knitwear: 650 units stagnant (30 days)',
+                                  tooltip:
+                                      'Knitwear: 650 units stagnant (30 days)',
                                 ),
 
                                 // Bubble 2: Dresses (X: 90 days, Y: 1150 units)
@@ -558,11 +678,14 @@ class _DeadStockViewState extends State<DeadStockView> {
                                   xRatio: 3.0 / 6.0,
                                   yRatio: 1150.0 / 2000.0,
                                   radius: 28,
-                                  fillColor: const Color(0xFFFDE68A).withOpacity(0.75),
+                                  fillColor: const Color(
+                                    0xFFFDE68A,
+                                  ).withOpacity(0.75),
                                   borderColor: const Color(0xFFD97706),
                                   label: 'Dresses',
                                   labelColor: const Color(0xFF78350F),
-                                  tooltip: 'Dresses: 1,150 units stagnant (90 days)',
+                                  tooltip:
+                                      'Dresses: 1,150 units stagnant (90 days)',
                                 ),
 
                                 // Bubble 3: Outerwear (X: 120 days, Y: 1700 units)
@@ -571,11 +694,14 @@ class _DeadStockViewState extends State<DeadStockView> {
                                   xRatio: 4.0 / 6.0,
                                   yRatio: 1700.0 / 2000.0,
                                   radius: 34,
-                                  fillColor: const Color(0xFFFECACA).withOpacity(0.8),
+                                  fillColor: const Color(
+                                    0xFFFECACA,
+                                  ).withOpacity(0.8),
                                   borderColor: const Color(0xFFEF4444),
                                   label: 'Outerwear',
                                   labelColor: const Color(0xFF991B1B),
-                                  tooltip: 'Outerwear: 1,700 units stagnant (120 days)',
+                                  tooltip:
+                                      'Outerwear: 1,700 units stagnant (120 days)',
                                 ),
 
                                 // Bubble 4: Shirts (X: 180+ days, Y: 400 units)
@@ -584,11 +710,14 @@ class _DeadStockViewState extends State<DeadStockView> {
                                   xRatio: 5.9 / 6.0,
                                   yRatio: 400.0 / 2000.0,
                                   radius: 21,
-                                  fillColor: const Color(0xFFA7F3D0).withOpacity(0.75),
+                                  fillColor: const Color(
+                                    0xFFA7F3D0,
+                                  ).withOpacity(0.75),
                                   borderColor: const Color(0xFF10B981),
                                   label: 'Shirts',
                                   labelColor: const Color(0xFF065F46),
-                                  tooltip: 'Shirts: 400 units stagnant (180+ days)',
+                                  tooltip:
+                                      'Shirts: 400 units stagnant (180+ days)',
                                 ),
                               ],
                             );
@@ -601,13 +730,55 @@ class _DeadStockViewState extends State<DeadStockView> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('0 Days', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
-                          Text('30 Days', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
-                          Text('60 Days', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
-                          Text('90 Days', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
-                          Text('120 Days', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
-                          Text('150 Days', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
-                          Text('180+ Days', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B6358))),
+                          Text(
+                            '0 Days',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: const Color(0xFF6B6358),
+                            ),
+                          ),
+                          Text(
+                            '30 Days',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: const Color(0xFF6B6358),
+                            ),
+                          ),
+                          Text(
+                            '60 Days',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: const Color(0xFF6B6358),
+                            ),
+                          ),
+                          Text(
+                            '90 Days',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: const Color(0xFF6B6358),
+                            ),
+                          ),
+                          Text(
+                            '120 Days',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: const Color(0xFF6B6358),
+                            ),
+                          ),
+                          Text(
+                            '150 Days',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: const Color(0xFF6B6358),
+                            ),
+                          ),
+                          Text(
+                            '180+ Days',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              color: const Color(0xFF6B6358),
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 4),
@@ -735,7 +906,11 @@ class _DeadStockViewState extends State<DeadStockView> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.inventory_2_outlined, size: 18, color: Color(0xFF8C5E33)),
+                    const Icon(
+                      Icons.inventory_2_outlined,
+                      size: 18,
+                      color: Color(0xFF8C5E33),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Recommended for Markdown',
@@ -750,7 +925,10 @@ class _DeadStockViewState extends State<DeadStockView> {
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Viewing all markdown candidate items...', style: GoogleFonts.inter(fontSize: 13)),
+                            content: Text(
+                              'Viewing all markdown candidate items...',
+                              style: GoogleFonts.inter(fontSize: 13),
+                            ),
                             backgroundColor: const Color(0xFF181512),
                           ),
                         );
@@ -766,7 +944,11 @@ class _DeadStockViewState extends State<DeadStockView> {
                             ),
                           ),
                           const SizedBox(width: 3),
-                          const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF946A36)),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 14,
+                            color: Color(0xFF946A36),
+                          ),
                         ],
                       ),
                     ),
@@ -776,14 +958,17 @@ class _DeadStockViewState extends State<DeadStockView> {
 
                 // Item 1: Cashmere Cardigan
                 _buildRecommendationCard(
-                  imageAsset: 'Assets/cashmere_sweater.jpg',
+                  imageAsset: '',
                   title: 'Cashmere Cardigan (Grey/S)',
                   subtitle: '120 Days Static · Qty: 45 · Val: ₹2.1L',
                   actionButton: ElevatedButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('15% Markdown initiated for Cashmere Cardigan.', style: GoogleFonts.inter(fontSize: 13)),
+                          content: Text(
+                            '15% Markdown initiated for Cashmere Cardigan.',
+                            style: GoogleFonts.inter(fontSize: 13),
+                          ),
                           backgroundColor: const Color(0xFF181512),
                         ),
                       );
@@ -791,12 +976,21 @@ class _DeadStockViewState extends State<DeadStockView> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF181512),
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
                     ),
                     child: Text(
                       'Trigger 15% Markdown',
-                      style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: Colors.white),
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -804,14 +998,17 @@ class _DeadStockViewState extends State<DeadStockView> {
 
                 // Item 2: Classic Trench Coat
                 _buildRecommendationCard(
-                  imageAsset: 'Assets/gabardine_trench.jpg',
+                  imageAsset: '',
                   title: 'Classic Trench Coat (Beige/M)',
                   subtitle: '95 Days Static · Qty: 32 · Val: ₹4.8L',
                   actionButton: ElevatedButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('10% Markdown initiated for Classic Trench Coat.', style: GoogleFonts.inter(fontSize: 13)),
+                          content: Text(
+                            '10% Markdown initiated for Classic Trench Coat.',
+                            style: GoogleFonts.inter(fontSize: 13),
+                          ),
                           backgroundColor: const Color(0xFF181512),
                         ),
                       );
@@ -819,12 +1016,21 @@ class _DeadStockViewState extends State<DeadStockView> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF181512),
                       elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
                     ),
                     child: Text(
                       'Trigger 10% Markdown',
-                      style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: Colors.white),
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -848,7 +1054,11 @@ class _DeadStockViewState extends State<DeadStockView> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.call_made_rounded, size: 18, color: Color(0xFF8C5E33)),
+                    const Icon(
+                      Icons.call_made_rounded,
+                      size: 18,
+                      color: Color(0xFF8C5E33),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Recommended for Inter-Store Transfer',
@@ -863,7 +1073,10 @@ class _DeadStockViewState extends State<DeadStockView> {
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Viewing all transfer candidates...', style: GoogleFonts.inter(fontSize: 13)),
+                            content: Text(
+                              'Viewing all transfer candidates...',
+                              style: GoogleFonts.inter(fontSize: 13),
+                            ),
                             backgroundColor: const Color(0xFF181512),
                           ),
                         );
@@ -879,7 +1092,11 @@ class _DeadStockViewState extends State<DeadStockView> {
                             ),
                           ),
                           const SizedBox(width: 3),
-                          const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF946A36)),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 14,
+                            color: Color(0xFF946A36),
+                          ),
                         ],
                       ),
                     ),
@@ -887,55 +1104,79 @@ class _DeadStockViewState extends State<DeadStockView> {
                 ),
                 const SizedBox(height: 14),
 
-                // Item 1: Oxford Linen Shirt
+                // Item 1: Classic Linen Shirt
                 _buildRecommendationCard(
-                  imageAsset: 'Assets/oxford_linen_shirt.jpg',
-                  title: 'Oxford Linen Shirt (White/L)',
+                  imageAsset: '',
+                  title: 'Classic Linen Shirt (White/L)',
                   subtitle: '110 Days Static · Qty: 88 · Val: ₹1.2L',
                   actionButton: OutlinedButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Inter-store transfer order generated for Delhi Flagship.', style: GoogleFonts.inter(fontSize: 13)),
+                          content: Text(
+                            'Inter-store transfer order generated.',
+                            style: GoogleFonts.inter(fontSize: 13),
+                          ),
                           backgroundColor: const Color(0xFF181512),
                         ),
                       );
                     },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFFE5DACD)),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
                     ),
                     child: Text(
-                      'Transfer to Delhi',
-                      style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF181512)),
+                      'Transfer Stock',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF181512),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 10),
 
-                // Item 2: Evening Silk Dress
+                // Item 2: Silk Slip Dress
                 _buildRecommendationCard(
-                  imageAsset: 'Assets/silk_evening_dress.jpg',
-                  title: 'Evening Silk Dress (Red/S)',
+                  imageAsset: '',
+                  title: 'Silk Slip Dress (Midnight/M)',
                   subtitle: '85 Days Static · Qty: 14 · Val: ₹2.2L',
                   actionButton: OutlinedButton(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Inter-store transfer order generated for Mumbai Boutique.', style: GoogleFonts.inter(fontSize: 13)),
+                          content: Text(
+                            'Inter-store transfer order generated for secondary store.',
+                            style: GoogleFonts.inter(fontSize: 13),
+                          ),
                           backgroundColor: const Color(0xFF181512),
                         ),
                       );
                     },
                     style: OutlinedButton.styleFrom(
                       side: const BorderSide(color: Color(0xFFE5DACD)),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
                     ),
                     child: Text(
-                      'Transfer to Mumbai',
-                      style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF181512)),
+                      'Transfer to Store',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF181512),
+                      ),
                     ),
                   ),
                 ),
@@ -973,7 +1214,11 @@ class _DeadStockViewState extends State<DeadStockView> {
                 width: 48,
                 height: 48,
                 color: const Color(0xFFF3ECE1),
-                child: const Icon(Icons.checkroom_rounded, size: 20, color: Color(0xFF8C5E33)),
+                child: const Icon(
+                  Icons.checkroom_rounded,
+                  size: 20,
+                  color: Color(0xFF8C5E33),
+                ),
               ),
             ),
           ),
@@ -1049,7 +1294,8 @@ class _DeadStockViewState extends State<DeadStockView> {
                     ),
                     children: [
                       TextSpan(
-                        text: 'Transferring 48 units of Linen Shirts to MG Road',
+                        text:
+                            'Reallocating 48 units of surplus stock to secondary facility',
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.w700,
                           color: const Color(0xFF181512),
@@ -1063,7 +1309,9 @@ class _DeadStockViewState extends State<DeadStockView> {
                           color: const Color(0xFF181512),
                         ),
                       ),
-                      const TextSpan(text: ' based on localized category velocity records.'),
+                      const TextSpan(
+                        text: ' based on localized category velocity records.',
+                      ),
                     ],
                   ),
                 ),
@@ -1072,23 +1320,27 @@ class _DeadStockViewState extends State<DeadStockView> {
           ),
           const SizedBox(width: 16),
           ElevatedButton(
-            onPressed: widget.onExecuteOptimization ?? () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Optimization executed! Transfer order created for 48 units of Linen Shirts to MG Road.',
-                    style: GoogleFonts.inter(fontSize: 13),
-                  ),
-                  backgroundColor: const Color(0xFF181512),
-                  duration: const Duration(seconds: 3),
-                ),
-              );
-            },
+            onPressed:
+                widget.onExecuteOptimization ??
+                () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Optimization executed! Transfer order created for 48 units of surplus stock to secondary facility.',
+                        style: GoogleFonts.inter(fontSize: 13),
+                      ),
+                      backgroundColor: const Color(0xFF181512),
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFBA8A55),
               elevation: 0,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
             ),
             child: Text(
               'Execute Action',

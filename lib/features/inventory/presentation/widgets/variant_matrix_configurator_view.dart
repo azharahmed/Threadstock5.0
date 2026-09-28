@@ -29,10 +29,7 @@ class VariantMatrixItem {
 }
 
 class VariantMatrixConfiguratorView extends StatefulWidget {
-  const VariantMatrixConfiguratorView({
-    super.key,
-    this.onBackToProductInfo,
-  });
+  const VariantMatrixConfiguratorView({super.key, this.onBackToProductInfo});
 
   final VoidCallback? onBackToProductInfo;
 
@@ -63,7 +60,7 @@ class _VariantMatrixConfiguratorViewState
         size: 'XS',
         colorName: 'Navy',
         colorDot: const Color(0xFF0F172A),
-        sku: 'MWC-XS-NVY',
+        sku: 'VAR-XS-NVY',
         retailPrice: 3999,
         costPrice: 1450,
         initialStock: 12,
@@ -73,7 +70,7 @@ class _VariantMatrixConfiguratorViewState
         size: 'S',
         colorName: 'Navy',
         colorDot: const Color(0xFF0F172A),
-        sku: 'MWC-S-NVY',
+        sku: 'VAR-S-NVY',
         retailPrice: 3999,
         costPrice: 1450,
         initialStock: 24,
@@ -83,7 +80,7 @@ class _VariantMatrixConfiguratorViewState
         size: 'M',
         colorName: 'Navy',
         colorDot: const Color(0xFF0F172A),
-        sku: 'MWC-M-NVY',
+        sku: 'VAR-M-NVY',
         retailPrice: 3999,
         costPrice: 1450,
         initialStock: 18,
@@ -93,7 +90,7 @@ class _VariantMatrixConfiguratorViewState
         size: 'L',
         colorName: 'Navy',
         colorDot: const Color(0xFF0F172A),
-        sku: 'MWC-L-NVY',
+        sku: 'VAR-L-NVY',
         retailPrice: 3999,
         costPrice: 1450,
         initialStock: 14,
@@ -103,7 +100,7 @@ class _VariantMatrixConfiguratorViewState
         size: 'XS',
         colorName: 'Charcoal',
         colorDot: const Color(0xFF475569),
-        sku: 'MWC-XS-CHAR',
+        sku: 'VAR-XS-CHAR',
         retailPrice: 3999,
         costPrice: 1450,
         initialStock: 10,
@@ -113,7 +110,7 @@ class _VariantMatrixConfiguratorViewState
         size: 'M',
         colorName: 'Charcoal',
         colorDot: const Color(0xFF475569),
-        sku: 'MWC-M-CHAR',
+        sku: 'VAR-M-CHAR',
         retailPrice: 3999,
         costPrice: 1450,
         initialStock: 14,
@@ -123,7 +120,7 @@ class _VariantMatrixConfiguratorViewState
         size: 'L',
         colorName: 'Cream',
         colorDot: const Color(0xFFE2D9C8),
-        sku: 'MWC-L-CREAM',
+        sku: 'VAR-L-CREAM',
         retailPrice: 4199,
         costPrice: 1550,
         initialStock: 3,
@@ -133,7 +130,7 @@ class _VariantMatrixConfiguratorViewState
         size: 'XL',
         colorName: 'Burgundy',
         colorDot: const Color(0xFF7F1D1D),
-        sku: 'MWC-XL-BURG',
+        sku: 'VAR-XL-BURG',
         retailPrice: 4199,
         costPrice: 1550,
         initialStock: 8,
@@ -194,7 +191,7 @@ class _VariantMatrixConfiguratorViewState
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
-                'assets/navy_merino_crewneck.jpg',
+                '',
                 width: 42,
                 height: 42,
                 fit: BoxFit.cover,
@@ -202,13 +199,17 @@ class _VariantMatrixConfiguratorViewState
                   width: 42,
                   height: 42,
                   color: const Color(0xFFF1F5F9),
-                  child: const Icon(Icons.checkroom_rounded, size: 20, color: Color(0xFF94A3B8)),
+                  child: const Icon(
+                    Icons.checkroom_rounded,
+                    size: 20,
+                    color: Color(0xFF94A3B8),
+                  ),
                 ),
               ),
             ),
             const SizedBox(width: 14),
             Text(
-              'Merino Wool Crewneck',
+              'Product Variant Matrix',
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
@@ -217,7 +218,7 @@ class _VariantMatrixConfiguratorViewState
             ),
             const SizedBox(width: 8),
             Text(
-              '|   MWC-2027',
+              '|   TS-SKU-BASE',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: const Color(0xFF6B7280),
@@ -232,7 +233,7 @@ class _VariantMatrixConfiguratorViewState
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                'Knitwear',
+                'Apparel',
                 style: GoogleFonts.inter(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w500,
@@ -259,16 +260,22 @@ class _VariantMatrixConfiguratorViewState
           ],
         ),
         OutlinedButton.icon(
-          onPressed: widget.onBackToProductInfo ?? () => Navigator.maybePop(context),
+          onPressed:
+              widget.onBackToProductInfo ?? () => Navigator.maybePop(context),
           icon: const Icon(Icons.arrow_back_rounded, size: 15),
           label: const Text('Back to Product Info'),
           style: OutlinedButton.styleFrom(
             foregroundColor: const Color(0xFF374151),
             side: const BorderSide(color: Color(0xFFD1D5DB)),
             backgroundColor: Colors.white,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            textStyle: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500),
+            textStyle: GoogleFonts.inter(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],
@@ -350,7 +357,11 @@ class _VariantMatrixConfiguratorViewState
                 color: const Color(0xFFFBF4EB),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.layers_outlined, size: 18, color: Color(0xFFB45309)),
+              child: const Icon(
+                Icons.layers_outlined,
+                size: 18,
+                color: Color(0xFFB45309),
+              ),
             ),
             const SizedBox(width: 10),
             Text(
@@ -368,7 +379,11 @@ class _VariantMatrixConfiguratorViewState
         // Sizes row
         Text(
           'Sizes (${_sizes.length} selected)',
-          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF6B7280)),
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF6B7280),
+          ),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -377,7 +392,10 @@ class _VariantMatrixConfiguratorViewState
           children: [
             for (final size in _sizes)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(6),
@@ -388,12 +406,20 @@ class _VariantMatrixConfiguratorViewState
                   children: [
                     Text(
                       size,
-                      style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500, color: const Color(0xFF374151)),
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF374151),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     InkWell(
                       onTap: () => setState(() => _sizes.remove(size)),
-                      child: const Icon(Icons.close_rounded, size: 13, color: Color(0xFF9CA3AF)),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 13,
+                        color: Color(0xFF9CA3AF),
+                      ),
                     ),
                   ],
                 ),
@@ -402,7 +428,10 @@ class _VariantMatrixConfiguratorViewState
               onTap: _showAddSizeDialog,
               borderRadius: BorderRadius.circular(6),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
@@ -411,11 +440,19 @@ class _VariantMatrixConfiguratorViewState
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.add_rounded, size: 14, color: Color(0xFFB45309)),
+                    const Icon(
+                      Icons.add_rounded,
+                      size: 14,
+                      color: Color(0xFFB45309),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Add size',
-                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFFB45309)),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFFB45309),
+                      ),
                     ),
                   ],
                 ),
@@ -428,7 +465,11 @@ class _VariantMatrixConfiguratorViewState
         // Colors row
         Text(
           'Colors (${_colors.length} selected)',
-          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF6B7280)),
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF6B7280),
+          ),
         ),
         const SizedBox(height: 8),
         Wrap(
@@ -437,7 +478,10 @@ class _VariantMatrixConfiguratorViewState
           children: [
             for (final col in _colors)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9FAFB),
                   borderRadius: BorderRadius.circular(6),
@@ -452,18 +496,29 @@ class _VariantMatrixConfiguratorViewState
                       decoration: BoxDecoration(
                         color: col['color'] as Color,
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFCBD5E1), width: 0.5),
+                        border: Border.all(
+                          color: const Color(0xFFCBD5E1),
+                          width: 0.5,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 7),
                     Text(
                       col['name'] as String,
-                      style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500, color: const Color(0xFF374151)),
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF374151),
+                      ),
                     ),
                     const SizedBox(width: 6),
                     InkWell(
                       onTap: () => setState(() => _colors.remove(col)),
-                      child: const Icon(Icons.close_rounded, size: 13, color: Color(0xFF9CA3AF)),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 13,
+                        color: Color(0xFF9CA3AF),
+                      ),
                     ),
                   ],
                 ),
@@ -472,7 +527,10 @@ class _VariantMatrixConfiguratorViewState
               onTap: _showAddColorDialog,
               borderRadius: BorderRadius.circular(6),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
@@ -481,11 +539,19 @@ class _VariantMatrixConfiguratorViewState
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.add_rounded, size: 14, color: Color(0xFFB45309)),
+                    const Icon(
+                      Icons.add_rounded,
+                      size: 14,
+                      color: Color(0xFFB45309),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Add color',
-                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFFB45309)),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFFB45309),
+                      ),
                     ),
                   ],
                 ),
@@ -518,12 +584,20 @@ class _VariantMatrixConfiguratorViewState
                   color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Icon(Icons.inventory_2_outlined, size: 16, color: Color(0xFFB45309)),
+                child: const Icon(
+                  Icons.inventory_2_outlined,
+                  size: 16,
+                  color: Color(0xFFB45309),
+                ),
               ),
               const SizedBox(width: 8),
               Text(
                 'Variant Preview',
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFFB45309)),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFFB45309),
+                ),
               ),
             ],
           ),
@@ -538,28 +612,42 @@ class _VariantMatrixConfiguratorViewState
           ),
           Text(
             '${_sizes.length} sizes × ${_colors.length} colors',
-            style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280)),
+            style: GoogleFonts.inter(
+              fontSize: 12.5,
+              color: const Color(0xFF6B7280),
+            ),
           ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Regenerated $totalCount variants based on active sizes and colors.'),
+                  content: Text(
+                    'Regenerated $totalCount variants based on active sizes and colors.',
+                  ),
                   backgroundColor: const Color(0xFF181513),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
             },
-            icon: const Icon(Icons.sync_rounded, size: 15, color: Color(0xFFB45309)),
+            icon: const Icon(
+              Icons.sync_rounded,
+              size: 15,
+              color: Color(0xFFB45309),
+            ),
             label: const Text('Regenerate Matrix'),
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFB45309),
               side: const BorderSide(color: Color(0xFFFDE68A)),
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              textStyle: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600),
+              textStyle: GoogleFonts.inter(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -608,7 +696,11 @@ class _VariantMatrixConfiguratorViewState
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
                         children: [
-                          const Icon(Icons.search_rounded, size: 15, color: Color(0xFF9CA3AF)),
+                          const Icon(
+                            Icons.search_rounded,
+                            size: 15,
+                            color: Color(0xFF9CA3AF),
+                          ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: TextField(
@@ -616,7 +708,10 @@ class _VariantMatrixConfiguratorViewState
                               style: GoogleFonts.inter(fontSize: 12),
                               decoration: const InputDecoration(
                                 hintText: 'Search variants...',
-                                hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 11.5),
+                                hintStyle: TextStyle(
+                                  color: Color(0xFF9CA3AF),
+                                  fontSize: 11.5,
+                                ),
                                 border: InputBorder.none,
                                 isDense: true,
                               ),
@@ -632,10 +727,18 @@ class _VariantMatrixConfiguratorViewState
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF374151),
                         side: const BorderSide(color: Color(0xFFD1D5DB)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
                         minimumSize: Size.zero,
-                        textStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+                        textStyle: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       child: const Text('Bulk Set Prices'),
                     ),
@@ -645,10 +748,18 @@ class _VariantMatrixConfiguratorViewState
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFF374151),
                         side: const BorderSide(color: Color(0xFFD1D5DB)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 7,
+                        ),
                         minimumSize: Size.zero,
-                        textStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+                        textStyle: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       child: const Text('Manage SKUs'),
                     ),
@@ -660,7 +771,11 @@ class _VariantMatrixConfiguratorViewState
                         borderRadius: BorderRadius.circular(6),
                         border: Border.all(color: const Color(0xFFD1D5DB)),
                       ),
-                      child: const Icon(Icons.more_vert_rounded, size: 16, color: Color(0xFF6B7280)),
+                      child: const Icon(
+                        Icons.more_vert_rounded,
+                        size: 16,
+                        color: Color(0xFF6B7280),
+                      ),
                     ),
                   ],
                 ),
@@ -695,13 +810,95 @@ class _VariantMatrixConfiguratorViewState
                   ),
                 ),
                 const SizedBox(width: 10),
-                Expanded(flex: 22, child: Text('Variant (Size / Color)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 20, child: Text('SKU', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 15, child: Align(alignment: Alignment.centerRight, child: Text('Retail Price (₹)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                Expanded(flex: 15, child: Align(alignment: Alignment.centerRight, child: Text('Cost Price (₹)', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                Expanded(flex: 12, child: Center(child: Text('Initial Stock', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                Expanded(flex: 10, child: Center(child: Text('Status', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                Expanded(flex: 8, child: Center(child: Text('Actions', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
+                Expanded(
+                  flex: 22,
+                  child: Text(
+                    'Variant (Size / Color)',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 20,
+                  child: Text(
+                    'SKU',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 15,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'Retail Price (₹)',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 15,
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'Cost Price (₹)',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 12,
+                  child: Center(
+                    child: Text(
+                      'Initial Stock',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 10,
+                  child: Center(
+                    child: Text(
+                      'Status',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 8,
+                  child: Center(
+                    child: Text(
+                      'Actions',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -714,13 +911,18 @@ class _VariantMatrixConfiguratorViewState
               child: Row(
                 children: [
                   InkWell(
-                    onTap: () => setState(() => item.isSelected = !item.isSelected),
+                    onTap: () =>
+                        setState(() => item.isSelected = !item.isSelected),
                     child: SizedBox(
                       width: 20,
                       child: Icon(
-                        item.isSelected ? Icons.check_box_rounded : Icons.check_box_outline_blank,
+                        item.isSelected
+                            ? Icons.check_box_rounded
+                            : Icons.check_box_outline_blank,
                         size: 16,
-                        color: item.isSelected ? const Color(0xFFB45309) : const Color(0xFFCBD5E1),
+                        color: item.isSelected
+                            ? const Color(0xFFB45309)
+                            : const Color(0xFFCBD5E1),
                       ),
                     ),
                   ),
@@ -757,7 +959,10 @@ class _VariantMatrixConfiguratorViewState
                     flex: 20,
                     child: Text(
                       item.sku,
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF4B5563)),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: const Color(0xFF4B5563),
+                      ),
                     ),
                   ),
 
@@ -768,7 +973,11 @@ class _VariantMatrixConfiguratorViewState
                       alignment: Alignment.centerRight,
                       child: Text(
                         _formatNumber(item.retailPrice),
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF111827),
+                        ),
                       ),
                     ),
                   ),
@@ -780,7 +989,10 @@ class _VariantMatrixConfiguratorViewState
                       alignment: Alignment.centerRight,
                       child: Text(
                         _formatNumber(item.costPrice),
-                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF6B7280),
+                        ),
                       ),
                     ),
                   ),
@@ -794,7 +1006,9 @@ class _VariantMatrixConfiguratorViewState
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: item.initialStock <= 5 ? const Color(0xFFD97706) : const Color(0xFF111827),
+                          color: item.initialStock <= 5
+                              ? const Color(0xFFD97706)
+                              : const Color(0xFF111827),
                         ),
                       ),
                     ),
@@ -809,7 +1023,8 @@ class _VariantMatrixConfiguratorViewState
                         width: 40,
                         child: Switch(
                           value: item.isActive,
-                          onChanged: (val) => setState(() => item.isActive = val),
+                          onChanged: (val) =>
+                              setState(() => item.isActive = val),
                           activeColor: Colors.white,
                           activeTrackColor: const Color(0xFF059669),
                           inactiveThumbColor: Colors.white,
@@ -824,7 +1039,11 @@ class _VariantMatrixConfiguratorViewState
                     flex: 8,
                     child: Center(
                       child: IconButton(
-                        icon: const Icon(Icons.more_horiz_rounded, size: 16, color: Color(0xFF9CA3AF)),
+                        icon: const Icon(
+                          Icons.more_horiz_rounded,
+                          size: 16,
+                          color: Color(0xFF9CA3AF),
+                        ),
                         onPressed: () {},
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -843,22 +1062,46 @@ class _VariantMatrixConfiguratorViewState
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Showing 1–8 of 24 variants', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280))),
+                Text(
+                  'Showing 1–8 of 24 variants',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    color: const Color(0xFF6B7280),
+                  ),
+                ),
                 Row(
                   children: [
                     Container(
                       width: 26,
                       height: 26,
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
-                      child: const Icon(Icons.chevron_left_rounded, size: 16, color: Color(0xFF94A3B8)),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: const Icon(
+                        Icons.chevron_left_rounded,
+                        size: 16,
+                        color: Color(0xFF94A3B8),
+                      ),
                     ),
                     const SizedBox(width: 4),
                     Container(
                       width: 26,
                       height: 26,
-                      decoration: BoxDecoration(color: const Color(0xFFFFFBEB), borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFD97706))),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: const Color(0xFFD97706)),
+                      ),
                       alignment: Alignment.center,
-                      child: Text('1', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFFB45309))),
+                      child: Text(
+                        '1',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFB45309),
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 4),
                     _buildPageNum('2'),
@@ -868,8 +1111,15 @@ class _VariantMatrixConfiguratorViewState
                     Container(
                       width: 26,
                       height: 26,
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
-                      child: const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF94A3B8)),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: Color(0xFF94A3B8),
+                      ),
                     ),
                   ],
                 ),
@@ -885,9 +1135,15 @@ class _VariantMatrixConfiguratorViewState
     return Container(
       width: 26,
       height: 26,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
       alignment: Alignment.center,
-      child: Text(num, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280))),
+      child: Text(
+        num,
+        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
+      ),
     );
   }
 
@@ -904,7 +1160,10 @@ class _VariantMatrixConfiguratorViewState
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Add Size', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+        title: Text(
+          'Add Size',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+        ),
         content: TextField(
           controller: sizeCtrl,
           autofocus: true,
@@ -926,7 +1185,9 @@ class _VariantMatrixConfiguratorViewState
               }
               Navigator.pop(ctx);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF181513)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF181513),
+            ),
             child: const Text('Add'),
           ),
         ],
@@ -939,7 +1200,10 @@ class _VariantMatrixConfiguratorViewState
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Add Color', style: GoogleFonts.inter(fontWeight: FontWeight.w700)),
+        title: Text(
+          'Add Color',
+          style: GoogleFonts.inter(fontWeight: FontWeight.w700),
+        ),
         content: TextField(
           controller: colorCtrl,
           autofocus: true,
@@ -966,7 +1230,9 @@ class _VariantMatrixConfiguratorViewState
               }
               Navigator.pop(ctx);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF181513)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF181513),
+            ),
             child: const Text('Add'),
           ),
         ],

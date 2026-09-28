@@ -19,8 +19,10 @@ import '../../features/suppliers/presentation/pages/suppliers_page.dart';
 import '../../features/transfers/presentation/pages/transfers_page.dart';
 import '../../features/catalog/presentation/pages/catalog_manager_page.dart';
 import '../../core/responsive/responsive_values.dart';
+import '../../core/widgets/safe_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/business/app_bootstrap_service.dart';
 import '../../core/business/current_business_service.dart';
 import '../../core/config/app_preferences_service.dart';
 import '../../features/inventory/data/location_repository.dart';
@@ -32,9 +34,9 @@ import '../widgets/command_palette_dialog.dart';
 import '../widgets/keyboard_shortcuts_dialog.dart';
 import '../widgets/switch_business_dialog.dart';
 import '../widgets/search_shortcut_coachmark.dart';
-import '../../features/purchasing/presentation/widgets/access_restricted_view.dart';
 import '../../core/auth/auth_service.dart';
 import '../../core/auth/authorization_service.dart';
+import '../../core/navigation/navigation_guard.dart';
 import '../router/app_router.dart';
 
 class AppShell extends StatefulWidget {
@@ -59,7 +61,10 @@ class _AppShellState extends State<AppShell> {
   String? _resolvedUserName;
   String? _resolvedWorkspaceName;
   String? _resolvedUserInitials;
+  String? _resolvedUsername; // @username handle from profiles
+  String? _companyLogoUrl;
   List<StockLocation> _availableLocations = [];
+  int _accessibleBusinessCount = 1; // default 1 — hides switcher until count is known
   bool _searchShortcutChecked = false;
 
   void _safeSetState(VoidCallback fn) {
@@ -80,8 +85,51 @@ class _AppShellState extends State<AppShell> {
     _selectedIndex = widget.initialIndex;
     _checkSearchShortcutTutorial();
     _loadRealBusinessAndLocations();
+    CurrentBusinessService.instance.addListener(_onBusinessChanged);
     HeldSalesCount.instance.addListener(_onHeldSalesCount);
     _refreshHeldSalesCount();
+  }
+
+  void _onBusinessChanged() {
+    _loadRealBusinessAndLocations();
+  }
+
+  /// Handles an explicit business switch from [SwitchBusinessDialog].
+  ///
+  /// This is the only correct way to change the active business at runtime:
+  /// 1. Clear the onboarding cache (prevents old business's state from
+  ///    contaminating the new business's routing).
+  /// 2. Fetch the new business's authoritative onboarding status from Supabase.
+  /// 3. Route to Overview if onboarding is complete, or to the first
+  ///    incomplete onboarding step if not.
+  Future<void> _handleBusinessSwitch(String newBusinessId) async {
+    // 1. Clear stale onboarding cache before loading new business.
+    OnboardingRepository.instance.clearCacheForBusiness(
+      OnboardingRepository.instance.currentProgress.businessId ?? '',
+    );
+
+    // 2. Load authoritative onboarding state for the new business from Supabase.
+    final progress = await OnboardingRepository.instance
+        .loadProgressForBusiness(newBusinessId);
+
+    if (!mounted) return;
+
+    // 3. Route based on the new business's onboarding status.
+    if (progress.isOnboardingCompleted) {
+      // Business is fully onboarded — stay in (or navigate to) the app shell.
+      // Reload locations/workspace name for the new business.
+      _loadRealBusinessAndLocations();
+    } else {
+      // Business is still mid-onboarding — redirect to the correct step.
+      final firstIncomplete = progress.firstIncompleteStep;
+      final targetRoute = AppBootstrapService.routeForStep(firstIncomplete);
+      NavigationGuard.safePushNamedAndRemoveUntil(
+        context,
+        targetRoute,
+        (route) => false,
+        source: 'AppShell._handleBusinessSwitch.midOnboarding',
+      );
+    }
   }
 
   void _onHeldSalesCount() {
@@ -96,6 +144,7 @@ class _AppShellState extends State<AppShell> {
 
   @override
   void dispose() {
+    CurrentBusinessService.instance.removeListener(_onBusinessChanged);
     HeldSalesCount.instance.removeListener(_onHeldSalesCount);
     super.dispose();
   }
@@ -132,7 +181,25 @@ class _AppShellState extends State<AppShell> {
     final biz = CurrentBusinessService.instance.currentBusiness;
     final onboardingProgress = OnboardingRepository.instance.currentProgress;
 
+    String? customDisplayName;
+    String? logoUrl;
+    if (bizId != null && bizId.isNotEmpty) {
+      logoUrl = AppPreferencesService.instance.getCompanyLogoUrl(bizId);
+      try {
+        final profileRow = await Supabase.instance.client
+            .from('business_profile_settings')
+            .select('display_name')
+            .eq('business_id', bizId)
+            .maybeSingle();
+        final dn = profileRow?['display_name'] as String?;
+        if (dn != null && dn.trim().isNotEmpty) {
+          customDisplayName = dn.trim();
+        }
+      } catch (_) {}
+    }
+
     String wsName =
+        customDisplayName ??
         biz?.legalName ??
         onboardingProgress.businessName ??
         'ThreadStock Workspace';
@@ -142,17 +209,35 @@ class _AppShellState extends State<AppShell> {
       final user = Supabase.instance.client.auth.currentUser;
       if (user != null) {
         final meta = user.userMetadata?['full_name'] as String?;
+        final metaUsername = user.userMetadata?['username'] as String?;
         if (meta != null && meta.trim().isNotEmpty) {
           uName = meta.trim();
-        } else {
+        }
+        // Always try profile for the most up-to-date values
+        try {
           final profile = await Supabase.instance.client
               .from('profiles')
-              .select('full_name')
+              .select('full_name, username')
               .eq('id', user.id)
               .maybeSingle();
           final p = profile?['full_name'] as String?;
           if (p != null && p.trim().isNotEmpty) {
             uName = p.trim();
+          } else {
+            uName ??= meta?.trim();
+          }
+          // username: prefer profiles.username, fallback to user_metadata
+          final dbUsername = profile?['username'] as String?;
+          if (dbUsername != null && dbUsername.isNotEmpty) {
+            _resolvedUsername = dbUsername;
+          } else if (metaUsername != null && metaUsername.isNotEmpty) {
+            _resolvedUsername = metaUsername;
+          }
+        } catch (_) {
+          // profiles query failed (e.g. username column not yet migrated)
+          if (uName == null && meta != null) uName = meta.trim();
+          if (_resolvedUsername == null && metaUsername != null) {
+            _resolvedUsername = metaUsername;
           }
         }
       }
@@ -172,27 +257,54 @@ class _AppShellState extends State<AppShell> {
     }
 
     List<StockLocation> locs = [];
+    int bizCount = 1;
     try {
       locs = await LocationRepository().getLocations(businessId: bizId);
     } catch (_) {}
+    try {
+      final uid = Supabase.instance.client.auth.currentUser?.id;
+      if (uid != null) {
+        final result = await Supabase.instance.client
+            .from('business_members')
+            .select('business_id')
+            .eq('user_id', uid);
+        final rows = result as List;
+        bizCount = rows.length > 1 ? rows.length : 1;
+      }
+    } catch (_) {
+      // business_members may not be accessible — keep default 1
+    }
 
     if (mounted) {
       setState(() {
         _resolvedWorkspaceName = wsName;
         _resolvedUserName = displayName;
         _resolvedUserInitials = initials;
+        _companyLogoUrl = logoUrl;
         _availableLocations = locs;
-        if (locs.isNotEmpty &&
-            !_availableLocations.any((l) => l.id == _selectedLocation)) {
-          _selectedLocation = locs.first.id;
+        _accessibleBusinessCount = bizCount;
+        if (locs.isNotEmpty) {
+          if (_selectedLocation != 'all' &&
+              !_availableLocations.any((l) => l.id == _selectedLocation)) {
+            _selectedLocation = locs.first.id;
+          }
+        } else {
+          _selectedLocation = 'none';
         }
-        CurrentBusinessService.instance.setCurrentLocationId(_selectedLocation);
+        CurrentBusinessService.instance.setCurrentLocationId(
+          (_selectedLocation == 'none' || _selectedLocation == 'all')
+              ? null
+              : _selectedLocation,
+        );
       });
       _refreshHeldSalesCount();
     }
   }
 
   String get _currentLocationDisplay {
+    if (_selectedLocation == 'all') {
+      return 'All Locations';
+    }
     if (_availableLocations.isNotEmpty) {
       return _availableLocations
           .firstWhere(
@@ -205,12 +317,91 @@ class _AppShellState extends State<AppShell> {
   }
 
   Widget _buildLocationDropdown() {
+    if (_availableLocations.isEmpty) {
+      return Row(
+        key: const ValueKey('topbar_location_empty_state'),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF3ECE2),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: const Color(0xFFDFD4C5)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.location_off_outlined,
+                  size: 14,
+                  color: Color(0xFF8C8478),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'No location configured',
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF6B6358),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          InkWell(
+            onTap: () {
+              setState(() {
+                _selectedIndex = 9;
+                _settingsSection = 'add_location';
+                _settingsTitle = 'Add Location';
+              });
+            },
+            borderRadius: BorderRadius.circular(6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFFD4AF37).withOpacity(0.12),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: const Color(0xFFD4AF37).withOpacity(0.4),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.add_rounded,
+                    size: 14,
+                    color: Color(0xFF997A15),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Add Location',
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF997A15),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     return ThreadStockDropdown<String>(
-      value: _availableLocations.any((l) => l.id == _selectedLocation)
-          ? _selectedLocation
-          : (_availableLocations.isNotEmpty
-                ? _availableLocations.first.id
-                : 'none'),
+      key: const ValueKey('topbar_location_dropdown'),
+      value: _selectedLocation == 'all'
+          ? 'all'
+          : (_availableLocations.any((l) => l.id == _selectedLocation)
+              ? _selectedLocation
+              : (_availableLocations.isNotEmpty
+                    ? _availableLocations.first.id
+                    : 'none')),
       isBorderless: true,
       menuWidth: 260,
       triggerLabel: (item) => context.isCompactDesktop
@@ -218,30 +409,29 @@ class _AppShellState extends State<AppShell> {
           : (item.subtitle != null && item.subtitle!.isNotEmpty
                 ? '${item.title} (${item.subtitle})'
                 : item.title),
-      items: _availableLocations.isNotEmpty
-          ? _availableLocations
-                .map(
-                  (l) => ThreadStockDropdownItem(
-                    value: l.id,
-                    title: l.name,
-                    subtitle: (l.city != null && l.city!.isNotEmpty)
-                        ? l.city
-                        : null,
-                    icon: Icons.warehouse_outlined,
-                  ),
-                )
-                .toList()
-          : const [
-              ThreadStockDropdownItem(
-                value: 'none',
-                title: 'No locations configured',
-                icon: Icons.location_off_outlined,
-              ),
-            ],
+      items: [
+        const ThreadStockDropdownItem(
+          value: 'all',
+          title: 'All Locations',
+          icon: Icons.storefront_outlined,
+        ),
+        ..._availableLocations.map(
+          (l) => ThreadStockDropdownItem(
+            value: l.id,
+            title: l.name,
+            subtitle: (l.city != null && l.city!.isNotEmpty)
+                ? l.city
+                : null,
+            icon: Icons.warehouse_outlined,
+          ),
+        ),
+      ],
       onChanged: (val) {
         if (val != 'none') {
           setState(() => _selectedLocation = val);
-          CurrentBusinessService.instance.setCurrentLocationId(val);
+          CurrentBusinessService.instance.setCurrentLocationId(
+            val == 'all' ? null : val,
+          );
         }
       },
       footerAction: ThreadStockDropdownAction(
@@ -255,7 +445,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   bool _isActivityDrawerOpen = false;
-  String _inventoryTitle = 'Product details';
+  String _inventoryTitle = 'Inventory';
   String _catalogSubSection = 'categories';
   String _salesTitle = 'Sales';
   String _salesSubSection = 'overview';
@@ -343,6 +533,7 @@ class _AppShellState extends State<AppShell> {
           _inventoryTitle == 'Inventory' ||
           _inventoryTitle == 'Variant Matrix Configurator' ||
           _inventoryTitle == 'Create New Product' ||
+          _inventoryTitle == 'Add Product' ||
           _inventoryTitle == 'Stock Count Reconciliation' ||
           _inventoryTitle == 'Active Stock Count') {
         return 'Search product, SKU or barcode...';
@@ -426,6 +617,17 @@ class _AppShellState extends State<AppShell> {
         onNavigateToIndex: (index) {
           _safeSetState(() => _selectedIndex = index);
         },
+        onNavigateToSection: (index, {title, subSection}) {
+          _safeSetState(() {
+            _selectedIndex = index;
+            if (index == 1) {
+              if (title != null) _inventoryTitle = title;
+            } else if (index == 2) {
+              if (title != null) _salesTitle = title;
+              if (subSection != null) _salesSubSection = subSection;
+            }
+          });
+        },
       );
     }
     if (_selectedIndex == 1) {
@@ -436,7 +638,8 @@ class _AppShellState extends State<AppShell> {
                 ? InventoryPageMode.stockList
                 : ((_inventoryTitle == 'Variant Matrix Configurator')
                       ? InventoryPageMode.variantMatrix
-                      : ((_inventoryTitle == 'Create New Product')
+                      : ((_inventoryTitle == 'Create New Product' ||
+                                _inventoryTitle == 'Add Product')
                             ? InventoryPageMode.createProduct
                             : ((_inventoryTitle == 'Stock Count Reconciliation')
                                   ? InventoryPageMode.reconciliation
@@ -477,6 +680,7 @@ class _AppShellState extends State<AppShell> {
                                                                                               ? InventoryPageMode.analytics
                                                                                               : InventoryPageMode.ageingReport))))))))))))));
       return InventoryPage(
+        businessId: CurrentBusinessService.instance.currentBusinessId,
         initialMode: invMode,
         onTitleChanged: (title) {
           if (_inventoryTitle != title) {
@@ -1000,11 +1204,12 @@ class _AppShellState extends State<AppShell> {
             ),
             child: Row(
               children: [
-                Image.asset(
-                  'Assets/logo_mark.png',
+                SafeImage(
+                  source: _companyLogoUrl ?? 'Assets/logo_mark.png',
                   height: context.isCompactDesktop ? 30 : 34,
+                  width: context.isCompactDesktop ? 30 : 34,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                  borderRadius: BorderRadius.circular(4),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -1012,7 +1217,10 @@ class _AppShellState extends State<AppShell> {
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      'THREADSTOCK',
+                      (_resolvedWorkspaceName != null &&
+                              _resolvedWorkspaceName!.isNotEmpty)
+                          ? _resolvedWorkspaceName!.toUpperCase()
+                          : 'THREADSTOCK',
                       style: GoogleFonts.montserrat(
                         fontSize: 15,
                         letterSpacing: 15 * 0.20,
@@ -1230,48 +1438,54 @@ class _AppShellState extends State<AppShell> {
                     borderRadius: BorderRadius.circular(10),
                     side: const BorderSide(color: Color(0xFFEADBCA)),
                   ),
-                  onSelected: (val) {
+                  onSelected: (val) async {
                     if (val == 'profile') {
                       setState(() => _selectedIndex = 10);
                     } else if (val == 'shortcuts') {
                       KeyboardShortcutsDialog.show(context);
                     } else if (val == 'switch_business') {
-                      SwitchBusinessDialog.show(context);
+                      SwitchBusinessDialog.show(
+                        context,
+                        onBusinessSelected: _handleBusinessSwitch,
+                      );
                     } else if (val == 'sign_out') {
-                      AuthService.instance.signOut().then((_) {
-                        if (context.mounted) {
-                          Navigator.of(context).pushNamedAndRemoveUntil(
-                            AppRoutes.login,
-                            (route) => false,
-                          );
-                        }
-                      });
+                      await AuthService.instance.signOut();
+                      if (mounted) {
+                        await NavigationGuard.safePushNamedAndRemoveUntil(
+                          context,
+                          AppRoutes.login,
+                          (route) => false,
+                          source: 'AppShell.userMenu.signOut',
+                        );
+                      }
                     }
                   },
                   itemBuilder: (context) => [
-                    PopupMenuItem<String>(
-                      value: 'switch_business',
-                      height: 38,
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.apartment_rounded,
-                            size: 17,
-                            color: Color(0xFF8D6433),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Switch Business',
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1E1C1A),
+                    if (_accessibleBusinessCount > 1) ...[
+                      PopupMenuItem<String>(
+                        value: 'switch_business',
+                        height: 38,
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.apartment_rounded,
+                              size: 17,
+                              color: Color(0xFF8D6433),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 10),
+                            Text(
+                              'Switch Business',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1E1C1A),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const PopupMenuDivider(height: 1),
+                      const PopupMenuDivider(height: 1),
+                    ],
                     PopupMenuItem<String>(
                       value: 'profile',
                       height: 38,
@@ -1386,7 +1600,9 @@ class _AppShellState extends State<AppShell> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
-                                _resolvedWorkspaceName ?? 'Workspace',
+                                _resolvedUsername != null
+                                    ? '@$_resolvedUsername'
+                                    : (_resolvedWorkspaceName ?? 'Workspace'),
                                 style: GoogleFonts.inter(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w400,
@@ -1684,6 +1900,9 @@ class _AppShellState extends State<AppShell> {
     return InkWell(
       onTap: () => setState(() {
         _selectedIndex = index;
+        if (index == 1) {
+          _inventoryTitle = 'Inventory';
+        }
         if (index == 2) {
           _salesSubSection = 'overview';
           _salesTitle = 'Sales';
@@ -2440,46 +2659,12 @@ class _AppShellState extends State<AppShell> {
                             ),
                             const SizedBox(width: 14),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: const Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    _availableLocations.isNotEmpty
-                                        ? (_availableLocations
-                                              .firstWhere(
-                                                (l) =>
-                                                    l.id == _selectedLocation,
-                                                orElse: () =>
-                                                    _availableLocations.first,
-                                              )
-                                              .name)
-                                        : 'Primary Location',
-                                    style: GoogleFonts.inter(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w500,
-                                      color: const Color(0xFF1E293B),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  const Icon(
-                                    Icons.keyboard_arrow_down_rounded,
-                                    size: 16,
-                                    color: Color(0xFF64748B),
-                                  ),
-                                ],
-                              ),
+                              width: 1,
+                              height: 18,
+                              color: const Color(0xFFDCD2C3),
                             ),
+                            const SizedBox(width: 14),
+                            _buildLocationDropdown(),
                           ],
                         )
                       else if (_selectedIndex == 1 &&
@@ -2574,11 +2759,11 @@ class _AppShellState extends State<AppShell> {
                           children: [
                             InkWell(
                               onTap: () => setState(
-                                () => _inventoryTitle = 'Stock Ageing Report',
+                                () => _inventoryTitle = 'Inventory',
                               ),
                               borderRadius: BorderRadius.circular(4),
                               child: Text(
-                                'Products',
+                                'Inventory',
                                 style: GoogleFonts.inter(
                                   fontSize: context.isCompactDesktop
                                       ? 13
@@ -2597,11 +2782,11 @@ class _AppShellState extends State<AppShell> {
                             const SizedBox(width: 8),
                             InkWell(
                               onTap: () => setState(
-                                () => _inventoryTitle = 'Create New Product',
+                                () => _inventoryTitle = 'Add Product',
                               ),
                               borderRadius: BorderRadius.circular(4),
                               child: Text(
-                                'Product Setup',
+                                'Add Product',
                                 style: GoogleFonts.inter(
                                   fontSize: context.isCompactDesktop
                                       ? 13
@@ -2629,38 +2814,18 @@ class _AppShellState extends State<AppShell> {
                           ],
                         )
                       else if (_selectedIndex == 1 &&
-                          _inventoryTitle == 'Create New Product')
+                          (_inventoryTitle == 'Create New Product' ||
+                              _inventoryTitle == 'Add Product'))
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             InkWell(
                               onTap: () => setState(
-                                () => _inventoryTitle = 'Stock Ageing Report',
+                                () => _inventoryTitle = 'Inventory',
                               ),
                               borderRadius: BorderRadius.circular(4),
                               child: Text(
-                                'Products',
-                                style: GoogleFonts.inter(
-                                  fontSize: context.isCompactDesktop
-                                      ? 13
-                                      : 13.5,
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color(0xFF64748B),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(
-                              Icons.chevron_right_rounded,
-                              size: 16,
-                              color: Color(0xFF94A3B8),
-                            ),
-                            const SizedBox(width: 8),
-                            InkWell(
-                              onTap: () {},
-                              borderRadius: BorderRadius.circular(4),
-                              child: Text(
-                                'Setup Ledger',
+                                'Inventory',
                                 style: GoogleFonts.inter(
                                   fontSize: context.isCompactDesktop
                                       ? 13
@@ -2678,7 +2843,7 @@ class _AppShellState extends State<AppShell> {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Create New Product',
+                              'Add Product',
                               style: GoogleFonts.inter(
                                 fontSize: context.isCompactDesktop ? 13 : 14,
                                 fontWeight: FontWeight.w600,
@@ -2694,7 +2859,7 @@ class _AppShellState extends State<AppShell> {
                           children: [
                             InkWell(
                               onTap: () => setState(
-                                () => _inventoryTitle = 'Stock Ageing Report',
+                                () => _inventoryTitle = 'Inventory',
                               ),
                               borderRadius: BorderRadius.circular(4),
                               child: Text(
@@ -2765,7 +2930,7 @@ class _AppShellState extends State<AppShell> {
                           children: [
                             InkWell(
                               onTap: () => setState(
-                                () => _inventoryTitle = 'Stock Ageing Report',
+                                () => _inventoryTitle = 'Inventory',
                               ),
                               borderRadius: BorderRadius.circular(4),
                               child: Text(
@@ -2961,7 +3126,7 @@ class _AppShellState extends State<AppShell> {
                           children: [
                             InkWell(
                               onTap: () => setState(
-                                () => _inventoryTitle = 'Stock Ageing Report',
+                                () => _inventoryTitle = 'Inventory',
                               ),
                               borderRadius: BorderRadius.circular(4),
                               child: Text(
@@ -3096,7 +3261,7 @@ class _AppShellState extends State<AppShell> {
                           children: [
                             InkWell(
                               onTap: () => setState(
-                                () => _inventoryTitle = 'Stock Ageing Report',
+                                () => _inventoryTitle = 'Inventory',
                               ),
                               borderRadius: BorderRadius.circular(4),
                               child: Text(
@@ -3175,7 +3340,7 @@ class _AppShellState extends State<AppShell> {
                           children: [
                             InkWell(
                               onTap: () => setState(
-                                () => _inventoryTitle = 'Stock Ageing Report',
+                                () => _inventoryTitle = 'Inventory',
                               ),
                               borderRadius: BorderRadius.circular(4),
                               child: Text(
@@ -3269,7 +3434,7 @@ class _AppShellState extends State<AppShell> {
                           children: [
                             InkWell(
                               onTap: () => setState(
-                                () => _inventoryTitle = 'Stock Ageing Report',
+                                () => _inventoryTitle = 'Inventory',
                               ),
                               borderRadius: BorderRadius.circular(4),
                               child: Text(
@@ -3307,7 +3472,7 @@ class _AppShellState extends State<AppShell> {
                           children: [
                             InkWell(
                               onTap: () => setState(
-                                () => _inventoryTitle = 'Stock Ageing Report',
+                                () => _inventoryTitle = 'Inventory',
                               ),
                               borderRadius: BorderRadius.circular(4),
                               child: Text(
@@ -4595,7 +4760,8 @@ class _AppShellState extends State<AppShell> {
                             color: const Color(0xFF355E82),
                           ),
                         )
-                      else if (!(_selectedIndex == 7) &&
+                      else if (!(_selectedIndex == 0) &&
+                          !(_selectedIndex == 7) &&
                           !(_selectedIndex == 3 &&
                               (_purchasingTitle == 'Return to Supplier' ||
                                   _purchasingTitle == 'POs / Returns')) &&
@@ -4604,8 +4770,6 @@ class _AppShellState extends State<AppShell> {
                                   _transfersTitle == 'TR-1042' ||
                                   _transfersTitle == 'Active' ||
                                   _transfersTitle == 'Transfer Order')) &&
-                          !(_selectedIndex == 0 &&
-                              _overviewTitle == 'Approval Center') &&
                           !(_selectedIndex == 9 &&
                               (_settingsSection == 'roles_permissions' ||
                                   _settingsTitle == 'Roles & Permissions' ||
@@ -4638,58 +4802,7 @@ class _AppShellState extends State<AppShell> {
                                   _insightsSubSection == 'suppliers' ||
                                   _insightsSubSection == 'forecast_accuracy' ||
                                   _insightsSubSection == 'dead_stock')))
-                        ThreadStockDropdown<String>(
-                          value:
-                              _availableLocations.any(
-                                (l) => l.id == _selectedLocation,
-                              )
-                              ? _selectedLocation
-                              : (_availableLocations.isNotEmpty
-                                    ? _availableLocations.first.id
-                                    : 'none'),
-                          isBorderless: true,
-                          menuWidth: 260,
-                          triggerLabel: (item) => context.isCompactDesktop
-                              ? item.title
-                              : (item.subtitle != null &&
-                                        item.subtitle!.isNotEmpty
-                                    ? '${item.title} (${item.subtitle})'
-                                    : item.title),
-                          items: _availableLocations.isNotEmpty
-                              ? _availableLocations
-                                    .map(
-                                      (l) => ThreadStockDropdownItem(
-                                        value: l.id,
-                                        title: l.name,
-                                        subtitle:
-                                            (l.city != null &&
-                                                l.city!.isNotEmpty)
-                                            ? l.city
-                                            : null,
-                                        icon: Icons.warehouse_outlined,
-                                      ),
-                                    )
-                                    .toList()
-                              : const [
-                                  ThreadStockDropdownItem(
-                                    value: 'none',
-                                    title: 'No locations configured',
-                                    icon: Icons.location_off_outlined,
-                                  ),
-                                ],
-                          onChanged: (val) {
-                            if (val != 'none') {
-                              _safeSetState(() => _selectedLocation = val);
-                            }
-                          },
-                          footerAction: ThreadStockDropdownAction(
-                            label: 'Manage locations',
-                            icon: Icons.settings_outlined,
-                            onTap: () {
-                              _safeSetState(() => _selectedIndex = 9);
-                            },
-                          ),
-                        ),
+                        _buildLocationDropdown(),
                     ],
                   ),
                 ),
@@ -4959,48 +5072,54 @@ class _AppShellState extends State<AppShell> {
                       ),
                       color: Colors.white,
                       elevation: 8,
-                      onSelected: (val) {
+                      onSelected: (val) async {
                         if (val == 'switch_business') {
-                          SwitchBusinessDialog.show(context);
+                          SwitchBusinessDialog.show(
+                            context,
+                            onBusinessSelected: _handleBusinessSwitch,
+                          );
                         } else if (val == 'profile') {
                           setState(() => _selectedIndex = 10);
                         } else if (val == 'shortcuts') {
                           KeyboardShortcutsDialog.show(context);
                         } else if (val == 'sign_out') {
-                          AuthService.instance.signOut().then((_) {
-                            if (context.mounted) {
-                              Navigator.of(context).pushNamedAndRemoveUntil(
-                                AppRoutes.login,
-                                (route) => false,
-                              );
-                            }
-                          });
+                          await AuthService.instance.signOut();
+                          if (mounted) {
+                            await NavigationGuard.safePushNamedAndRemoveUntil(
+                              context,
+                              AppRoutes.login,
+                              (route) => false,
+                              source: 'AppShell.mobileMenu.signOut',
+                            );
+                          }
                         }
                       },
                       itemBuilder: (context) => [
-                        PopupMenuItem<String>(
-                          value: 'switch_business',
-                          height: 38,
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.apartment_rounded,
-                                size: 17,
-                                color: Color(0xFF8D6433),
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'Switch Business',
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF1E1C1A),
+                        if (_accessibleBusinessCount > 1) ...[
+                          PopupMenuItem<String>(
+                            value: 'switch_business',
+                            height: 38,
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.apartment_rounded,
+                                  size: 17,
+                                  color: Color(0xFF8D6433),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 10),
+                                Text(
+                                  'Switch Business',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1E1C1A),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const PopupMenuDivider(height: 1),
+                          const PopupMenuDivider(height: 1),
+                        ],
                         PopupMenuItem<String>(
                           value: 'profile',
                           height: 38,

@@ -55,62 +55,7 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
   @override
   void initState() {
     super.initState();
-    _variants = [
-      LabelVariantItem(
-        name: 'Oxford Linen Shirt',
-        variant: 'Black / M',
-        sku: 'TS-10492-BLK-M',
-        price: '₹2,490',
-        qty: 12,
-        imageAsset: 'assets/oxford_linen_shirt.jpg',
-        isSelected: true,
-      ),
-      LabelVariantItem(
-        name: 'Oxford Linen Shirt',
-        variant: 'Navy / L',
-        sku: 'TS-10492-SND-L',
-        price: '₹2,490',
-        qty: 8,
-        imageAsset: 'assets/oxford_linen_shirt_blue.jpg',
-        isSelected: true,
-      ),
-      LabelVariantItem(
-        name: 'Oxford Linen Shirt',
-        variant: 'Sand / M',
-        sku: 'TS-10492-SND-M',
-        price: '₹2,490',
-        qty: 10,
-        imageAsset: 'assets/gabardine_trench.jpg',
-        isSelected: true,
-      ),
-      LabelVariantItem(
-        name: 'Merino Wool Crewneck',
-        variant: 'Navy / L',
-        sku: 'MWB-20188-NVY-L',
-        price: '₹8,990',
-        qty: 0,
-        imageAsset: 'assets/merino_wool_blazer.jpg',
-        isSelected: false,
-      ),
-      LabelVariantItem(
-        name: 'Merino Wool Crewneck',
-        variant: 'Gray / M',
-        sku: 'MWB-20188-GRY-M',
-        price: '₹8,990',
-        qty: 0,
-        imageAsset: 'assets/cashmere_sweater.jpg',
-        isSelected: false,
-      ),
-      LabelVariantItem(
-        name: 'Silk Evening Dress',
-        variant: 'Crimson / S',
-        sku: 'TS-SED-CS',
-        price: '₹6,500',
-        qty: 0,
-        imageAsset: 'assets/silk_evening_dress.jpg',
-        isSelected: false,
-      ),
-    ];
+    _variants = [];
   }
 
   @override
@@ -118,6 +63,11 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
     _searchController.dispose();
     super.dispose();
   }
+
+  LabelVariantItem? get _selectedVariant =>
+      _variants.where((v) => v.isSelected).isNotEmpty
+      ? _variants.firstWhere((v) => v.isSelected)
+      : null;
 
   int get _selectedCount => _variants.where((v) => v.isSelected).length;
 
@@ -149,10 +99,20 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                 color: const Color(0xFFFBF4EB),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.style_outlined, color: Color(0xFF92400E), size: 20),
+              child: const Icon(
+                Icons.style_outlined,
+                color: Color(0xFF92400E),
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
-            Text('Add Catalog Variants to Label Batch', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text(
+              'Add Catalog Variants to Label Batch',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
         content: SizedBox(
@@ -164,14 +124,22 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                 decoration: InputDecoration(
                   hintText: 'Search catalog SKU, color, or barcode...',
                   prefixIcon: const Icon(Icons.search, size: 18),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
               Text(
-                'All available SKUs in Central Store catalog are ready for label generation.',
-                style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280)),
+                'All available SKUs in the catalog are ready for label generation.',
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: const Color(0xFF6B7280),
+                ),
               ),
             ],
           ),
@@ -179,7 +147,10 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Close', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            child: Text(
+              'Close',
+              style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -195,7 +166,9 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF181513),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Add to Batch'),
           ),
@@ -225,17 +198,11 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Column 1: Selected Variants Table (~42%)
-                    Expanded(
-                      flex: 42,
-                      child: _buildSelectedVariantsCard(),
-                    ),
+                    Expanded(flex: 42, child: _buildSelectedVariantsCard()),
                     const SizedBox(width: 18),
 
                     // Column 2: Label Setup & Live Preview (~33%)
-                    Expanded(
-                      flex: 33,
-                      child: _buildLabelSetupCard(),
-                    ),
+                    Expanded(flex: 33, child: _buildLabelSetupCard()),
                     const SizedBox(width: 18),
 
                     // Column 3: Print Output & Quick Presets (~25%)
@@ -327,33 +294,55 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                       children: [
                         Text(
                           'Selected Variants',
-                          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF111827),
+                          ),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           '$_selectedCount selected',
-                          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6B7280)),
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: const Color(0xFF6B7280),
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'Choose variants and specify print quantities.',
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: const Color(0xFF6B7280),
+                      ),
                     ),
                   ],
                 ),
                 OutlinedButton.icon(
                   onPressed: _showAddVariantsModal,
-                  icon: const Icon(Icons.add, size: 15, color: Color(0xFFB45309)),
+                  icon: const Icon(
+                    Icons.add,
+                    size: 15,
+                    color: Color(0xFFB45309),
+                  ),
                   label: const Text('Add Variants'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFFB45309),
                     side: const BorderSide(color: Color(0xFFFDE68A)),
                     backgroundColor: const Color(0xFFFFFBEB).withOpacity(0.5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    textStyle: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    textStyle: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ],
@@ -376,7 +365,11 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Row(
                       children: [
-                        const Icon(Icons.search_rounded, size: 17, color: Color(0xFF9CA3AF)),
+                        const Icon(
+                          Icons.search_rounded,
+                          size: 17,
+                          color: Color(0xFF9CA3AF),
+                        ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextField(
@@ -384,7 +377,10 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                             style: GoogleFonts.inter(fontSize: 12.5),
                             decoration: const InputDecoration(
                               hintText: 'Search product, SKU or variant...',
-                              hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12.5),
+                              hintStyle: TextStyle(
+                                color: Color(0xFF9CA3AF),
+                                fontSize: 12.5,
+                              ),
                               border: InputBorder.none,
                               isDense: true,
                             ),
@@ -404,7 +400,11 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: const Color(0xFFD1D5DB)),
                   ),
-                  child: const Icon(Icons.tune_rounded, size: 17, color: Color(0xFF4B5563)),
+                  child: const Icon(
+                    Icons.tune_rounded,
+                    size: 17,
+                    color: Color(0xFF4B5563),
+                  ),
                 ),
               ],
             ),
@@ -438,163 +438,286 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Expanded(flex: 38, child: Text('Product / Variant', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 24, child: Text('SKU', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 16, child: Text('Price', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 22, child: Text('Qty to Print', textAlign: TextAlign.center, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
+                Expanded(
+                  flex: 38,
+                  child: Text(
+                    'Product / Variant',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 24,
+                  child: Text(
+                    'SKU',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 16,
+                  child: Text(
+                    'Price',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 22,
+                  child: Text(
+                    'Qty to Print',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
 
           // Table Rows
-          for (final item in _filteredVariants) ...[
+          if (_filteredVariants.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 24,
-                    child: Checkbox(
-                      value: item.isSelected,
-                      activeColor: const Color(0xFFB45309),
-                      onChanged: (val) {
-                        setState(() {
-                          item.isSelected = val ?? false;
-                          if (item.isSelected && item.qty == 0) {
-                            item.qty = 10;
-                          } else if (!item.isSelected) {
-                            item.qty = 0;
-                          }
-                        });
-                      },
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: Column(
+                  children: [
+                    const Icon(
+                      Icons.qr_code_2_rounded,
+                      size: 36,
+                      color: Color(0xFFCBD5E1),
                     ),
-                  ),
-                  const SizedBox(width: 8),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No barcode items queued',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF475569),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Add product variants above to generate and print custom barcode labels.',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: const Color(0xFF94A3B8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            for (final item in _filteredVariants) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      child: Checkbox(
+                        value: item.isSelected,
+                        activeColor: const Color(0xFFB45309),
+                        onChanged: (val) {
+                          setState(() {
+                            item.isSelected = val ?? false;
+                            if (item.isSelected && item.qty == 0) {
+                              item.qty = 10;
+                            } else if (!item.isSelected) {
+                              item.qty = 0;
+                            }
+                          });
+                        },
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
 
-                  // Product & Variant
-                  Expanded(
-                    flex: 38,
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.asset(
-                            item.imageAsset,
-                            width: 38,
-                            height: 38,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
+                    // Product & Variant
+                    Expanded(
+                      flex: 38,
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.asset(
+                              item.imageAsset,
                               width: 38,
                               height: 38,
-                              color: const Color(0xFFF1F5F9),
-                              child: const Icon(Icons.checkroom_rounded, size: 18, color: Color(0xFF94A3B8)),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    color: const Color(0xFFF1F5F9),
+                                    child: const Icon(
+                                      Icons.checkroom_rounded,
+                                      size: 18,
+                                      color: Color(0xFF94A3B8),
+                                    ),
+                                  ),
                             ),
                           ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.name,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF111827),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 1),
+                                Text(
+                                  item.variant,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: const Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // SKU
+                    Expanded(
+                      flex: 24,
+                      child: Text(
+                        item.sku,
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          color: const Color(0xFF4B5563),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.name,
-                                style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                                overflow: TextOverflow.ellipsis,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+
+                    // Price
+                    Expanded(
+                      flex: 16,
+                      child: Text(
+                        item.price,
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF111827),
+                        ),
+                      ),
+                    ),
+
+                    // Qty Stepper
+                    Expanded(
+                      flex: 22,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              if (item.qty > 0) {
+                                setState(() {
+                                  item.qty--;
+                                  if (item.qty == 0) item.isSelected = false;
+                                });
+                              }
+                            },
+                            child: Container(
+                              width: 24,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: const Color(0xFFD1D5DB),
+                                ),
+                                borderRadius: const BorderRadius.horizontal(
+                                  left: Radius.circular(4),
+                                ),
                               ),
-                              const SizedBox(height: 1),
-                              Text(item.variant, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280))),
-                            ],
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.remove,
+                                size: 13,
+                                color: Color(0xFF4B5563),
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // SKU
-                  Expanded(
-                    flex: 24,
-                    child: Text(
-                      item.sku,
-                      style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF4B5563)),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-
-                  // Price
-                  Expanded(
-                    flex: 16,
-                    child: Text(
-                      item.price,
-                      style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                    ),
-                  ),
-
-                  // Qty Stepper
-                  Expanded(
-                    flex: 22,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            if (item.qty > 0) {
+                          Container(
+                            width: 32,
+                            height: 26,
+                            decoration: const BoxDecoration(
+                              border: Border.symmetric(
+                                horizontal: BorderSide(
+                                  color: Color(0xFFD1D5DB),
+                                ),
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              '${item.qty}',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF111827),
+                              ),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () {
                               setState(() {
-                                item.qty--;
-                                if (item.qty == 0) item.isSelected = false;
+                                item.qty++;
+                                item.isSelected = true;
                               });
-                            }
-                          },
-                          child: Container(
-                            width: 24,
-                            height: 26,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: const Color(0xFFD1D5DB)),
-                              borderRadius: const BorderRadius.horizontal(left: Radius.circular(4)),
+                            },
+                            child: Container(
+                              width: 24,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: const Color(0xFFD1D5DB),
+                                ),
+                                borderRadius: const BorderRadius.horizontal(
+                                  right: Radius.circular(4),
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.add,
+                                size: 13,
+                                color: Color(0xFF4B5563),
+                              ),
                             ),
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.remove, size: 13, color: Color(0xFF4B5563)),
                           ),
-                        ),
-                        Container(
-                          width: 32,
-                          height: 26,
-                          decoration: const BoxDecoration(
-                            border: Border.symmetric(horizontal: BorderSide(color: Color(0xFFD1D5DB))),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            '${item.qty}',
-                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            setState(() {
-                              item.qty++;
-                              item.isSelected = true;
-                            });
-                          },
-                          child: Container(
-                            width: 24,
-                            height: 26,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: const Color(0xFFD1D5DB)),
-                              borderRadius: const BorderRadius.horizontal(right: Radius.circular(4)),
-                            ),
-                            alignment: Alignment.center,
-                            child: const Icon(Icons.add, size: 13, color: Color(0xFF4B5563)),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          ],
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            ],
 
           // Footer
           Padding(
@@ -604,16 +727,26 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
               children: [
                 Text(
                   '$_selectedCount variants selected',
-                  style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280)),
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    color: const Color(0xFF6B7280),
+                  ),
                 ),
                 Text.rich(
                   TextSpan(
                     text: 'Total labels: ',
-                    style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280)),
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      color: const Color(0xFF6B7280),
+                    ),
                     children: [
                       TextSpan(
                         text: '$_totalLabelsToPrint',
-                        style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                        style: GoogleFonts.inter(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF111827),
+                        ),
                       ),
                     ],
                   ),
@@ -641,19 +774,31 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
           // Header
           Text(
             'Label Setup',
-            style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF111827),
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             'Configure your label design and content.',
-            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: const Color(0xFF6B7280),
+            ),
           ),
           const SizedBox(height: 16),
 
           // LABEL TEMPLATE
           Text(
             'LABEL TEMPLATE',
-            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF4B5563), letterSpacing: 0.3),
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF4B5563),
+              letterSpacing: 0.3,
+            ),
           ),
           const SizedBox(height: 6),
           Container(
@@ -668,14 +813,25 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
               child: DropdownButton<String>(
                 value: _selectedTemplate,
                 isExpanded: true,
-                icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF6B7280)),
-                style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500, color: const Color(0xFF1F2937)),
-                items: [
-                  '40 × 30 mm (Standard Jewelry/Hangtag)',
-                  '50 × 30 mm (Price Label)',
-                  '30 × 20 mm (Small Tag)',
-                  '70 × 30 mm (Shelf Label)',
-                ].map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Color(0xFF6B7280),
+                ),
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF1F2937),
+                ),
+                items:
+                    [
+                          '40 × 30 mm (Standard Jewelry/Hangtag)',
+                          '50 × 30 mm (Price Label)',
+                          '30 × 20 mm (Small Tag)',
+                          '70 × 30 mm (Shelf Label)',
+                        ]
+                        .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                        .toList(),
                 onChanged: (val) {
                   if (val != null) setState(() => _selectedTemplate = val);
                 },
@@ -685,26 +841,55 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
           const SizedBox(height: 4),
           Text(
             'Ideal for apparel, accessories and general items.',
-            style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280)),
+            style: GoogleFonts.inter(
+              fontSize: 11.5,
+              color: const Color(0xFF6B7280),
+            ),
           ),
           const SizedBox(height: 18),
 
           // INCLUDE CONTENT ON LABEL
           Text(
             'INCLUDE CONTENT ON LABEL',
-            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF4B5563), letterSpacing: 0.3),
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF4B5563),
+              letterSpacing: 0.3,
+            ),
           ),
           const SizedBox(height: 8),
-          _buildToggleRow('Product Name & Variant', _includeName, (v) => setState(() => _includeName = v)),
-          _buildToggleRow('Retail Price (INR)', _includePrice, (v) => setState(() => _includePrice = v)),
-          _buildToggleRow('Barcode Image', _includeBarcode, (v) => setState(() => _includeBarcode = v)),
-          _buildToggleRow('Brand / Logo', _includeLogo, (v) => setState(() => _includeLogo = v)),
+          _buildToggleRow(
+            'Product Name & Variant',
+            _includeName,
+            (v) => setState(() => _includeName = v),
+          ),
+          _buildToggleRow(
+            'Retail Price (INR)',
+            _includePrice,
+            (v) => setState(() => _includePrice = v),
+          ),
+          _buildToggleRow(
+            'Barcode Image',
+            _includeBarcode,
+            (v) => setState(() => _includeBarcode = v),
+          ),
+          _buildToggleRow(
+            'Brand / Logo',
+            _includeLogo,
+            (v) => setState(() => _includeLogo = v),
+          ),
           const SizedBox(height: 16),
 
           // BARCODE SYMBOLOGY
           Text(
             'BARCODE SYMBOLOGY',
-            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF4B5563), letterSpacing: 0.3),
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF4B5563),
+              letterSpacing: 0.3,
+            ),
           ),
           const SizedBox(height: 8),
           Row(
@@ -721,7 +906,12 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
           // LIVE PREVIEW (REAL SIZE)
           Text(
             'LIVE PREVIEW (REAL SIZE)',
-            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF4B5563), letterSpacing: 0.3),
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF4B5563),
+              letterSpacing: 0.3,
+            ),
           ),
           const SizedBox(height: 10),
 
@@ -741,32 +931,53 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                 if (_includeLogo) ...[
                   Text(
                     'THREADSTOCK',
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: const Color(0xFF1E293B), letterSpacing: 1.2),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF1E293B),
+                      letterSpacing: 1.2,
+                    ),
                   ),
                   const SizedBox(height: 6),
                 ] else ...[
                   Text(
                     'THREADSTOCK',
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w800, color: const Color(0xFF1E293B), letterSpacing: 1.2),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF1E293B),
+                      letterSpacing: 1.2,
+                    ),
                   ),
                   const SizedBox(height: 4),
                 ],
                 if (_includeName) ...[
                   Text(
-                    'Oxford Linen Shirt',
-                    style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                    _selectedVariant?.name ?? 'Sample Product',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF111827),
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Black / M',
-                    style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF4B5563)),
+                    _selectedVariant?.variant ?? 'Standard Variant',
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      color: const Color(0xFF4B5563),
+                    ),
                   ),
                   const SizedBox(height: 8),
                 ],
                 if (_includePrice) ...[
                   Text(
-                    '₹2,490',
-                    style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                    _selectedVariant?.price ?? '₹0',
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF111827),
+                    ),
                   ),
                   const SizedBox(height: 10),
                 ],
@@ -775,14 +986,16 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                   SizedBox(
                     height: 38,
                     width: 170,
-                    child: CustomPaint(
-                      painter: _RealisticBarcodePainter(),
-                    ),
+                    child: CustomPaint(painter: _RealisticBarcodePainter()),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'TS-10492-BLK-M',
-                    style: GoogleFonts.spaceMono(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
+                    _selectedVariant?.sku ?? 'TS-SKU-001',
+                    style: GoogleFonts.spaceMono(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF111827),
+                    ),
                   ),
                 ],
               ],
@@ -793,13 +1006,24 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
     );
   }
 
-  Widget _buildToggleRow(String label, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildToggleRow(
+    String label,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500, color: const Color(0xFF374151))),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF374151),
+            ),
+          ),
           SizedBox(
             height: 24,
             width: 42,
@@ -828,7 +1052,11 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFFBF4EB) : const Color(0xFFF8FAFC),
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: isSelected ? const Color(0xFFD97706) : const Color(0xFFE2E8F0)),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFFD97706)
+                : const Color(0xFFE2E8F0),
+          ),
         ),
         alignment: Alignment.center,
         child: Text(
@@ -836,7 +1064,9 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
           style: GoogleFonts.inter(
             fontSize: 11.5,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? const Color(0xFF92400E) : const Color(0xFF6B7280),
+            color: isSelected
+                ? const Color(0xFF92400E)
+                : const Color(0xFF6B7280),
           ),
         ),
       ),
@@ -857,11 +1087,19 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
         children: [
           Row(
             children: [
-              const Icon(Icons.print_outlined, size: 18, color: Color(0xFF111827)),
+              const Icon(
+                Icons.print_outlined,
+                size: 18,
+                color: Color(0xFF111827),
+              ),
               const SizedBox(width: 8),
               Text(
                 'Print Output',
-                style: GoogleFonts.inter(fontSize: 15.5, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                style: GoogleFonts.inter(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF111827),
+                ),
               ),
             ],
           ),
@@ -871,24 +1109,63 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total Variants', style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280))),
-              Text('$_selectedCount SKUs', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
+              Text(
+                'Total Variants',
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: const Color(0xFF6B7280),
+                ),
+              ),
+              Text(
+                '$_selectedCount SKUs',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF111827),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total Labels to Print', style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280))),
-              Text('$_totalLabelsToPrint Labels', style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w700, color: const Color(0xFFD97706))),
+              Text(
+                'Total Labels to Print',
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: const Color(0xFF6B7280),
+                ),
+              ),
+              Text(
+                '$_totalLabelsToPrint Labels',
+                style: GoogleFonts.inter(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFFD97706),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Est. Paper Sheets (40×30)', style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280))),
-              Text('2 Sheets (A4)', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
+              Text(
+                'Est. Paper Sheets (40×30)',
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: const Color(0xFF6B7280),
+                ),
+              ),
+              Text(
+                '2 Sheets (A4)',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF111827),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -897,11 +1174,14 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton.icon(
-              onPressed: widget.onPrint ??
+              onPressed:
+                  widget.onPrint ??
                   () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Sending $_totalLabelsToPrint labels to thermal printer (Central Store)...'),
+                        content: Text(
+                          'Sending $_totalLabelsToPrint labels to thermal printer...',
+                        ),
                         backgroundColor: const Color(0xFF181513),
                         behavior: SnackBarBehavior.floating,
                       ),
@@ -913,9 +1193,14 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                 backgroundColor: const Color(0xFF181513),
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                textStyle: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -925,11 +1210,14 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: widget.onDownloadPdf ??
+              onPressed:
+                  widget.onDownloadPdf ??
                   () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Downloading 40x30mm PDF print template...'),
+                        content: Text(
+                          'Downloading 40x30mm PDF print template...',
+                        ),
                         backgroundColor: Color(0xFF181513),
                         behavior: SnackBarBehavior.floating,
                       ),
@@ -940,9 +1228,14 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF374151),
                 side: const BorderSide(color: Color(0xFFD1D5DB)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 11),
-                textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
@@ -952,7 +1245,8 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: widget.onSaveConfig ??
+              onPressed:
+                  widget.onSaveConfig ??
                   () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
@@ -967,9 +1261,14 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF374151),
                 side: const BorderSide(color: Color(0xFFD1D5DB)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 11),
-                textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ),
@@ -986,12 +1285,20 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFFB45309)),
+                const Icon(
+                  Icons.info_outline_rounded,
+                  size: 16,
+                  color: Color(0xFFB45309),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Use high quality labels for best scanning results. Ensure printer settings are set to 100% (Actual Size).',
-                    style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF78350F), height: 1.35),
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      color: const Color(0xFF78350F),
+                      height: 1.35,
+                    ),
                   ),
                 ),
               ],
@@ -1023,18 +1330,29 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
         children: [
           Row(
             children: [
-              const Icon(Icons.description_outlined, size: 17, color: Color(0xFF111827)),
+              const Icon(
+                Icons.description_outlined,
+                size: 17,
+                color: Color(0xFF111827),
+              ),
               const SizedBox(width: 8),
               Text(
                 'Quick Presets',
-                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF111827),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 2),
           Text(
             'Use commonly used label formats.',
-            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: const Color(0xFF6B7280),
+            ),
           ),
           const SizedBox(height: 14),
 
@@ -1046,9 +1364,13 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                 child: Row(
                   children: [
                     Icon(
-                      _selectedPreset == preset['name'] ? Icons.radio_button_checked : Icons.radio_button_off,
+                      _selectedPreset == preset['name']
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_off,
                       size: 16,
-                      color: _selectedPreset == preset['name'] ? const Color(0xFFB45309) : const Color(0xFF9CA3AF),
+                      color: _selectedPreset == preset['name']
+                          ? const Color(0xFFB45309)
+                          : const Color(0xFF9CA3AF),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -1056,14 +1378,19 @@ class _BarcodeLabelsViewState extends State<BarcodeLabelsView> {
                         preset['name']!,
                         style: GoogleFonts.inter(
                           fontSize: 12.5,
-                          fontWeight: _selectedPreset == preset['name'] ? FontWeight.w600 : FontWeight.w500,
+                          fontWeight: _selectedPreset == preset['name']
+                              ? FontWeight.w600
+                              : FontWeight.w500,
                           color: const Color(0xFF374151),
                         ),
                       ),
                     ),
                     Text(
                       preset['size']!,
-                      style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF9CA3AF)),
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        color: const Color(0xFF9CA3AF),
+                      ),
                     ),
                   ],
                 ),
@@ -1086,8 +1413,46 @@ class _RealisticBarcodePainter extends CustomPainter {
 
     // A realistic pattern of varying widths
     final barPattern = [
-      3, 1, 1, 2, 4, 1, 2, 1, 3, 2, 1, 1, 4, 2, 1, 3, 1, 2, 1, 4,
-      1, 2, 3, 1, 2, 1, 1, 4, 2, 1, 3, 1, 1, 2, 4, 1, 2, 1, 3, 2
+      3,
+      1,
+      1,
+      2,
+      4,
+      1,
+      2,
+      1,
+      3,
+      2,
+      1,
+      1,
+      4,
+      2,
+      1,
+      3,
+      1,
+      2,
+      1,
+      4,
+      1,
+      2,
+      3,
+      1,
+      2,
+      1,
+      1,
+      4,
+      2,
+      1,
+      3,
+      1,
+      1,
+      2,
+      4,
+      1,
+      2,
+      1,
+      3,
+      2,
     ];
 
     double currentX = 10.0;

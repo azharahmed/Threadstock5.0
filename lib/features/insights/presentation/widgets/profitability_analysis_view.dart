@@ -26,8 +26,11 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -68,15 +71,9 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    flex: 62,
-                    child: _buildRevenueVsCogsChartCard(),
-                  ),
+                  Expanded(flex: 62, child: _buildRevenueVsCogsChartCard()),
                   const SizedBox(width: 20),
-                  Expanded(
-                    flex: 38,
-                    child: _buildMarginByCategoryCard(),
-                  ),
+                  Expanded(flex: 38, child: _buildMarginByCategoryCard()),
                 ],
               );
             }
@@ -131,8 +128,9 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
         );
 
         final rightContent = Column(
-          crossAxisAlignment:
-              isCompact ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+          crossAxisAlignment: isCompact
+              ? CrossAxisAlignment.start
+              : CrossAxisAlignment.end,
           children: [
             Text(
               'Smarter insights. Stronger growth.',
@@ -155,34 +153,37 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
                 setState(() => _selectedPeriod = val);
                 _showFeedback('Period updated: $val');
               },
-              itemBuilder: (context) => [
-                'Past 30 Days: Oct 1 - Oct 31',
-                'Past 7 Days',
-                'This Quarter (Q4)',
-                'Year to Date (2024)',
-              ]
-                  .map(
-                    (p) => PopupMenuItem(
-                      value: p,
-                      height: 38,
-                      child: Text(
-                        p,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: p == _selectedPeriod
-                              ? FontWeight.w600
-                              : FontWeight.w400,
-                          color: p == _selectedPeriod
-                              ? const Color(0xFF8D6433)
-                              : const Color(0xFF1E1C1A),
+              itemBuilder: (context) =>
+                  [
+                        'Past 30 Days: Oct 1 - Oct 31',
+                        'Past 7 Days',
+                        'This Quarter (Q4)',
+                        'Year to Date (2024)',
+                      ]
+                      .map(
+                        (p) => PopupMenuItem(
+                          value: p,
+                          height: 38,
+                          child: Text(
+                            p,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: p == _selectedPeriod
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                              color: p == _selectedPeriod
+                                  ? const Color(0xFF8D6433)
+                                  : const Color(0xFF1E1C1A),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  )
-                  .toList(),
+                      )
+                      .toList(),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
@@ -228,11 +229,7 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
         if (isCompact) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              leftContent,
-              const SizedBox(height: 12),
-              rightContent,
-            ],
+            children: [leftContent, const SizedBox(height: 12), rightContent],
           );
         }
 
@@ -304,7 +301,7 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
                   ),
                   const TextSpan(
                     text:
-                        'Silk Scarves margin dropped 8% — supplier cost increase detected. Advise negotiation or switching to Biella Fabric.',
+                        'Silk Scarves margin dropped 8% — supplier cost increase detected. Advise negotiation or switching to alternative supplier.',
                   ),
                 ],
               ),
@@ -315,7 +312,8 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
           // View Details Button
           InkWell(
             onTap: () => _showFeedback(
-                'Opening AI Supplier Margin Analysis & Negotiation Insights...'),
+              'Opening AI Supplier Margin Analysis & Negotiation Insights...',
+            ),
             borderRadius: BorderRadius.circular(6),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
@@ -407,10 +405,12 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
             spacing: cardSpacing,
             runSpacing: cardSpacing,
             children: cards
-                .map((c) => SizedBox(
-                      width: (constraints.maxWidth - cardSpacing) / 2,
-                      child: c,
-                    ))
+                .map(
+                  (c) => SizedBox(
+                    width: (constraints.maxWidth - cardSpacing) / 2,
+                    child: c,
+                  ),
+                )
                 .toList(),
           );
         }
@@ -424,7 +424,9 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
                   child: Padding(
                     padding: EdgeInsets.only(
                       left: entry.key == 0 ? 0 : cardSpacing / 2,
-                      right: entry.key == cards.length - 1 ? 0 : cardSpacing / 2,
+                      right: entry.key == cards.length - 1
+                          ? 0
+                          : cardSpacing / 2,
                     ),
                     child: entry.value,
                   ),
@@ -507,7 +509,9 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
                     const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 5, vertical: 1.5),
+                        horizontal: 5,
+                        vertical: 1.5,
+                      ),
                       decoration: BoxDecoration(
                         color: isPositive
                             ? const Color(0xFFE7F7ED)
@@ -603,8 +607,10 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
                     )
                     .toList(),
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(6),
@@ -678,10 +684,7 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
           const SizedBox(height: 16),
 
           // Custom Painted Smooth Dual-Curve Area Chart
-          SizedBox(
-            height: 200,
-            child: _DualAreaLineChart(),
-          ),
+          SizedBox(height: 200, child: _DualAreaLineChart()),
         ],
       ),
     );
@@ -694,7 +697,7 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
     final categories = const [
       _CategoryMarginItem('Silk Shirts', 0.74, Color(0xFFC89748)),
       _CategoryMarginItem('Linen Blazers', 0.68, Color(0xFF3B82F6)),
-      _CategoryMarginItem('Raw Denim', 0.62, Color(0xFF475569)),
+      _CategoryMarginItem('Trousers', 0.62, Color(0xFF475569)),
       _CategoryMarginItem('Accessories', 0.45, Color(0xFF94A3B8)),
       _CategoryMarginItem('Silk Scarves', 0.38, Color(0xFFEF4444)),
     ];
@@ -727,57 +730,59 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
           const SizedBox(height: 18),
           Column(
             children: categories
-                .map((cat) => Padding(
-                      padding: const EdgeInsets.only(bottom: 14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                cat.name,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF2E2A24),
-                                ),
+                .map(
+                  (cat) => Padding(
+                    padding: const EdgeInsets.only(bottom: 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              cat.name,
+                              style: GoogleFonts.inter(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w500,
+                                color: const Color(0xFF2E2A24),
                               ),
-                              Text(
-                                '${(cat.ratio * 100).toInt()}%',
-                                style: GoogleFonts.inter(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF181512),
+                            ),
+                            Text(
+                              '${(cat.ratio * 100).toInt()}%',
+                              style: GoogleFonts.inter(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF181512),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: Stack(
+                            children: [
+                              Container(
+                                height: 8,
+                                color: const Color(0xFFF3ECE4),
+                              ),
+                              FractionallySizedBox(
+                                widthFactor: cat.ratio,
+                                child: Container(
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    color: cat.color,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 6),
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: Stack(
-                              children: [
-                                Container(
-                                  height: 8,
-                                  color: const Color(0xFFF3ECE4),
-                                ),
-                                FractionallySizedBox(
-                                  widthFactor: cat.ratio,
-                                  child: Container(
-                                    height: 8,
-                                    decoration: BoxDecoration(
-                                      color: cat.color,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ))
+                        ),
+                      ],
+                    ),
+                  ),
+                )
                 .toList(),
           ),
         ],
@@ -789,48 +794,7 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
   // 5. BOTTOM TABLE: PRODUCT PROFITABILITY
   // ===========================================================================
   Widget _buildProductProfitabilityTableCard() {
-    final products = const [
-      _ProductProfitItem(
-        title: 'Premium Wool Blazer',
-        imageAsset: 'Assets/merino_wool_blazer.jpg',
-        revenue: '₹3,40,000',
-        cost: '₹1,02,000',
-        profit: '₹2,38,000',
-        margin: '70%',
-        status: 'Optimal',
-        isCritical: false,
-      ),
-      _ProductProfitItem(
-        title: 'Linen Summer Dress',
-        imageAsset: 'Assets/silk_evening_dress.jpg',
-        revenue: '₹1,85,000',
-        cost: '₹59,200',
-        profit: '₹1,25,800',
-        margin: '68%',
-        status: 'Optimal',
-        isCritical: false,
-      ),
-      _ProductProfitItem(
-        title: 'Raw Denim Jeans',
-        imageAsset: 'Assets/raw_denim_jeans.jpg',
-        revenue: '₹2,10,000',
-        cost: '₹84,000',
-        profit: '₹1,26,000',
-        margin: '60%',
-        status: 'Optimal',
-        isCritical: false,
-      ),
-      _ProductProfitItem(
-        title: 'Silk Scarves (Standard)',
-        imageAsset: 'Assets/silk_scarves.jpg',
-        revenue: '₹95,000',
-        cost: '₹61,750',
-        profit: '₹33,250',
-        margin: '35%',
-        status: 'Critical Alert',
-        isCritical: true,
-      ),
-    ];
+    final products = const <_ProductProfitItem>[];
 
     return Container(
       padding: const EdgeInsets.all(18),
@@ -940,12 +904,29 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
           ),
 
           // Product Rows
-          Column(
-            children: products
-                .map((item) => Container(
+          if (products.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 36),
+              child: Center(
+                child: Text(
+                  'No product profitability data available yet.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF7E7569),
+                  ),
+                ),
+              ),
+            )
+          else
+            Column(
+              children: products
+                  .map(
+                    (item) => Container(
                       margin: const EdgeInsets.symmetric(vertical: 3),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 9),
+                        horizontal: 12,
+                        vertical: 9,
+                      ),
                       decoration: BoxDecoration(
                         color: item.isCritical
                             ? const Color(0xFFFFF0F0) // Soft red highlight
@@ -1054,7 +1035,9 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
                               alignment: Alignment.centerLeft,
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3.5),
+                                  horizontal: 8,
+                                  vertical: 3.5,
+                                ),
                                 decoration: BoxDecoration(
                                   color: item.isCritical
                                       ? const Color(0xFFFFDFDF)
@@ -1076,9 +1059,10 @@ class _ProfitabilityAnalysisViewState extends State<ProfitabilityAnalysisView> {
                           ),
                         ],
                       ),
-                    ))
-                .toList(),
-          ),
+                    ),
+                  )
+                  .toList(),
+            ),
         ],
       ),
     );
@@ -1128,7 +1112,15 @@ class _DualAreaLineChart extends StatelessWidget {
         final height = constraints.maxHeight;
 
         // Labels
-        final xLabels = ['Oct 1', 'Oct 5', 'Oct 10', 'Oct 15', 'Oct 20', 'Oct 25', 'Oct 31'];
+        final xLabels = [
+          'Oct 1',
+          'Oct 5',
+          'Oct 10',
+          'Oct 15',
+          'Oct 20',
+          'Oct 25',
+          'Oct 31',
+        ];
         final yLabels = ['15L', '10L', '5L', '0'];
 
         const leftGutter = 34.0;
@@ -1149,14 +1141,16 @@ class _DualAreaLineChart extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: yLabels
-                    .map((label) => Text(
-                          label,
-                          style: GoogleFonts.inter(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF9E958A),
-                          ),
-                        ))
+                    .map(
+                      (label) => Text(
+                        label,
+                        style: GoogleFonts.inter(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF9E958A),
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -1182,14 +1176,16 @@ class _DualAreaLineChart extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: xLabels
-                    .map((label) => Text(
-                          label,
-                          style: GoogleFonts.inter(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF9E958A),
-                          ),
-                        ))
+                    .map(
+                      (label) => Text(
+                        label,
+                        style: GoogleFonts.inter(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF9E958A),
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -1269,7 +1265,9 @@ class _SmoothCurvesPainter extends CustomPainter {
     );
 
     final revFillPaint = Paint()
-      ..shader = revGradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..shader = revGradient.createShader(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+      )
       ..style = PaintingStyle.fill;
     canvas.drawPath(revFillPath, revFillPaint);
 
@@ -1288,7 +1286,9 @@ class _SmoothCurvesPainter extends CustomPainter {
     );
 
     final cogsFillPaint = Paint()
-      ..shader = cogsGradient.createShader(Rect.fromLTWH(0, 0, size.width, size.height))
+      ..shader = cogsGradient.createShader(
+        Rect.fromLTWH(0, 0, size.width, size.height),
+      )
       ..style = PaintingStyle.fill;
     canvas.drawPath(cogsFillPath, cogsFillPaint);
 

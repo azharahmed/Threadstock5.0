@@ -2,9 +2,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../business/app_bootstrap_service.dart';
 import '../business/current_business_service.dart';
 import '../config/app_preferences_service.dart';
+import '../../features/inventory/data/location_repository.dart';
 import '../../features/onboarding/data/onboarding_repository.dart';
+import '../../features/sales/presentation/active_sale_session.dart';
 import 'authorization_service.dart';
 
 enum AuthStatus {
@@ -96,7 +99,7 @@ class AuthService extends ChangeNotifier {
       case AuthChangeEvent.signedIn:
       case AuthChangeEvent.tokenRefreshed:
       case AuthChangeEvent.userUpdated:
-        if (session != null && session.user != null) {
+        if (session != null) {
           _status = AuthStatus.authenticated;
           _lastAuthError = null;
         } else {
@@ -109,6 +112,13 @@ class AuthService extends ChangeNotifier {
         _currentUser = null;
         _currentSession = null;
         _lastAuthError = null;
+        CurrentBusinessService.instance.clear();
+        AppPreferencesService.instance.setCurrentBusinessId(null);
+        OnboardingRepository.instance.clearCache();
+        LocationRepository.clearCache();
+        AuthorizationService.instance.clear();
+        AppBootstrapService.clearSession();
+        ActiveSaleSession.instance.clear(preserveLocation: false);
         break;
 
       case AuthChangeEvent.passwordRecovery:
@@ -116,7 +126,7 @@ class AuthService extends ChangeNotifier {
         break;
 
       case AuthChangeEvent.initialSession:
-        if (session != null && session.user != null) {
+        if (session != null) {
           _status = AuthStatus.authenticated;
         } else {
           _status = AuthStatus.unauthenticated;
@@ -173,11 +183,15 @@ class AuthService extends ChangeNotifier {
   }
 
   /// Production sign-up with email, password, and full name.
-  /// The backend trigger `handle_new_user()` automatically provisions public.profiles.
+  /// Optionally accepts [username] and [phone] which are stored in
+  /// user_metadata and will be written to public.profiles by the
+  /// handle_new_user trigger once migration 002 is deployed.
   Future<AuthResponse> signUp({
     required String email,
     required String password,
     required String fullName,
+    String? username,
+    String? phone,
   }) async {
     final sb = _resolvedClient;
     if (sb == null) {
@@ -188,10 +202,18 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
 
     try {
+      final meta = <String, dynamic>{'full_name': fullName.trim()};
+      if (username != null && username.isNotEmpty) {
+        meta['username'] = username.trim().toLowerCase();
+      }
+      if (phone != null && phone.isNotEmpty) {
+        meta['phone'] = phone.trim();
+      }
+
       final response = await sb.auth.signUp(
         email: email.trim(),
         password: password,
-        data: {'full_name': fullName.trim()},
+        data: meta,
       );
 
       final user = response.user;
@@ -261,7 +283,10 @@ class AuthService extends ChangeNotifier {
       CurrentBusinessService.instance.clear();
       await AppPreferencesService.instance.setCurrentBusinessId(null);
       OnboardingRepository.instance.clearCache();
+      LocationRepository.clearCache();
       AuthorizationService.instance.clear();
+      AppBootstrapService.clearSession();
+      ActiveSaleSession.instance.clear(preserveLocation: false);
 
       _currentUser = null;
       _currentSession = null;

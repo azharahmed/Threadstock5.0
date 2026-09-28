@@ -22,7 +22,7 @@ class PurchasingDefaultsView extends StatefulWidget {
 
 class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
   int _activeTabIndex = 0;
-  String _selectedWarehouse = 'Central Warehouse (Zone A)';
+  String _selectedWarehouse = 'All Locations';
 
   // General Purchasing Rules
   String _defaultPaymentTerms = 'Net 30';
@@ -31,8 +31,9 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
   // Default Receiving Rules
   bool _requireQuantityCheck = true;
   bool _allowOverReceiving = true;
-  final TextEditingController _maxOverReceiveController =
-      TextEditingController(text: '10');
+  final TextEditingController _maxOverReceiveController = TextEditingController(
+    text: '10',
+  );
 
   // PO Approval Workflows
   bool _enablePoApprovals = true;
@@ -53,11 +54,7 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
     'Audit Log',
   ];
 
-  final List<String> _warehouses = const [
-    'Central Warehouse (Zone A)',
-    'Delhi Flagship (Zone B)',
-    'Mumbai Boutique (Zone C)',
-  ];
+  final List<String> _warehouses = const ['All Locations'];
 
   final List<String> _paymentTermsOptions = const [
     'Net 15',
@@ -136,18 +133,12 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Left Column: General Purchasing Rules & Default Receiving Rules (50% / 50%)
-                      Expanded(
-                        flex: 50,
-                        child: _buildLeftColumn(),
-                      ),
+                      Expanded(flex: 50, child: _buildLeftColumn()),
 
                       const SizedBox(width: 24),
 
                       // Right Column: PO Approval Workflows & Cost Tracking & Duties (50% / 50%)
-                      Expanded(
-                        flex: 50,
-                        child: _buildRightColumn(),
-                      ),
+                      Expanded(flex: 50, child: _buildRightColumn()),
                     ],
                   ),
                 ],
@@ -308,7 +299,7 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
                     widget.onSelectSection!('transfer_settings');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Transfer Settings > Central Warehouse (Zone A)',
+                      'Settings > Transfer Settings',
                       'Configure stock transfer workflows, transit times and receiving preferences.',
                     );
                   }
@@ -317,7 +308,7 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
                     widget.onSelectSection!('import_export');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Import / Export Center > Central Warehouse (Zone A)',
+                      'Settings > Import / Export Center',
                       'Import and export your business data with ease. Manage files, track history, and ensure data accuracy.',
                     );
                   }
@@ -326,7 +317,7 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
                     widget.onSelectSection!('api_webhooks');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > API & Webhooks > Central Warehouse (Zone A)',
+                      'Settings > API & Webhooks',
                       'Manage API access, configure webhooks, and integrate with external systems.',
                     );
                   }
@@ -335,7 +326,7 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
                     widget.onSelectSection!('audit_log');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > System Audit Log > Central Warehouse (Zone A)',
+                      'Settings > System Audit Log',
                       'Track all system changes, user actions, and important events across ThreadStock.',
                     );
                   }
@@ -366,7 +357,9 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
           color: isSelected ? const Color(0xFF7A481B) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF7A481B) : const Color(0xFFDFD4C5),
+            color: isSelected
+                ? const Color(0xFF7A481B)
+                : const Color(0xFFDFD4C5),
           ),
         ),
         child: Text(
@@ -556,7 +549,8 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
                 onChanged: (val) {
                   setState(() => _autoGeneratePOs = val);
                   _showFeedback(
-                      'Auto-generation of POs ${val ? "enabled" : "disabled"}');
+                    'Auto-generation of POs ${val ? "enabled" : "disabled"}',
+                  );
                 },
               ),
             ],
@@ -665,7 +659,8 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
                 onChanged: (val) {
                   setState(() => _requireQuantityCheck = val);
                   _showFeedback(
-                      'Quantity check requirement ${val ? "enabled" : "disabled"}');
+                    'Quantity check requirement ${val ? "enabled" : "disabled"}',
+                  );
                 },
               ),
             ],
@@ -706,7 +701,8 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
                 onChanged: (val) {
                   setState(() => _allowOverReceiving = val);
                   _showFeedback(
-                      'Over-receiving ${val ? "permitted" : "restricted"}');
+                    'Over-receiving ${val ? "permitted" : "restricted"}',
+                  );
                 },
               ),
             ],
@@ -891,8 +887,7 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
                 value: _enablePoApprovals,
                 onChanged: (val) {
                   setState(() => _enablePoApprovals = val);
-                  _showFeedback(
-                      'PO Approvals ${val ? "enabled" : "disabled"}');
+                  _showFeedback('PO Approvals ${val ? "enabled" : "disabled"}');
                 },
               ),
             ],
@@ -1097,7 +1092,8 @@ class _PurchasingDefaultsViewState extends State<PurchasingDefaultsView> {
                 onChanged: (val) {
                   setState(() => _calculateLandedCost = val);
                   _showFeedback(
-                      'Landed cost calculation ${val ? "enabled" : "disabled"}');
+                    'Landed cost calculation ${val ? "enabled" : "disabled"}',
+                  );
                 },
               ),
             ],

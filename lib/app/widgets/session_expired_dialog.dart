@@ -86,10 +86,7 @@ class _SessionExpiredDialogState extends State<SessionExpiredDialog> {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: const Color(0xFFEADBCA),
-              width: 1.0,
-            ),
+            border: Border.all(color: const Color(0xFFEADBCA), width: 1.0),
             boxShadow: const [
               BoxShadow(
                 color: Color(0x1A000000),

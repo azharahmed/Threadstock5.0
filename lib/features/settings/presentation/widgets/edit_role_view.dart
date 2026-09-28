@@ -76,7 +76,8 @@ class _EditRoleViewState extends State<EditRoleView> {
       text: widget.role?.title ?? 'Inventory Staff',
     );
     _descriptionController = TextEditingController(
-      text: widget.role?.description ??
+      text:
+          widget.role?.description ??
           'Responsible for physical checks, logging local adjustments and executing region transfers.',
     );
 
@@ -208,25 +209,29 @@ class _EditRoleViewState extends State<EditRoleView> {
   }
 
   void _handleSave() {
-    final updatedRole = (widget.role ??
-            const RoleItem(
-              id: 'inventory_staff',
-              title: 'Inventory Staff',
-              description: '',
-              memberCount: 12,
-              icon: Icons.inventory_2_outlined,
-            ))
-        .copyWith(
-      title: _nameController.text.trim(),
-      description: _descriptionController.text.trim(),
-    );
+    final updatedRole =
+        (widget.role ??
+                const RoleItem(
+                  id: 'inventory_staff',
+                  title: 'Inventory Staff',
+                  description: '',
+                  memberCount: 12,
+                  icon: Icons.inventory_2_outlined,
+                ))
+            .copyWith(
+              title: _nameController.text.trim(),
+              description: _descriptionController.text.trim(),
+            );
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               "Role '${_nameController.text}' permissions updated successfully.",
@@ -320,7 +325,10 @@ class _EditRoleViewState extends State<EditRoleView> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFFAF2E6),
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFE8DDD0), width: 1.2),
+                  border: Border.all(
+                    color: const Color(0xFFE8DDD0),
+                    width: 1.2,
+                  ),
                 ),
                 child: const Icon(
                   Icons.people_outline_rounded,
@@ -368,8 +376,13 @@ class _EditRoleViewState extends State<EditRoleView> {
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFFD8CEC1)),
                 backgroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: Text(
                 'Cancel',
@@ -386,8 +399,13 @@ class _EditRoleViewState extends State<EditRoleView> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5C3E21),
                 elevation: 0,
-                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 22,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: Text(
                 'Save Changes',
@@ -417,15 +435,9 @@ class _EditRoleViewState extends State<EditRoleView> {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  flex: 5,
-                  child: _buildRoleNameField(),
-                ),
+                Expanded(flex: 5, child: _buildRoleNameField()),
                 const SizedBox(width: 20),
-                Expanded(
-                  flex: 6,
-                  child: _buildRoleDescriptionField(),
-                ),
+                Expanded(flex: 6, child: _buildRoleDescriptionField()),
               ],
             );
           } else {
@@ -480,7 +492,10 @@ class _EditRoleViewState extends State<EditRoleView> {
           ),
           decoration: InputDecoration(
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
@@ -493,7 +508,10 @@ class _EditRoleViewState extends State<EditRoleView> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFBA8A55), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFFBA8A55),
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -523,7 +541,10 @@ class _EditRoleViewState extends State<EditRoleView> {
           ),
           decoration: InputDecoration(
             isDense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 14,
+              vertical: 12,
+            ),
             filled: true,
             fillColor: Colors.white,
             border: OutlineInputBorder(
@@ -536,7 +557,10 @@ class _EditRoleViewState extends State<EditRoleView> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: const BorderSide(color: Color(0xFFBA8A55), width: 1.5),
+              borderSide: const BorderSide(
+                color: Color(0xFFBA8A55),
+                width: 1.5,
+              ),
             ),
           ),
         ),
@@ -662,8 +686,7 @@ class _EditRoleViewState extends State<EditRoleView> {
         ),
 
         // Operation Rows
-        for (final op in module.operations)
-          _buildOperationRow(op),
+        for (final op in module.operations) _buildOperationRow(op),
       ],
     );
   }
@@ -733,16 +756,14 @@ class _EditRoleViewState extends State<EditRoleView> {
               color: isChecked ? const Color(0xFF5C3E21) : Colors.white,
               borderRadius: BorderRadius.circular(4),
               border: Border.all(
-                color: isChecked ? const Color(0xFF5C3E21) : const Color(0xFFDCD2C3),
+                color: isChecked
+                    ? const Color(0xFF5C3E21)
+                    : const Color(0xFFDCD2C3),
                 width: 1.5,
               ),
             ),
             child: isChecked
-                ? const Icon(
-                    Icons.check_rounded,
-                    size: 13,
-                    color: Colors.white,
-                  )
+                ? const Icon(Icons.check_rounded, size: 13, color: Colors.white)
                 : null,
           ),
         ),
@@ -782,7 +803,8 @@ class _EditRoleViewState extends State<EditRoleView> {
           ),
           const SizedBox(width: 16),
           OutlinedButton.icon(
-            onPressed: widget.onCreateCustomRole ??
+            onPressed:
+                widget.onCreateCustomRole ??
                 () {
                   setState(() {
                     _nameController.text = 'New Custom Role';
@@ -803,7 +825,10 @@ class _EditRoleViewState extends State<EditRoleView> {
                     SnackBar(
                       content: Text(
                         'Initialized template for New Custom Role.',
-                        style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: Colors.white,
+                        ),
                       ),
                       backgroundColor: const Color(0xFF1E1C1A),
                       behavior: SnackBarBehavior.floating,
@@ -811,7 +836,11 @@ class _EditRoleViewState extends State<EditRoleView> {
                     ),
                   );
                 },
-            icon: const Icon(Icons.add_rounded, size: 16, color: Color(0xFF1E1C1A)),
+            icon: const Icon(
+              Icons.add_rounded,
+              size: 16,
+              color: Color(0xFF1E1C1A),
+            ),
             label: Text(
               'Create Custom Role',
               style: GoogleFonts.inter(
@@ -824,7 +853,9 @@ class _EditRoleViewState extends State<EditRoleView> {
               side: const BorderSide(color: Color(0xFFDCD2C3)),
               backgroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
         ],

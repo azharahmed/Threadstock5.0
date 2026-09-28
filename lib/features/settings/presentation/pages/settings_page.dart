@@ -53,14 +53,15 @@ class _SettingsPageState extends State<SettingsPage> {
   String _firstDayOfWeek = 'Monday';
 
   // Preferences: Operational Defaults
-  String _defaultLandingDashboard = 'Central Warehouse (Zone A)';
+  String _defaultLandingDashboard = 'Global Executive Overview';
   bool _enableGuidedOnboarding = true;
   String _tableDensity = 'Compact Density';
   String _defaultRowsPerPage = '50 Items';
   bool _enableQuickKeyboardShortcuts = true;
 
   // Help & Support form state
-  final TextEditingController _supportSubjectController = TextEditingController();
+  final TextEditingController _supportSubjectController =
+      TextEditingController();
   String _selectedSupportCategory = 'Inventory Reconciliation & Auditing';
   final TextEditingController _supportDescController = TextEditingController();
 
@@ -72,26 +73,14 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   final List<_SettingsNavItem> _navItems = const [
-    _SettingsNavItem(
-      label: 'Preferences',
-      icon: Icons.grid_view_rounded,
-    ),
+    _SettingsNavItem(label: 'Preferences', icon: Icons.grid_view_rounded),
     _SettingsNavItem(
       label: 'Subscription & Plan',
       icon: Icons.subtitles_outlined,
     ),
-    _SettingsNavItem(
-      label: 'Billing',
-      icon: Icons.receipt_long_outlined,
-    ),
-    _SettingsNavItem(
-      label: 'Help & Support',
-      icon: Icons.help_outline_rounded,
-    ),
-    _SettingsNavItem(
-      label: 'System Status',
-      icon: Icons.show_chart_rounded,
-    ),
+    _SettingsNavItem(label: 'Billing', icon: Icons.receipt_long_outlined),
+    _SettingsNavItem(label: 'Help & Support', icon: Icons.help_outline_rounded),
+    _SettingsNavItem(label: 'System Status', icon: Icons.show_chart_rounded),
   ];
 
   @override
@@ -100,25 +89,17 @@ class _SettingsPageState extends State<SettingsPage> {
     _currentSection = widget.initialSection;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_currentSection == 'settings_search' || _currentSection == 'search') {
-        widget.onSubNavChanged?.call(
-          'Settings Search',
-          '',
-        );
-      } else if (_currentSection == 'system_settings' || _currentSection == 'data_retention') {
-        widget.onSubNavChanged?.call(
-          'System Settings',
-          '',
-        );
+        widget.onSubNavChanged?.call('Settings Search', '');
+      } else if (_currentSection == 'system_settings' ||
+          _currentSection == 'data_retention') {
+        widget.onSubNavChanged?.call('System Settings', '');
       } else if (_currentSection == 'add_location') {
         widget.onSubNavChanged?.call(
           'Add Location',
           'Settings → Locations → Add Location',
         );
       } else if (_currentSection == 'locations') {
-        widget.onSubNavChanged?.call(
-          'Locations',
-          'Settings > Locations',
-        );
+        widget.onSubNavChanged?.call('Locations', 'Settings > Locations');
       } else if (_currentSection == 'business_profile') {
         widget.onSubNavChanged?.call(
           'Business Profile',
@@ -149,7 +130,8 @@ class _SettingsPageState extends State<SettingsPage> {
           'Settings > Roles > Edit Role: Inventory Staff',
           '',
         );
-      } else if (_currentSection == 'security_sso' || _currentSection == 'security') {
+      } else if (_currentSection == 'security_sso' ||
+          _currentSection == 'security') {
         widget.onSubNavChanged?.call(
           'Settings > Security',
           'Enforce strong security policies, session handling and review active team session logs.',
@@ -159,7 +141,8 @@ class _SettingsPageState extends State<SettingsPage> {
           'Settings > Sales Channels',
           'Connect, manage and configure active physical or digital checkout points of sale.',
         );
-      } else if (_currentSection == 'pos_channel' || _currentSection == 'instore_pos') {
+      } else if (_currentSection == 'pos_channel' ||
+          _currentSection == 'instore_pos') {
         widget.onSubNavChanged?.call(
           'Settings > Sales Channels > In-Store POS',
           '',
@@ -169,7 +152,8 @@ class _SettingsPageState extends State<SettingsPage> {
           'Settings > Integrations',
           'Link e-commerce channels, courier aggregators, and enterprise accounting software.',
         );
-      } else if (_currentSection == 'shopify_connector' || _currentSection == 'shopify') {
+      } else if (_currentSection == 'shopify_connector' ||
+          _currentSection == 'shopify') {
         widget.onSubNavChanged?.call(
           'Integrations > Shopify Connector',
           'Connect your Shopify store to sync products, inventory and orders with ThreadStock.',
@@ -199,35 +183,35 @@ class _SettingsPageState extends State<SettingsPage> {
           _currentSection == 'purchasing' ||
           _currentSection == 'po_defaults') {
         widget.onSubNavChanged?.call(
-          'Settings > Purchasing Defaults > Central Warehouse (Zone A)',
+          'Settings > Purchasing Defaults',
           'Configure buying, receiving and cost settings for your business.',
         );
       } else if (_currentSection == 'transfer_settings' ||
           _currentSection == 'transfer_defaults' ||
           _currentSection == 'transfers_schema') {
         widget.onSubNavChanged?.call(
-          'Settings > Transfer Settings > Central Warehouse (Zone A)',
+          'Settings > Transfer Settings',
           'Configure stock transfer workflows, transit times and receiving preferences.',
         );
       } else if (_currentSection == 'import_export' ||
           _currentSection == 'import_export_studio' ||
           _currentSection == 'import_export_center') {
         widget.onSubNavChanged?.call(
-          'Settings > Import / Export Center > Central Warehouse (Zone A)',
+          'Settings > Import / Export Center',
           'Import and export your business data with ease. Manage files, track history, and ensure data accuracy.',
         );
       } else if (_currentSection == 'api_webhooks' ||
           _currentSection == 'webhooks' ||
           _currentSection == 'api') {
         widget.onSubNavChanged?.call(
-          'Settings > API & Webhooks > Central Warehouse (Zone A)',
+          'Settings > API & Webhooks',
           'Manage API access, configure webhooks, and integrate with external systems.',
         );
       } else if (_currentSection == 'audit_log' ||
           _currentSection == 'system_audit_log' ||
           _currentSection == 'activity_logs') {
         widget.onSubNavChanged?.call(
-          'Settings > System Audit Log > Central Warehouse (Zone A)',
+          'Settings > System Audit Log',
           'Track all system changes, user actions, and important events across ThreadStock.',
         );
       } else if (_currentSection == 'sync_queue' ||
@@ -259,7 +243,7 @@ class _SettingsPageState extends State<SettingsPage> {
       case 0:
         widget.onSubNavChanged!(
           'Preferences',
-          'Tailor the interface and default configurations for Atelier OS',
+          'Tailor the interface and default configurations for ThreadStock',
         );
         break;
       case 1:
@@ -400,10 +384,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 'Settings > Business Profile',
               );
             } else if (section == 'locations') {
-              widget.onSubNavChanged?.call(
-                'Locations',
-                'Settings > Locations',
-              );
+              widget.onSubNavChanged?.call('Locations', 'Settings > Locations');
             } else if (section == 'add_location') {
               widget.onSubNavChanged?.call(
                 'Add Location',
@@ -474,35 +455,35 @@ class _SettingsPageState extends State<SettingsPage> {
                 section == 'purchasing' ||
                 section == 'po_defaults') {
               widget.onSubNavChanged?.call(
-                'Settings > Purchasing Defaults > Central Warehouse (Zone A)',
+                'Settings > Purchasing Defaults',
                 'Configure buying, receiving and cost settings for your business.',
               );
             } else if (section == 'transfer_settings' ||
                 section == 'transfer_defaults' ||
                 section == 'transfers_schema') {
               widget.onSubNavChanged?.call(
-                'Settings > Transfer Settings > Central Warehouse (Zone A)',
+                'Settings > Transfer Settings',
                 'Configure stock transfer workflows, transit times and receiving preferences.',
               );
             } else if (section == 'import_export' ||
                 section == 'import_export_studio' ||
                 section == 'import_export_center') {
               widget.onSubNavChanged?.call(
-                'Settings > Import / Export Center > Central Warehouse (Zone A)',
+                'Settings > Import / Export Center',
                 'Import and export your business data with ease. Manage files, track history, and ensure data accuracy.',
               );
             } else if (section == 'api_webhooks' ||
                 section == 'webhooks' ||
                 section == 'api') {
               widget.onSubNavChanged?.call(
-                'Settings > API & Webhooks > Central Warehouse (Zone A)',
+                'Settings > API & Webhooks',
                 'Manage API access, configure webhooks, and integrate with external systems.',
               );
             } else if (section == 'audit_log' ||
                 section == 'system_audit_log' ||
                 section == 'activity_logs') {
               widget.onSubNavChanged?.call(
-                'Settings > System Audit Log > Central Warehouse (Zone A)',
+                'Settings > System Audit Log',
                 'Track all system changes, user actions, and important events across ThreadStock.',
               );
             } else if (section == 'sync_queue' ||
@@ -531,28 +512,28 @@ class _SettingsPageState extends State<SettingsPage> {
             _currentSection = sec;
             if (sec == 'transfer_settings' || sec == 'transfer_defaults') {
               widget.onSubNavChanged?.call(
-                'Settings > Transfer Settings > Central Warehouse (Zone A)',
+                'Settings > Transfer Settings',
                 'Configure stock transfer workflows, transit times and receiving preferences.',
               );
             } else if (sec == 'import_export' ||
                 sec == 'import_export_studio' ||
                 sec == 'import_export_center') {
               widget.onSubNavChanged?.call(
-                'Settings > Import / Export Center > Central Warehouse (Zone A)',
+                'Settings > Import / Export Center',
                 'Import and export your business data with ease. Manage files, track history, and ensure data accuracy.',
               );
             } else if (sec == 'api_webhooks' ||
                 sec == 'webhooks' ||
                 sec == 'api') {
               widget.onSubNavChanged?.call(
-                'Settings > API & Webhooks > Central Warehouse (Zone A)',
+                'Settings > API & Webhooks',
                 'Manage API access, configure webhooks, and integrate with external systems.',
               );
             } else if (sec == 'audit_log' ||
                 sec == 'system_audit_log' ||
                 sec == 'activity_logs') {
               widget.onSubNavChanged?.call(
-                'Settings > System Audit Log > Central Warehouse (Zone A)',
+                'Settings > System Audit Log',
                 'Track all system changes, user actions, and important events across ThreadStock.',
               );
             }
@@ -574,28 +555,28 @@ class _SettingsPageState extends State<SettingsPage> {
             _currentSection = sec;
             if (sec == 'purchasing_defaults' || sec == 'purchasing') {
               widget.onSubNavChanged?.call(
-                'Settings > Purchasing Defaults > Central Warehouse (Zone A)',
+                'Settings > Purchasing Defaults',
                 'Configure buying, receiving and cost settings for your business.',
               );
             } else if (sec == 'import_export' ||
                 sec == 'import_export_studio' ||
                 sec == 'import_export_center') {
               widget.onSubNavChanged?.call(
-                'Settings > Import / Export Center > Central Warehouse (Zone A)',
+                'Settings > Import / Export Center',
                 'Import and export your business data with ease. Manage files, track history, and ensure data accuracy.',
               );
             } else if (sec == 'api_webhooks' ||
                 sec == 'webhooks' ||
                 sec == 'api') {
               widget.onSubNavChanged?.call(
-                'Settings > API & Webhooks > Central Warehouse (Zone A)',
+                'Settings > API & Webhooks',
                 'Manage API access, configure webhooks, and integrate with external systems.',
               );
             } else if (sec == 'audit_log' ||
                 sec == 'system_audit_log' ||
                 sec == 'activity_logs') {
               widget.onSubNavChanged?.call(
-                'Settings > System Audit Log > Central Warehouse (Zone A)',
+                'Settings > System Audit Log',
                 'Track all system changes, user actions, and important events across ThreadStock.',
               );
             }
@@ -617,27 +598,27 @@ class _SettingsPageState extends State<SettingsPage> {
             _currentSection = sec;
             if (sec == 'purchasing_defaults' || sec == 'purchasing') {
               widget.onSubNavChanged?.call(
-                'Settings > Purchasing Defaults > Central Warehouse (Zone A)',
+                'Settings > Purchasing Defaults',
                 'Configure buying, receiving and cost settings for your business.',
               );
             } else if (sec == 'transfer_settings' ||
                 sec == 'transfer_defaults') {
               widget.onSubNavChanged?.call(
-                'Settings > Transfer Settings > Central Warehouse (Zone A)',
+                'Settings > Transfer Settings',
                 'Configure stock transfer workflows, transit times and receiving preferences.',
               );
             } else if (sec == 'api_webhooks' ||
                 sec == 'webhooks' ||
                 sec == 'api') {
               widget.onSubNavChanged?.call(
-                'Settings > API & Webhooks > Central Warehouse (Zone A)',
+                'Settings > API & Webhooks',
                 'Manage API access, configure webhooks, and integrate with external systems.',
               );
             } else if (sec == 'audit_log' ||
                 sec == 'system_audit_log' ||
                 sec == 'activity_logs') {
               widget.onSubNavChanged?.call(
-                'Settings > System Audit Log > Central Warehouse (Zone A)',
+                'Settings > System Audit Log',
                 'Track all system changes, user actions, and important events across ThreadStock.',
               );
             }
@@ -659,27 +640,27 @@ class _SettingsPageState extends State<SettingsPage> {
             _currentSection = sec;
             if (sec == 'purchasing_defaults' || sec == 'purchasing') {
               widget.onSubNavChanged?.call(
-                'Settings > Purchasing Defaults > Central Warehouse (Zone A)',
+                'Settings > Purchasing Defaults',
                 'Configure buying, receiving and cost settings for your business.',
               );
             } else if (sec == 'transfer_settings' ||
                 sec == 'transfer_defaults') {
               widget.onSubNavChanged?.call(
-                'Settings > Transfer Settings > Central Warehouse (Zone A)',
+                'Settings > Transfer Settings',
                 'Configure stock transfer workflows, transit times and receiving preferences.',
               );
             } else if (sec == 'import_export' ||
                 sec == 'import_export_studio' ||
                 sec == 'import_export_center') {
               widget.onSubNavChanged?.call(
-                'Settings > Import / Export Center > Central Warehouse (Zone A)',
+                'Settings > Import / Export Center',
                 'Import and export your business data with ease. Manage files, track history, and ensure data accuracy.',
               );
             } else if (sec == 'audit_log' ||
                 sec == 'system_audit_log' ||
                 sec == 'activity_logs') {
               widget.onSubNavChanged?.call(
-                'Settings > System Audit Log > Central Warehouse (Zone A)',
+                'Settings > System Audit Log',
                 'Track all system changes, user actions, and important events across ThreadStock.',
               );
             }
@@ -701,27 +682,27 @@ class _SettingsPageState extends State<SettingsPage> {
             _currentSection = sec;
             if (sec == 'purchasing_defaults' || sec == 'purchasing') {
               widget.onSubNavChanged?.call(
-                'Settings > Purchasing Defaults > Central Warehouse (Zone A)',
+                'Settings > Purchasing Defaults',
                 'Configure buying, receiving and cost settings for your business.',
               );
             } else if (sec == 'transfer_settings' ||
                 sec == 'transfer_defaults') {
               widget.onSubNavChanged?.call(
-                'Settings > Transfer Settings > Central Warehouse (Zone A)',
+                'Settings > Transfer Settings',
                 'Configure stock transfer workflows, transit times and receiving preferences.',
               );
             } else if (sec == 'import_export' ||
                 sec == 'import_export_studio' ||
                 sec == 'import_export_center') {
               widget.onSubNavChanged?.call(
-                'Settings > Import / Export Center > Central Warehouse (Zone A)',
+                'Settings > Import / Export Center',
                 'Import and export your business data with ease. Manage files, track history, and ensure data accuracy.',
               );
             } else if (sec == 'api_webhooks' ||
                 sec == 'webhooks' ||
                 sec == 'api') {
               widget.onSubNavChanged?.call(
-                'Settings > API & Webhooks > Central Warehouse (Zone A)',
+                'Settings > API & Webhooks',
                 'Manage API access, configure webhooks, and integrate with external systems.',
               );
             }
@@ -750,7 +731,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 sec == 'system_audit_log' ||
                 sec == 'activity_logs') {
               widget.onSubNavChanged?.call(
-                'Settings > System Audit Log > Central Warehouse (Zone A)',
+                'Settings > System Audit Log',
                 'Track all system changes, user actions, and important events across ThreadStock.',
               );
             }
@@ -800,7 +781,8 @@ class _SettingsPageState extends State<SettingsPage> {
         onSubNavChanged: widget.onSubNavChanged,
       );
     }
-    if (_currentSection == 'shopify_connector' || _currentSection == 'shopify') {
+    if (_currentSection == 'shopify_connector' ||
+        _currentSection == 'shopify') {
       return ShopifyConnectorView(
         onBackToIntegrations: () {
           setState(() => _currentSection = 'integrations');
@@ -873,11 +855,20 @@ class _SettingsPageState extends State<SettingsPage> {
         onTabChanged: (section) {
           setState(() => _currentSection = section);
           if (section == 'roles_permissions') {
-            widget.onSubNavChanged?.call('Roles & Permissions', 'Manage workspace roles, permissions and granular system capabilities.');
+            widget.onSubNavChanged?.call(
+              'Roles & Permissions',
+              'Manage workspace roles, permissions and granular system capabilities.',
+            );
           } else if (section == 'locations') {
-            widget.onSubNavChanged?.call('Locations', 'Manage locations and inventory nodes.');
+            widget.onSubNavChanged?.call(
+              'Locations',
+              'Manage locations and inventory nodes.',
+            );
           } else if (section == 'integrations') {
-            widget.onSubNavChanged?.call('Settings > Integrations', 'Link e-commerce channels, courier aggregators, and enterprise accounting software.');
+            widget.onSubNavChanged?.call(
+              'Settings > Integrations',
+              'Link e-commerce channels, courier aggregators, and enterprise accounting software.',
+            );
           } else if (section == 'system_settings') {
             widget.onSubNavChanged?.call('System Settings', '');
           }
@@ -894,17 +885,11 @@ class _SettingsPageState extends State<SettingsPage> {
       return AddLocationView(
         onCancel: () {
           setState(() => _currentSection = 'locations');
-          widget.onSubNavChanged?.call(
-            'Locations',
-            'Settings > Locations',
-          );
+          widget.onSubNavChanged?.call('Locations', 'Settings > Locations');
         },
         onCreated: (name) {
           setState(() => _currentSection = 'locations');
-          widget.onSubNavChanged?.call(
-            'Locations',
-            'Settings > Locations',
-          );
+          widget.onSubNavChanged?.call('Locations', 'Settings > Locations');
         },
       );
     }
@@ -1056,11 +1041,7 @@ class _SettingsPageState extends State<SettingsPage> {
               subtitle: 'Choose how dates appear across the application.',
               control: _buildDropdown(
                 value: _dateFormat,
-                options: const [
-                  'DD/MM/YYYY',
-                  'MM/DD/YYYY',
-                  'YYYY-MM-DD',
-                ],
+                options: const ['DD/MM/YYYY', 'MM/DD/YYYY', 'YYYY-MM-DD'],
                 onChanged: (val) => setState(() => _dateFormat = val),
               ),
             ),
@@ -1082,7 +1063,8 @@ class _SettingsPageState extends State<SettingsPage> {
         _buildCard(
           icon: Icons.layers_outlined,
           title: 'Operational Defaults',
-          subtitle: 'Configure default behaviours for your day-to-day operations.',
+          subtitle:
+              'Configure default behaviours for your day-to-day operations.',
           children: [
             _buildSettingRow(
               title: 'Default Landing Dashboard',
@@ -1090,10 +1072,8 @@ class _SettingsPageState extends State<SettingsPage> {
               control: _buildDropdown(
                 value: _defaultLandingDashboard,
                 options: const [
-                  'Central Warehouse (Zone A)',
-                  'Flagship Delhi (Zone B)',
-                  'Mumbai Boutique (Zone C)',
                   'Global Executive Overview',
+                  'Primary Location',
                 ],
                 onChanged: (val) =>
                     setState(() => _defaultLandingDashboard = val),
@@ -1131,8 +1111,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   '100 Items',
                   '250 Items',
                 ],
-                onChanged: (val) =>
-                    setState(() => _defaultRowsPerPage = val),
+                onChanged: (val) => setState(() => _defaultRowsPerPage = val),
               ),
             ),
             _buildDivider(),
@@ -1146,7 +1125,10 @@ class _SettingsPageState extends State<SettingsPage> {
                     onPressed: () => KeyboardShortcutsDialog.show(context),
                     style: TextButton.styleFrom(
                       foregroundColor: const Color(0xFF9E7744),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       minimumSize: Size.zero,
                     ),
                     child: Text(
@@ -1189,11 +1171,7 @@ class _SettingsPageState extends State<SettingsPage> {
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                Color(0xFFFCF9F4),
-                Color(0xFFFAF6EE),
-                Color(0xFFF7EFE1),
-              ],
+              colors: [Color(0xFFFCF9F4), Color(0xFFFAF6EE), Color(0xFFF7EFE1)],
             ),
             boxShadow: [
               BoxShadow(
@@ -1245,59 +1223,59 @@ class _SettingsPageState extends State<SettingsPage> {
                                   ),
                                 ),
                               ),
-                          const SizedBox(width: 12),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFAF2E6),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: const Color(0xFFDECDB9),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFAF2E6),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: const Color(0xFFDECDB9),
+                                  ),
+                                ),
+                                child: Text(
+                                  'ACTIVE PLAN',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.7,
+                                    color: const Color(0xFF9E7744),
+                                  ),
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              'ACTIVE PLAN',
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          RichText(
+                            text: TextSpan(
                               style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.7,
-                                color: const Color(0xFF9E7744),
+                                fontSize: 13.5,
+                                color: const Color(0xFF6B6358),
                               ),
+                              children: [
+                                const TextSpan(
+                                  text: 'Your package renews automatically on ',
+                                ),
+                                TextSpan(
+                                  text: 'October 15, 2024.',
+                                  style: GoogleFonts.inter(
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1E1C1A),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      RichText(
-                        text: TextSpan(
-                          style: GoogleFonts.inter(
-                            fontSize: 13.5,
-                            color: const Color(0xFF6B6358),
-                          ),
-                          children: [
-                            const TextSpan(
-                              text: 'Your package renews automatically on ',
-                            ),
-                            TextSpan(
-                              text: 'October 15, 2024.',
-                              style: GoogleFonts.inter(
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1E1C1A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
+              ),
+              const SizedBox(width: 16),
 
               // Right: Pricing Info
               Column(
@@ -1555,9 +1533,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [
                     // Header Row
                     TableRow(
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF7F2EB),
-                      ),
+                      decoration: const BoxDecoration(color: Color(0xFFF7F2EB)),
                       children: [
                         _buildTableHeaderCell('CAPABILITIES', isLeft: true),
                         _buildTableHeaderCell('STARTER'),
@@ -1596,9 +1572,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       isProBold: true,
                     ),
 
-                    // Row 4: Atelier AI Integration
+                    // Row 4: ThreadStock AI Integration
                     _buildMatrixRow(
-                      capability: 'Atelier AI Integration',
+                      capability: 'ThreadStock AI Integration',
                       starter: 'Not Available',
                       professional: 'Standard AI Assistant',
                       enterprise: 'Fine-tuned models',
@@ -1650,7 +1626,10 @@ class _SettingsPageState extends State<SettingsPage> {
                       height: 28,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFFBA8A55), width: 1.2),
+                        border: Border.all(
+                          color: const Color(0xFFBA8A55),
+                          width: 1.2,
+                        ),
                       ),
                       child: const Center(
                         child: Text(
@@ -1686,7 +1665,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   backgroundColor: Colors.white.withOpacity(0.85),
                   foregroundColor: const Color(0xFF1E1C1A),
                   side: const BorderSide(color: Color(0xFFDECDB9), width: 1.1),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 10,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -1918,7 +1900,8 @@ class _SettingsPageState extends State<SettingsPage> {
     return _buildCard(
       icon: Icons.receipt_long_outlined,
       title: 'Billing & Invoicing',
-      subtitle: 'Manage payment instruments, corporate GSTIN, and past statements.',
+      subtitle:
+          'Manage payment instruments, corporate GSTIN, and past statements.',
       children: [
         _buildSettingRow(
           title: 'Payment Method',
@@ -1935,7 +1918,7 @@ class _SettingsPageState extends State<SettingsPage> {
         _buildDivider(),
         _buildSettingRow(
           title: 'Billing Contact Email',
-          subtitle: 'finance@maisonatelier.com (Receives invoices and receipts)',
+          subtitle: 'finance@threadstock.ai (Receives invoices and receipts)',
           control: OutlinedButton(
             onPressed: () {},
             style: OutlinedButton.styleFrom(
@@ -1974,7 +1957,8 @@ class _SettingsPageState extends State<SettingsPage> {
               child: _buildTopQuickCard(
                 icon: Icons.smart_display_outlined,
                 title: 'Video Tutorials',
-                subtitle: 'Screencasts detailing Atelier OS setup and workflows',
+                subtitle:
+                    'Screencasts detailing ThreadStock setup and workflows',
               ),
             ),
             const SizedBox(width: 14),
@@ -2009,7 +1993,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFFAF7F2).withOpacity(0.92),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE8DFD3), width: 1.0),
+                  border: Border.all(
+                    color: const Color(0xFFE8DFD3),
+                    width: 1.0,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF2A231A).withOpacity(0.04),
@@ -2034,7 +2021,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFFAF6F0),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: const Color(0xFFDECDB9)),
+                                  border: Border.all(
+                                    color: const Color(0xFFDECDB9),
+                                  ),
                                 ),
                                 child: const Center(
                                   child: Icon(
@@ -2152,7 +2141,9 @@ class _SettingsPageState extends State<SettingsPage> {
                           items: const [
                             DropdownMenuItem(
                               value: 'Inventory Reconciliation & Auditing',
-                              child: Text('Inventory Reconciliation & Auditing'),
+                              child: Text(
+                                'Inventory Reconciliation & Auditing',
+                              ),
                             ),
                             DropdownMenuItem(
                               value: 'Barcode Scanner & POS Hardware',
@@ -2202,7 +2193,8 @@ class _SettingsPageState extends State<SettingsPage> {
                                 color: const Color(0xFF1E1C1A),
                               ),
                               decoration: InputDecoration(
-                                hintText: 'Explain details of your operational issue...',
+                                hintText:
+                                    'Explain details of your operational issue...',
                                 hintStyle: GoogleFonts.inter(
                                   fontSize: 12.5,
                                   color: const Color(0xFF9E958A),
@@ -2341,7 +2333,10 @@ class _SettingsPageState extends State<SettingsPage> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFFAF7F2).withOpacity(0.92),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE8DFD3), width: 1.0),
+                  border: Border.all(
+                    color: const Color(0xFFE8DFD3),
+                    width: 1.0,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFF2A231A).withOpacity(0.04),
@@ -2366,7 +2361,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFFAF6F0),
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: const Color(0xFFDECDB9)),
+                                  border: Border.all(
+                                    color: const Color(0xFFDECDB9),
+                                  ),
                                 ),
                                 child: const Center(
                                   child: Icon(
@@ -2435,7 +2432,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         2: FlexColumnWidth(1.8),
                         3: FlexColumnWidth(2.0),
                       },
-                      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                      defaultVerticalAlignment:
+                          TableCellVerticalAlignment.middle,
                       children: [
                         // Header
                         TableRow(
@@ -2910,11 +2908,7 @@ class _SettingsPageState extends State<SettingsPage> {
               shape: BoxShape.circle,
             ),
             child: const Center(
-              child: Icon(
-                Icons.check_rounded,
-                size: 22,
-                color: Colors.white,
-              ),
+              child: Icon(Icons.check_rounded, size: 22, color: Colors.white),
             ),
           ),
           const SizedBox(width: 16),
@@ -2934,7 +2928,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Atelier cloud platform is operating normally. No global incidents reported in past 24 hours.',
+                  'ThreadStock cloud platform is operating normally. No global incidents reported in past 24 hours.',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
@@ -2989,7 +2983,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     'Monitor real-time data flows between ThreadStock and connected external integrations.',
                   );
                 },
-                icon: const Icon(Icons.sync_rounded, size: 15, color: Color(0xFF1B4D2E)),
+                icon: const Icon(
+                  Icons.sync_rounded,
+                  size: 15,
+                  color: Color(0xFF1B4D2E),
+                ),
                 label: Text(
                   'Live Sync Queue',
                   style: GoogleFonts.inter(
@@ -3001,8 +2999,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 style: OutlinedButton.styleFrom(
                   backgroundColor: Colors.white,
                   side: const BorderSide(color: Color(0xFFB0D5BE)),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ],
@@ -3150,7 +3153,8 @@ class _SettingsPageState extends State<SettingsPage> {
             icon: Icons.dns_rounded,
             title: 'Core Retail Database Platform',
             uptime: '99.98% uptime',
-            description: 'Primary database, authentication and core data services.',
+            description:
+                'Primary database, authentication and core data services.',
             status: 'Operational',
             isDegraded: false,
           ),
@@ -3159,7 +3163,8 @@ class _SettingsPageState extends State<SettingsPage> {
             icon: Icons.cloud_outlined,
             title: 'Real-time Inventory Sync Engine',
             uptime: '99.92% uptime',
-            description: 'Synchronizes inventory across all locations in real-time.',
+            description:
+                'Synchronizes inventory across all locations in real-time.',
             status: 'Operational',
             isDegraded: false,
           ),
@@ -3168,14 +3173,15 @@ class _SettingsPageState extends State<SettingsPage> {
             icon: Icons.credit_card_outlined,
             title: 'POS and Payment Gateways Processing',
             uptime: '100% uptime',
-            description: 'Payment processing, card terminals and transaction services.',
+            description:
+                'Payment processing, card terminals and transaction services.',
             status: 'Operational',
             isDegraded: false,
           ),
           _buildServiceDivider(),
           _buildServiceRow(
             icon: Icons.psychology_outlined,
-            title: 'Atelier OS AI Prediction Engines',
+            title: 'ThreadStock AI Prediction Engines',
             uptime: '94.20% uptime',
             description: 'AI forecasting, recommendation and analytics models.',
             status: 'Degraded Performance',
@@ -3186,7 +3192,8 @@ class _SettingsPageState extends State<SettingsPage> {
             icon: Icons.alt_route_rounded,
             title: 'Global Warehousing API Integrations',
             uptime: '99.95% uptime',
-            description: 'Third-party integrations and warehouse sync services.',
+            description:
+                'Third-party integrations and warehouse sync services.',
             status: 'Operational',
             isDegraded: false,
           ),
@@ -3218,9 +3225,15 @@ class _SettingsPageState extends State<SettingsPage> {
     required bool isDegraded,
     bool isLast = false,
   }) {
-    final statusColor = isDegraded ? const Color(0xFFC26100) : const Color(0xFF2E7D32);
-    final statusBg = isDegraded ? const Color(0xFFFFF3E0) : const Color(0xFFE8F5E9);
-    final statusBorder = isDegraded ? const Color(0xFFFFE0B2) : const Color(0xFFC8E6C9);
+    final statusColor = isDegraded
+        ? const Color(0xFFC26100)
+        : const Color(0xFF2E7D32);
+    final statusBg = isDegraded
+        ? const Color(0xFFFFF3E0)
+        : const Color(0xFFE8F5E9);
+    final statusBorder = isDegraded
+        ? const Color(0xFFFFE0B2)
+        : const Color(0xFFC8E6C9);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -3236,9 +3249,7 @@ class _SettingsPageState extends State<SettingsPage> {
               shape: BoxShape.circle,
               border: Border.all(color: statusBorder),
             ),
-            child: Center(
-              child: Icon(icon, size: 18, color: statusColor),
-            ),
+            child: Center(child: Icon(icon, size: 18, color: statusColor)),
           ),
           const SizedBox(width: 14),
 
@@ -3371,7 +3382,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFFAF6F0),
                               shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0xFFDECDB9)),
+                              border: Border.all(
+                                color: const Color(0xFFDECDB9),
+                              ),
                             ),
                             child: const Center(
                               child: Icon(
@@ -3467,7 +3480,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFE8F5E9),
                               borderRadius: BorderRadius.circular(5),
-                              border: Border.all(color: const Color(0xFFC8E6C9)),
+                              border: Border.all(
+                                color: const Color(0xFFC8E6C9),
+                              ),
                             ),
                             child: Text(
                               'Resolved',
@@ -3539,7 +3554,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFFAF6F0),
                               shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0xFFDECDB9)),
+                              border: Border.all(
+                                color: const Color(0xFFDECDB9),
+                              ),
                             ),
                             child: const Center(
                               child: Icon(
@@ -3635,7 +3652,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFEFF6FF),
                               borderRadius: BorderRadius.circular(5),
-                              border: Border.all(color: const Color(0xFFDBEAFE)),
+                              border: Border.all(
+                                color: const Color(0xFFDBEAFE),
+                              ),
                             ),
                             child: Text(
                               'Scheduled',
@@ -3753,9 +3772,7 @@ class _SettingsPageState extends State<SettingsPage> {
           // Setting Rows
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            child: Column(
-              children: children,
-            ),
+            child: Column(children: children),
           ),
         ],
       ),
@@ -3836,7 +3853,9 @@ class _SettingsPageState extends State<SettingsPage> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFFBF7EE) : Colors.transparent,
+                color: isSelected
+                    ? const Color(0xFFFBF7EE)
+                    : Colors.transparent,
                 borderRadius: BorderRadius.circular(7),
                 border: isSelected
                     ? Border.all(color: const Color(0xFFBA8A55), width: 1.2)
@@ -3889,10 +3908,7 @@ class _SettingsPageState extends State<SettingsPage> {
             color: const Color(0xFF1E1C1A),
           ),
           items: options.map((opt) {
-            return DropdownMenuItem(
-              value: opt,
-              child: Text(opt),
-            );
+            return DropdownMenuItem(value: opt, child: Text(opt));
           }).toList(),
           onChanged: (val) {
             if (val != null) {
@@ -3923,36 +3939,33 @@ class _SettingsPageState extends State<SettingsPage> {
             color: value ? const Color(0xFF553519) : const Color(0xFFD8CFBE),
           ),
           child: AnimatedAlign(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeInOut,
-          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            width: 19,
-            height: 19,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x33000000),
-                  blurRadius: 3,
-                  offset: Offset(0, 1),
-                ),
-              ],
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeInOut,
+            alignment: value ? Alignment.centerRight : Alignment.centerLeft,
+            child: Container(
+              width: 19,
+              height: 19,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 3,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }
 
 class _SettingsNavItem {
-  const _SettingsNavItem({
-    required this.label,
-    required this.icon,
-  });
+  const _SettingsNavItem({required this.label, required this.icon});
 
   final String label;
   final IconData icon;
@@ -3990,10 +4003,7 @@ class _SubNavItemWidgetState extends State<_SubNavItemWidget> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 140),
-          padding: const EdgeInsets.symmetric(
-            horizontal: 14,
-            vertical: 10,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(8),
@@ -4006,8 +4016,8 @@ class _SubNavItemWidgetState extends State<_SubNavItemWidget> {
                 color: widget.isSelected
                     ? const Color(0xFF1E1C1A)
                     : (_isHovered
-                        ? const Color(0xFF3E3831)
-                        : const Color(0xFF6B6358)),
+                          ? const Color(0xFF3E3831)
+                          : const Color(0xFF6B6358)),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -4021,8 +4031,8 @@ class _SubNavItemWidgetState extends State<_SubNavItemWidget> {
                     color: widget.isSelected
                         ? const Color(0xFF1E1C1A)
                         : (_isHovered
-                            ? const Color(0xFF2C2721)
-                            : const Color(0xFF4E473E)),
+                              ? const Color(0xFF2C2721)
+                              : const Color(0xFF4E473E)),
                   ),
                 ),
               ),

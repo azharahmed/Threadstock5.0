@@ -55,8 +55,9 @@ class _DeleteProductDialogState extends State<DeleteProductDialog> {
   void initState() {
     super.initState();
     _isConfirmedChecked = widget.initialChecked;
-    _confirmTextController =
-        TextEditingController(text: widget.initialConfirmText);
+    _confirmTextController = TextEditingController(
+      text: widget.initialConfirmText,
+    );
   }
 
   @override
@@ -336,10 +337,7 @@ class _DeleteProductDialogState extends State<DeleteProductDialog> {
           decoration: BoxDecoration(
             color: const Color(0xFFFFFBFB),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: const Color(0xFFFCA5A5),
-              width: 1.2,
-            ),
+            border: Border.all(color: const Color(0xFFFCA5A5), width: 1.2),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 14),
           alignment: Alignment.centerLeft,

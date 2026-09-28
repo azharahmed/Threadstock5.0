@@ -25,8 +25,11 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -81,8 +84,10 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                           imageAsset,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.inventory_2_outlined,
-                                  color: Color(0xFF9E8462)),
+                              const Icon(
+                                Icons.inventory_2_outlined,
+                                color: Color(0xFF9E8462),
+                              ),
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -110,8 +115,10 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                   ),
                   IconButton(
                     onPressed: () => Navigator.of(ctx).pop(),
-                    icon: const Icon(Icons.close_rounded,
-                        color: Color(0xFF7E766B)),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Color(0xFF7E766B),
+                    ),
                   ),
                 ],
               ),
@@ -127,9 +134,17 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
                     _buildDialogMetric('Actual Sales', actualSales),
-                    Container(width: 1, height: 32, color: const Color(0xFFE5DACD)),
+                    Container(
+                      width: 1,
+                      height: 32,
+                      color: const Color(0xFFE5DACD),
+                    ),
                     _buildDialogMetric('Forecasted', forecasted),
-                    Container(width: 1, height: 32, color: const Color(0xFFE5DACD)),
+                    Container(
+                      width: 1,
+                      height: 32,
+                      color: const Color(0xFFE5DACD),
+                    ),
                     _buildDialogMetric('Variance', variance),
                   ],
                 ),
@@ -146,7 +161,10 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
               const SizedBox(height: 6),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9F5F0),
                   borderRadius: BorderRadius.circular(8),
@@ -171,32 +189,48 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                       foregroundColor: const Color(0xFF4A443B),
                       side: const BorderSide(color: Color(0xFFDCCFBD)),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 18, vertical: 12),
+                        horizontal: 18,
+                        vertical: 12,
+                      ),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
-                    child: Text('Close',
-                        style: GoogleFonts.inter(
-                            fontSize: 13, fontWeight: FontWeight.w500)),
+                    child: Text(
+                      'Close',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 10),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.of(ctx).pop();
-                      _showFeedback('Adjusting forecast parameters for $title...');
+                      _showFeedback(
+                        'Adjusting forecast parameters for $title...',
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF181512),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       elevation: 0,
                     ),
-                    child: Text('Retrain Signal Weight',
-                        style: GoogleFonts.inter(
-                            fontSize: 13, fontWeight: FontWeight.w600)),
+                    child: Text(
+                      'Retrain Signal Weight',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -252,15 +286,9 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    flex: 58,
-                    child: _buildAccuracyTrendCard(),
-                  ),
+                  Expanded(flex: 58, child: _buildAccuracyTrendCard()),
                   const SizedBox(width: 20),
-                  Expanded(
-                    flex: 42,
-                    child: _buildSignalAttributionCard(),
-                  ),
+                  Expanded(flex: 42, child: _buildSignalAttributionCard()),
                 ],
               );
             }
@@ -391,8 +419,9 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
         value,
         style: GoogleFonts.inter(
           fontSize: 13,
-          fontWeight:
-              _selectedPeriod == value ? FontWeight.w600 : FontWeight.w400,
+          fontWeight: _selectedPeriod == value
+              ? FontWeight.w600
+              : FontWeight.w400,
           color: _selectedPeriod == value
               ? const Color(0xFF8C5E33)
               : const Color(0xFF1E1C1A),
@@ -481,8 +510,9 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                     value: 0.87,
                     strokeWidth: 6.5,
                     backgroundColor: const Color(0xFFF0EAE1),
-                    valueColor:
-                        const AlwaysStoppedAnimation<Color>(Color(0xFFC89748)),
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                      Color(0xFFC89748),
+                    ),
                     strokeCap: StrokeCap.round,
                   ),
                 ),
@@ -523,8 +553,10 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                 ),
                 const SizedBox(height: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEBF8F2),
                     borderRadius: BorderRadius.circular(6),
@@ -532,8 +564,11 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.arrow_upward_rounded,
-                          size: 11, color: Color(0xFF16A34A)),
+                      const Icon(
+                        Icons.arrow_upward_rounded,
+                        size: 11,
+                        color: Color(0xFF16A34A),
+                      ),
                       const SizedBox(width: 3),
                       Text(
                         '5% vs last period',
@@ -595,7 +630,9 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEBF8F2),
                         borderRadius: BorderRadius.circular(4),
@@ -603,8 +640,11 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.arrow_downward_rounded,
-                              size: 11, color: Color(0xFF16A34A)),
+                          const Icon(
+                            Icons.arrow_downward_rounded,
+                            size: 11,
+                            color: Color(0xFF16A34A),
+                          ),
                           const SizedBox(width: 2),
                           Text(
                             '2.1%',
@@ -674,8 +714,10 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEE2E2),
                     borderRadius: BorderRadius.circular(4),
@@ -744,8 +786,10 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                 ),
                 const SizedBox(height: 6),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFEBF8F2),
                     borderRadius: BorderRadius.circular(4),
@@ -856,11 +900,26 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                   setState(() => _selectedTrendFrequency = val);
                 },
                 itemBuilder: (context) => [
-                  PopupMenuItem(value: 'Weekly', child: Text('Weekly', style: GoogleFonts.inter(fontSize: 13))),
-                  PopupMenuItem(value: 'Monthly', child: Text('Monthly', style: GoogleFonts.inter(fontSize: 13))),
+                  PopupMenuItem(
+                    value: 'Weekly',
+                    child: Text(
+                      'Weekly',
+                      style: GoogleFonts.inter(fontSize: 13),
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 'Monthly',
+                    child: Text(
+                      'Monthly',
+                      style: GoogleFonts.inter(fontSize: 13),
+                    ),
+                  ),
                 ],
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(6),
@@ -878,8 +937,11 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.keyboard_arrow_down_rounded,
-                          size: 15, color: Color(0xFF7A7267)),
+                      const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 15,
+                        color: Color(0xFF7A7267),
+                      ),
                     ],
                   ),
                 ),
@@ -889,10 +951,7 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
           const SizedBox(height: 20),
 
           // Custom Line Chart
-          SizedBox(
-            height: 195,
-            child: _WeeklyAccuracyTrendChart(),
-          ),
+          SizedBox(height: 195, child: _WeeklyAccuracyTrendChart()),
         ],
       ),
     );
@@ -1078,7 +1137,9 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                   Container(
                     color: const Color(0xFFFAF7F2),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
@@ -1153,9 +1214,9 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                   ),
                   const Divider(height: 1, color: Color(0xFFF0EAE1)),
 
-                  // Row 1: Oxford Linen Shirt (Black/M)
+                  // Row 1: Classic Linen Shirt (Black/M)
                   _buildProductDeviationRow(
-                    productName: 'Oxford Linen Shirt (Black/M)',
+                    productName: 'Classic Linen Shirt (Black/M)',
                     actualSales: '847',
                     forecasted: '880',
                     variance: '-3.7%',
@@ -1163,13 +1224,13 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                     isVarianceGreen: true, // In screenshot, -3.7% is green
                     reasonLabel: 'High Accuracy',
                     reasonType: _ReasonType.green,
-                    imageAsset: 'Assets/black_linen_shirt.jpg',
+                    imageAsset: '',
                   ),
                   const Divider(height: 1, color: Color(0xFFF5EFE6)),
 
-                  // Row 2: Merino Wool Blazer (Navy/L)
+                  // Row 2: Wool Tailored Blazer (Navy/L)
                   _buildProductDeviationRow(
-                    productName: 'Merino Wool Blazer (Navy/L)',
+                    productName: 'Wool Tailored Blazer (Navy/L)',
                     actualSales: '124',
                     forecasted: '110',
                     variance: '+12.7%',
@@ -1177,13 +1238,13 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                     isVarianceGreen: false, // red in screenshot
                     reasonLabel: 'Optimal',
                     reasonType: _ReasonType.green,
-                    imageAsset: 'Assets/merino_wool_blazer.jpg',
+                    imageAsset: '',
                   ),
                   const Divider(height: 1, color: Color(0xFFF5EFE6)),
 
-                  // Row 3: Silk Evening Dress (Red/S)
+                  // Row 3: Satin Evening Gown (Red/S)
                   _buildProductDeviationRow(
-                    productName: 'Silk Evening Dress (Red/S)',
+                    productName: 'Satin Evening Gown (Red/S)',
                     actualSales: '98',
                     forecasted: '140',
                     variance: '-30.0%',
@@ -1191,13 +1252,13 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                     isVarianceGreen: false, // red in screenshot
                     reasonLabel: 'Under-forecasted',
                     reasonType: _ReasonType.red,
-                    imageAsset: 'Assets/silk_evening_dress.jpg',
+                    imageAsset: '',
                   ),
                   const Divider(height: 1, color: Color(0xFFF5EFE6)),
 
-                  // Row 4: Gabardine Trench (Beige/M)
+                  // Row 4: Cotton Trench Coat (Beige/M)
                   _buildProductDeviationRow(
-                    productName: 'Gabardine Trench (Beige/M)',
+                    productName: 'Cotton Trench Coat (Beige/M)',
                     actualSales: '45',
                     forecasted: '80',
                     variance: '-43.7%',
@@ -1205,7 +1266,7 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                     isVarianceGreen: false, // red in screenshot
                     reasonLabel: 'Model Miss',
                     reasonType: _ReasonType.red,
-                    imageAsset: 'Assets/gabardine_trench.jpg',
+                    imageAsset: '',
                   ),
                 ],
               ),
@@ -1248,9 +1309,11 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                   child: Image.asset(
                     imageAsset,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.checkroom_rounded,
-                            size: 20, color: Color(0xFF9E8462)),
+                    errorBuilder: (context, error, stackTrace) => const Icon(
+                      Icons.checkroom_rounded,
+                      size: 20,
+                      color: Color(0xFF9E8462),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -1317,8 +1380,10 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 3.5,
+                ),
                 decoration: BoxDecoration(
                   color: reasonType == _ReasonType.green
                       ? const Color(0xFFEBF8F2)
@@ -1358,10 +1423,13 @@ class _ForecastAccuracyViewState extends State<ForecastAccuracyView> {
                 backgroundColor: Colors.white,
                 foregroundColor: const Color(0xFF181512),
                 side: const BorderSide(color: Color(0xFFE0D7CB)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6)),
+                  borderRadius: BorderRadius.circular(6),
+                ),
                 elevation: 0,
               ),
               child: Text(
@@ -1586,12 +1654,7 @@ class _WeeklyAccuracyTrendChart extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Expanded(
-          child: Container(
-            height: 1,
-            color: const Color(0xFFEFECE6),
-          ),
-        ),
+        Expanded(child: Container(height: 1, color: const Color(0xFFEFECE6))),
       ],
     );
   }
@@ -1618,10 +1681,7 @@ class _TrendLinePainter extends CustomPainter {
   final List<_ChartPoint> points;
   final Color lineColor;
 
-  _TrendLinePainter({
-    required this.points,
-    required this.lineColor,
-  });
+  _TrendLinePainter({required this.points, required this.lineColor});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1647,10 +1707,7 @@ class _TrendLinePainter extends CustomPainter {
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
-        colors: [
-          lineColor.withOpacity(0.16),
-          lineColor.withOpacity(0.01),
-        ],
+        colors: [lineColor.withOpacity(0.16), lineColor.withOpacity(0.01)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..style = PaintingStyle.fill;
 

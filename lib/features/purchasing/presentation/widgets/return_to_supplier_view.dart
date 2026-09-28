@@ -31,10 +31,10 @@ class ReturnItemData {
 class ReturnToSupplierView extends StatefulWidget {
   const ReturnToSupplierView({
     super.key,
-    this.poNumber = 'PO #10482',
-    this.supplier = 'Milano Tessuti',
-    this.poDate = '12 Jan 2027',
-    this.receivedDate = '18 Jan 2027',
+    this.poNumber = '',
+    this.supplier = '',
+    this.poDate = '-',
+    this.receivedDate = '-',
     this.onViewOriginalPo,
     this.onCreatePurchaseReturn,
     this.onSaveDraft,
@@ -60,33 +60,14 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
   @override
   void initState() {
     super.initState();
-    _items = [
-      ReturnItemData(
-        name: 'Oxford Linen Shirt',
-        sku: 'TS-10432',
-        variant: 'Black / M',
-        receivedQty: 40,
-        returnQty: 10,
-        reason: 'Damaged',
-        unitCost: 980,
-        imageAsset: 'Assets/black_linen_shirt.jpg',
-      ),
-      ReturnItemData(
-        name: 'Oxford Linen Shirt',
-        sku: 'TS-10432',
-        variant: 'White / L',
-        receivedQty: 40,
-        returnQty: 4,
-        reason: 'Quality Issue',
-        unitCost: 980,
-        imageAsset: 'Assets/oxford_linen_shirt.jpg',
-      ),
-    ];
+    _items = [];
   }
 
-  int get _totalUnitsReturned => _items.fold<int>(0, (sum, item) => sum + item.returnQty);
+  int get _totalUnitsReturned =>
+      _items.fold<int>(0, (sum, item) => sum + item.returnQty);
 
-  int get _totalExpectedCredit => _items.fold<int>(0, (sum, item) => sum + item.creditExpected);
+  int get _totalExpectedCredit =>
+      _items.fold<int>(0, (sum, item) => sum + item.creditExpected);
 
   void _toggleSelectAll(bool? val) {
     setState(() {
@@ -106,7 +87,11 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Text(
           'Edit Return Quantity',
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF181513)),
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF181513),
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -114,24 +99,41 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
           children: [
             Text(
               '${item.name} (${item.variant})',
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               'Received: ${item.receivedQty} units • Unit Cost: ₹${item.unitCost}',
-              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: const Color(0xFF64748B),
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
               keyboardType: TextInputType.number,
               autofocus: true,
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
               decoration: InputDecoration(
                 labelText: 'Return Quantity',
-                labelStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B)),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                labelStyle: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF64748B),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
             ),
           ],
@@ -139,7 +141,10 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -154,9 +159,14 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF181513),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: Text('Save', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            child: Text(
+              'Save',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -169,7 +179,10 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
     if (str.length <= 3) return '₹$str';
     final lastThree = str.substring(str.length - 3);
     final rest = str.substring(0, str.length - 3);
-    final formattedRest = rest.replaceAllMapped(RegExp(r'(\d+?)(?=(\d\d)+$)'), (m) => '${m[1]},');
+    final formattedRest = rest.replaceAllMapped(
+      RegExp(r'(\d+?)(?=(\d\d)+$)'),
+      (m) => '${m[1]},',
+    );
     return '₹$formattedRest,$lastThree';
   }
 
@@ -291,7 +304,11 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFFB45309)),
+                const Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 14,
+                  color: Color(0xFFB45309),
+                ),
               ],
             ),
           ),
@@ -458,6 +475,53 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
 
   // 3. Received Items Section with Interactive Return Table
   Widget _buildReceivedItemsSection() {
+    if (widget.poNumber.isEmpty || _items.isEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFBF4EB),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.inventory_2_outlined,
+                size: 36,
+                color: Color(0xFF92400E),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'No purchase order selected',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF181513),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Select a received purchase order from the PO list to initiate a return to supplier.',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: const Color(0xFF64748B),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -489,9 +553,14 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
             children: [
               // Table Header
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: const BoxDecoration(
-                  border: Border(bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1.2)),
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1.2),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -501,7 +570,9 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                         value: _selectAll,
                         onChanged: _toggleSelectAll,
                         activeColor: const Color(0xFF181513),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
@@ -510,49 +581,77 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                       flex: 3,
                       child: Text(
                         'Product',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     Expanded(
                       flex: 2,
                       child: Text(
                         'Variant',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 90,
                       child: Text(
                         'Received Qty',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 85,
                       child: Text(
                         'Return Qty',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 140,
                       child: Text(
                         'Reason',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 75,
                       child: Text(
                         'Unit Cost',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 95,
                       child: Text(
                         'Credit Expected',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                   ],
@@ -565,10 +664,19 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                 final isLast = index == _items.length - 1;
 
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
-                    color: item.isSelected ? const Color(0xFFFBF8F3) : Colors.white,
-                    border: isLast ? null : const Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
+                    color: item.isSelected
+                        ? const Color(0xFFFBF8F3)
+                        : Colors.white,
+                    border: isLast
+                        ? null
+                        : const Border(
+                            bottom: BorderSide(color: Color(0xFFF1F5F9)),
+                          ),
                   ),
                   child: Row(
                     children: [
@@ -584,8 +692,11 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                             });
                           },
                           activeColor: const Color(0xFF181513),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -606,7 +717,11 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                                   width: 42,
                                   height: 42,
                                   color: const Color(0xFFE2E8F0),
-                                  child: const Icon(Icons.image_outlined, size: 20, color: Color(0xFF94A3B8)),
+                                  child: const Icon(
+                                    Icons.image_outlined,
+                                    size: 20,
+                                    color: Color(0xFF94A3B8),
+                                  ),
                                 ),
                               ),
                             ),
@@ -646,7 +761,10 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                         flex: 2,
                         child: Text(
                           item.variant,
-                          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF334155)),
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: const Color(0xFF334155),
+                          ),
                         ),
                       ),
 
@@ -655,7 +773,10 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                         width: 90,
                         child: Text(
                           '${item.receivedQty}',
-                          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF181513)),
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: const Color(0xFF181513),
+                          ),
                         ),
                       ),
 
@@ -674,7 +795,9 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                               decoration: BoxDecoration(
                                 color: const Color(0xFFF8FAFC),
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: const Color(0xFFCBD5E1)),
+                                border: Border.all(
+                                  color: const Color(0xFFCBD5E1),
+                                ),
                               ),
                               child: Text(
                                 '${item.returnQty}',
@@ -697,24 +820,43 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                           child: PopupMenuButton<String>(
                             tooltip: 'Select return reason',
                             color: Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             onSelected: (val) {
                               setState(() {
                                 item.reason = val;
                               });
                             },
                             itemBuilder: (context) => [
-                              const PopupMenuItem(value: 'Damaged', child: Text('Damaged')),
-                              const PopupMenuItem(value: 'Quality Issue', child: Text('Quality Issue')),
-                              const PopupMenuItem(value: 'Wrong Item', child: Text('Wrong Item')),
-                              const PopupMenuItem(value: 'Excess Inventory', child: Text('Excess Inventory')),
+                              const PopupMenuItem(
+                                value: 'Damaged',
+                                child: Text('Damaged'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'Quality Issue',
+                                child: Text('Quality Issue'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'Wrong Item',
+                                child: Text('Wrong Item'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'Excess Inventory',
+                                child: Text('Excess Inventory'),
+                              ),
                             ],
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(6),
-                                border: Border.all(color: const Color(0xFFCBD5E1)),
+                                border: Border.all(
+                                  color: const Color(0xFFCBD5E1),
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -732,7 +874,11 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                                     ),
                                   ),
                                   const SizedBox(width: 4),
-                                  const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF94A3B8)),
+                                  const Icon(
+                                    Icons.keyboard_arrow_down_rounded,
+                                    size: 16,
+                                    color: Color(0xFF94A3B8),
+                                  ),
                                 ],
                               ),
                             ),
@@ -745,7 +891,10 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                         width: 75,
                         child: Text(
                           '₹${item.unitCost}',
-                          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF181513)),
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            color: const Color(0xFF181513),
+                          ),
                         ),
                       ),
 
@@ -812,9 +961,18 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
           const Divider(color: Color(0xFFF1F5F9), height: 1),
           const SizedBox(height: 14),
 
-          _buildSummaryRow('Units Returned', '$_totalUnitsReturned units', isBold: true),
+          _buildSummaryRow(
+            'Units Returned',
+            '$_totalUnitsReturned units',
+            isBold: true,
+          ),
           const SizedBox(height: 10),
-          _buildSummaryRow('Inventory Reduction', '-$_totalUnitsReturned units', valueColor: const Color(0xFFDC2626), isBold: true),
+          _buildSummaryRow(
+            'Inventory Reduction',
+            '-$_totalUnitsReturned units',
+            valueColor: const Color(0xFFDC2626),
+            isBold: true,
+          ),
           const SizedBox(height: 16),
 
           // Expected Credit Card
@@ -830,7 +988,11 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.monetization_on_outlined, size: 20, color: Color(0xFFD97706)),
+                    const Icon(
+                      Icons.monetization_on_outlined,
+                      size: 20,
+                      color: Color(0xFFD97706),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Expected Credit',
@@ -866,7 +1028,11 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFFB45309)),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 16,
+                  color: Color(0xFFB45309),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -885,27 +1051,39 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
           const SizedBox(height: 16),
 
           // Primary: Create Purchase Return (Solid Black with plane icon)
-          InkWell(
-            onTap: widget.onCreatePurchaseReturn,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: double.infinity,
-              height: 42,
-              decoration: BoxDecoration(
-                color: const Color(0xFF181513),
-                borderRadius: BorderRadius.circular(8),
-              ),
+          Container(
+            width: double.infinity,
+            height: 42,
+            decoration: BoxDecoration(
+              color: (widget.poNumber.isEmpty || _items.isEmpty)
+                  ? const Color(0xFFE2E8F0)
+                  : const Color(0xFF181513),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: InkWell(
+              onTap: (widget.poNumber.isEmpty || _items.isEmpty)
+                  ? null
+                  : widget.onCreatePurchaseReturn,
+              borderRadius: BorderRadius.circular(8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.near_me_outlined, size: 16, color: Colors.white),
+                  Icon(
+                    Icons.near_me_outlined,
+                    size: 16,
+                    color: (widget.poNumber.isEmpty || _items.isEmpty)
+                        ? const Color(0xFF94A3B8)
+                        : Colors.white,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Create Purchase Return',
                     style: GoogleFonts.inter(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white,
+                      color: (widget.poNumber.isEmpty || _items.isEmpty)
+                          ? const Color(0xFF94A3B8)
+                          : Colors.white,
                     ),
                   ),
                 ],
@@ -916,7 +1094,9 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
 
           // Secondary: Save Draft (Outline Button with document icon)
           InkWell(
-            onTap: widget.onSaveDraft,
+            onTap: (widget.poNumber.isEmpty || _items.isEmpty)
+                ? null
+                : widget.onSaveDraft,
             borderRadius: BorderRadius.circular(8),
             child: Container(
               width: double.infinity,
@@ -924,19 +1104,31 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFCBD5E1)),
+                border: Border.all(
+                  color: (widget.poNumber.isEmpty || _items.isEmpty)
+                      ? const Color(0xFFE2E8F0)
+                      : const Color(0xFFCBD5E1),
+                ),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.article_outlined, size: 15, color: Color(0xFF181513)),
+                  Icon(
+                    Icons.article_outlined,
+                    size: 15,
+                    color: (widget.poNumber.isEmpty || _items.isEmpty)
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF181513),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Save Draft',
                     style: GoogleFonts.inter(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF181513),
+                      color: (widget.poNumber.isEmpty || _items.isEmpty)
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF181513),
                     ),
                   ),
                 ],
@@ -987,14 +1179,20 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                   color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(Icons.storefront_outlined, size: 18, color: Color(0xFFB45309)),
+                child: const Icon(
+                  Icons.storefront_outlined,
+                  size: 18,
+                  color: Color(0xFFB45309),
+                ),
               ),
               const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    widget.supplier,
+                    widget.supplier.isEmpty
+                        ? 'No Supplier Selected'
+                        : widget.supplier,
                     style: GoogleFonts.inter(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
@@ -1003,7 +1201,9 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Textile & Fabric Supplier',
+                    widget.supplier.isEmpty
+                        ? 'Linked to purchase order'
+                        : 'Supplier Partner',
                     style: GoogleFonts.inter(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w400,
@@ -1019,17 +1219,33 @@ class _ReturnToSupplierViewState extends State<ReturnToSupplierView> {
           const SizedBox(height: 14),
 
           // Contact Details
-          _buildSupplierContactRow(Icons.mail_outline_rounded, 'orders@milanotessuti.com'),
+          _buildSupplierContactRow(
+            Icons.mail_outline_rounded,
+            widget.supplier.isEmpty ? 'No email linked' : 'orders@supplier.com',
+          ),
           const SizedBox(height: 10),
-          _buildSupplierContactRow(Icons.phone_outlined, '+91 22 4567 8900'),
+          _buildSupplierContactRow(
+            Icons.phone_outlined,
+            widget.supplier.isEmpty ? 'No phone linked' : 'Primary phone',
+          ),
           const SizedBox(height: 10),
-          _buildSupplierContactRow(Icons.location_on_outlined, 'Milan, Italy'),
+          _buildSupplierContactRow(
+            Icons.location_on_outlined,
+            widget.supplier.isEmpty
+                ? 'No address specified'
+                : 'Supplier Address',
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryRow(String label, String value, {Color? valueColor, bool isBold = false}) {
+  Widget _buildSummaryRow(
+    String label,
+    String value, {
+    Color? valueColor,
+    bool isBold = false,
+  }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [

@@ -5,11 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/responsive/desktop_layout.dart';
 
 class DataRetentionView extends StatefulWidget {
-  const DataRetentionView({
-    super.key,
-    this.onSelectNav,
-    this.onBackToSettings,
-  });
+  const DataRetentionView({super.key, this.onSelectNav, this.onBackToSettings});
 
   final ValueChanged<String>? onSelectNav;
   final VoidCallback? onBackToSettings;
@@ -135,9 +131,7 @@ class _DataRetentionViewState extends State<DataRetentionView> {
 
                 // Right Column: Data Retention Policy & Settings
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: _buildMainContent(),
-                  ),
+                  child: SingleChildScrollView(child: _buildMainContent()),
                 ),
               ],
             );
@@ -152,11 +146,31 @@ class _DataRetentionViewState extends State<DataRetentionView> {
   // ==========================================
   Widget _buildSubnavColumn({required bool isFullWidth}) {
     final navItems = [
-      {'id': 'general_settings', 'label': 'General Settings', 'icon': Icons.settings_outlined},
-      {'id': 'locations', 'label': 'Locations', 'icon': Icons.location_on_outlined},
-      {'id': 'roles_permissions', 'label': 'Roles & Permissions', 'icon': Icons.people_outline_rounded},
-      {'id': 'data_retention', 'label': 'Data Retention', 'icon': Icons.storage_rounded},
-      {'id': 'integrations', 'label': 'Integrations', 'icon': Icons.link_rounded},
+      {
+        'id': 'general_settings',
+        'label': 'General Settings',
+        'icon': Icons.settings_outlined,
+      },
+      {
+        'id': 'locations',
+        'label': 'Locations',
+        'icon': Icons.location_on_outlined,
+      },
+      {
+        'id': 'roles_permissions',
+        'label': 'Roles & Permissions',
+        'icon': Icons.people_outline_rounded,
+      },
+      {
+        'id': 'data_retention',
+        'label': 'Data Retention',
+        'icon': Icons.storage_rounded,
+      },
+      {
+        'id': 'integrations',
+        'label': 'Integrations',
+        'icon': Icons.link_rounded,
+      },
     ];
 
     return Column(
@@ -194,7 +208,9 @@ class _DataRetentionViewState extends State<DataRetentionView> {
           color: isSelected ? const Color(0xFF9E6721) : Colors.white,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? const Color(0xFF8B5719) : const Color(0xFFEFE7DC),
+            color: isSelected
+                ? const Color(0xFF8B5719)
+                : const Color(0xFFEFE7DC),
             width: 1.0,
           ),
           boxShadow: isSelected
@@ -254,7 +270,8 @@ class _DataRetentionViewState extends State<DataRetentionView> {
           title: 'Transaction Records',
           description:
               'Sales invoices, stock transfers, purchasing billing summaries, and custom ledger adjustments.',
-          footnote: 'Cannot reduce below regulatory minimum tax requirement for audits.',
+          footnote:
+              'Cannot reduce below regulatory minimum tax requirement for audits.',
           currentValue: _transactionRetention,
           options: const [
             '5 Years',
@@ -309,7 +326,8 @@ class _DataRetentionViewState extends State<DataRetentionView> {
           title: 'Deleted Records',
           description:
               'Soft-deleted files, archived invoices, and product variants removed from catalog.',
-          footnote: 'Permanently erased from background databases after window.',
+          footnote:
+              'Permanently erased from background databases after window.',
           currentValue: _deletedRecordsRetention,
           options: const [
             '7 Days (Immediate)',
@@ -468,10 +486,14 @@ class _DataRetentionViewState extends State<DataRetentionView> {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: isAlertIcon ? const Color(0xFFFDF2F2) : const Color(0xFFFAF4EC),
+              color: isAlertIcon
+                  ? const Color(0xFFFDF2F2)
+                  : const Color(0xFFFAF4EC),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
-                color: isAlertIcon ? const Color(0xFFFDE2E2) : const Color(0xFFF0E5D4),
+                color: isAlertIcon
+                    ? const Color(0xFFFDE2E2)
+                    : const Color(0xFFF0E5D4),
                 width: 1.0,
               ),
             ),
@@ -479,7 +501,9 @@ class _DataRetentionViewState extends State<DataRetentionView> {
               child: Icon(
                 icon,
                 size: 20,
-                color: isAlertIcon ? const Color(0xFFDC2626) : const Color(0xFF8D6433),
+                color: isAlertIcon
+                    ? const Color(0xFFDC2626)
+                    : const Color(0xFF8D6433),
               ),
             ),
           ),
@@ -565,7 +589,9 @@ class _DataRetentionViewState extends State<DataRetentionView> {
                       opt,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                         color: isSelected
                             ? const Color(0xFF9E6721)
                             : const Color(0xFF1E1C1A),

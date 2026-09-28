@@ -29,7 +29,7 @@ class PoItemLine {
 class PoDetailView extends StatefulWidget {
   const PoDetailView({
     super.key,
-    this.poNumber = 'PO-2024-8902',
+    this.poNumber = 'PO-8902',
     this.onBackToOverview,
   });
 
@@ -43,45 +43,18 @@ class PoDetailView extends StatefulWidget {
 class _PoDetailViewState extends State<PoDetailView> {
   String _approvalStatus = 'Awaiting Approval';
 
-  final List<PoItemLine> _items = const [
-    PoItemLine(
-      index: 1,
-      name: 'Premium Merino Wool (Navy)',
-      categoryDetails: 'Fabric • Wool • Navy',
-      itemCode: 'MW-NVY-01',
-      quantity: '120 meters',
-      unitPrice: 450,
-      totalPrice: 54000,
-      imageAsset: 'Assets/navy_merino_fabric.jpg',
-    ),
-    PoItemLine(
-      index: 2,
-      name: 'Raw Linen Weave (Oatmeal)',
-      categoryDetails: 'Fabric • Linen • Oatmeal',
-      itemCode: 'LN-OAT-04',
-      quantity: '80 meters',
-      unitPrice: 180,
-      totalPrice: 14400,
-      imageAsset: 'Assets/raw_linen_fabric.jpg',
-    ),
-    PoItemLine(
-      index: 3,
-      name: 'Mulberry Silk Lining (Navy)',
-      categoryDetails: 'Lining • Silk • Navy',
-      itemCode: 'SK-NR-02',
-      quantity: '20 meters',
-      unitPrice: 500,
-      totalPrice: 10000,
-      imageAsset: 'Assets/mulberry_silk_fabric.jpg',
-    ),
-  ];
+  final List<PoItemLine> _items = const [];
 
   void _showFeedback(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -126,7 +99,7 @@ class _PoDetailViewState extends State<PoDetailView> {
               _buildApprovalBanner(),
               const SizedBox(height: 20),
 
-              // 2. Breadcrumbs, Heading PO-2024-8902, Supplier & Date Tags
+              // 2. Breadcrumbs, Heading PO-8902, Supplier & Date Tags
               _buildPoHeaderSection(),
               const SizedBox(height: 20),
 
@@ -198,7 +171,7 @@ class _PoDetailViewState extends State<PoDetailView> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'This purchase order (₹78,400) exceeds the ₹50,000 threshold. Pending approval from Arun Kapoor (Owner).',
+                  'This purchase order exceeds the approval threshold. Pending review from the business owner.',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     color: const Color(0xFF6B6358),
@@ -220,11 +193,16 @@ class _PoDetailViewState extends State<PoDetailView> {
                 child: InkWell(
                   onTap: () {
                     setState(() => _approvalStatus = 'Rejected');
-                    _showFeedback('Purchase Order rejected and returned to requester');
+                    _showFeedback(
+                      'Purchase Order rejected and returned to requester',
+                    );
                   },
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8.5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8.5,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
@@ -249,11 +227,16 @@ class _PoDetailViewState extends State<PoDetailView> {
                 child: InkWell(
                   onTap: () {
                     setState(() => _approvalStatus = 'Approved');
-                    _showFeedback('Purchase Order approved by Arun Kapoor and transmitted to Biella Fabric');
+                    _showFeedback(
+                      'Purchase Order approved and transmitted to supplier',
+                    );
                   },
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 9,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFF382718),
                       borderRadius: BorderRadius.circular(8),
@@ -306,7 +289,11 @@ class _PoDetailViewState extends State<PoDetailView> {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.chevron_right_rounded, size: 15, color: Color(0xFF9E958A)),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 15,
+              color: Color(0xFF9E958A),
+            ),
             const SizedBox(width: 8),
             InkWell(
               onTap: widget.onBackToOverview,
@@ -324,7 +311,7 @@ class _PoDetailViewState extends State<PoDetailView> {
         ),
         const SizedBox(height: 8),
 
-        // Main Title Row: PO-2024-8902 + Status Badge + Right Badges
+        // Main Title Row: PO-8902 + Status Badge + Right Badges
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -344,7 +331,10 @@ class _PoDetailViewState extends State<PoDetailView> {
                 ),
                 const SizedBox(width: 14),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFDF5E6),
                     borderRadius: BorderRadius.circular(12),
@@ -367,14 +357,17 @@ class _PoDetailViewState extends State<PoDetailView> {
               children: [
                 // Supplier Tag
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.92),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: const Color(0xFFDFD6C9)),
                   ),
                   child: Text(
-                    'Supplier: Biella Fabric',
+                    'Supplier: Partner',
                     style: GoogleFonts.inter(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w500,
@@ -386,14 +379,17 @@ class _PoDetailViewState extends State<PoDetailView> {
 
                 // Created Date Tag
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.92),
                     borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: const Color(0xFFDFD6C9)),
                   ),
                   child: Text(
-                    'Created: Sep 15, 2024',
+                    'Created: —',
                     style: GoogleFonts.inter(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w500,
@@ -407,7 +403,8 @@ class _PoDetailViewState extends State<PoDetailView> {
                 Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => _showFeedback('More actions for ${widget.poNumber}'),
+                    onTap: () =>
+                        _showFeedback('More actions for ${widget.poNumber}'),
                     borderRadius: BorderRadius.circular(6),
                     child: Container(
                       width: 34,
@@ -481,7 +478,11 @@ class _PoDetailViewState extends State<PoDetailView> {
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: const Icon(Icons.check_rounded, size: 14, color: Colors.white),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Column(
@@ -497,7 +498,7 @@ class _PoDetailViewState extends State<PoDetailView> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'by Priya Nair • Sep 15, 10:23 AM',
+                        'by Operations Team',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: const Color(0xFF7A7268),
@@ -531,7 +532,11 @@ class _PoDetailViewState extends State<PoDetailView> {
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: const Icon(Icons.check_rounded, size: 14, color: Colors.white),
+                    child: const Icon(
+                      Icons.check_rounded,
+                      size: 14,
+                      color: Colors.white,
+                    ),
                   ),
                   const SizedBox(width: 10),
                   Column(
@@ -547,7 +552,7 @@ class _PoDetailViewState extends State<PoDetailView> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Automatically submitted (threshold check passed)\nSep 15, 10:32 AM',
+                        'Automatically submitted (threshold check passed)',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: const Color(0xFF7A7268),
@@ -578,7 +583,10 @@ class _PoDetailViewState extends State<PoDetailView> {
                     height: 22,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFC28835), width: 2.5),
+                      border: Border.all(
+                        color: const Color(0xFFC28835),
+                        width: 2.5,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -595,7 +603,7 @@ class _PoDetailViewState extends State<PoDetailView> {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Arun Kapoor (Owner) notified • Pending',
+                        'Business Owner notified • Pending',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           color: const Color(0xFF7A7268),
@@ -633,7 +641,7 @@ class _PoDetailViewState extends State<PoDetailView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Order Items (3) + [Edit Order] [Download PDF] [Print]
+          // Header: Order Items + [Edit Order] [Download PDF] [Print]
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -659,7 +667,8 @@ class _PoDetailViewState extends State<PoDetailView> {
                   _buildOrderActionButton(
                     icon: Icons.description_outlined,
                     label: 'Download PDF',
-                    onTap: () => _showFeedback('Downloading PO-2024-8902 PDF...'),
+                    onTap: () =>
+                        _showFeedback('Downloading ${widget.poNumber} PDF...'),
                   ),
                   const SizedBox(width: 8),
 
@@ -667,7 +676,9 @@ class _PoDetailViewState extends State<PoDetailView> {
                   _buildOrderActionButton(
                     icon: Icons.print_outlined,
                     label: 'Print',
-                    onTap: () => _showFeedback('Sending PO-2024-8902 to office printer...'),
+                    onTap: () => _showFeedback(
+                      'Sending ${widget.poNumber} to office printer...',
+                    ),
                   ),
                 ],
               ),
@@ -756,142 +767,158 @@ class _PoDetailViewState extends State<PoDetailView> {
           ),
 
           // Table Rows
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _items.length,
-            separatorBuilder: (context, index) => const Divider(
-              height: 1,
-              color: Color(0xFFF0E8DD),
-            ),
-            itemBuilder: (context, index) {
-              final item = _items[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Index
-                    SizedBox(
-                      width: 32,
-                      child: Text(
-                        '${item.index}',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF181513),
+          if (_items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 36),
+              child: Center(
+                child: Text(
+                  'No items recorded for this purchase order.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF7A7268),
+                  ),
+                ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _items.length,
+              separatorBuilder: (context, index) =>
+                  const Divider(height: 1, color: Color(0xFFF0E8DD)),
+              itemBuilder: (context, index) {
+                final item = _items[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Index
+                      SizedBox(
+                        width: 32,
+                        child: Text(
+                          '${item.index}',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF181513),
+                          ),
                         ),
                       ),
-                    ),
 
-                    // Item & Details (Thumbnail + Title + Subtitle)
-                    Expanded(
-                      flex: 6,
-                      child: Row(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              color: const Color(0xFFF7F4EF),
-                              child: Image.asset(
-                                item.imageAsset,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => const Icon(
-                                  Icons.image_outlined,
-                                  size: 20,
-                                  color: Colors.grey,
+                      // Item & Details (Thumbnail + Title + Subtitle)
+                      Expanded(
+                        flex: 6,
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                color: const Color(0xFFF7F4EF),
+                                child: Image.asset(
+                                  item.imageAsset,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(
+                                        Icons.image_outlined,
+                                        size: 20,
+                                        color: Colors.grey,
+                                      ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.name,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF181513),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.name,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF181513),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  item.categoryDetails,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: const Color(0xFF7A7268),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    item.categoryDetails,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: const Color(0xFF7A7268),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
+                          ],
+                        ),
+                      ),
+
+                      // Item Code
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          item.itemCode,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF5A5248),
                           ),
-                        ],
-                      ),
-                    ),
-
-                    // Item Code
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        item.itemCode,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF5A5248),
                         ),
                       ),
-                    ),
 
-                    // Quantity
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        item.quantity,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF181513),
+                      // Quantity
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          item.quantity,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF181513),
+                          ),
                         ),
                       ),
-                    ),
 
-                    // Unit Price
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        '₹${_formatCurrency(item.unitPrice)}',
-                        textAlign: TextAlign.right,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFF5A5248),
+                      // Unit Price
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          '₹${_formatCurrency(item.unitPrice)}',
+                          textAlign: TextAlign.right,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF5A5248),
+                          ),
                         ),
                       ),
-                    ),
 
-                    // Total Price
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        '₹${_formatCurrency(item.totalPrice)}',
-                        textAlign: TextAlign.right,
-                        style: GoogleFonts.inter(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF181513),
+                      // Total Price
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          '₹${_formatCurrency(item.totalPrice)}',
+                          textAlign: TextAlign.right,
+                          style: GoogleFonts.inter(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF181513),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                    ],
+                  ),
+                );
+              },
+            ),
           const SizedBox(height: 24),
           const Divider(height: 1, color: Color(0xFFE8DFD3)),
           const SizedBox(height: 18),
@@ -928,7 +955,10 @@ class _PoDetailViewState extends State<PoDetailView> {
                     // Notes Container
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFAF7F2),
                         borderRadius: BorderRadius.circular(8),
@@ -957,7 +987,7 @@ class _PoDetailViewState extends State<PoDetailView> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Urgent for Q4 collection. Please expedite once approved.',
+                                  'No notes attached.',
                                   style: GoogleFonts.inter(
                                     fontSize: 12,
                                     color: const Color(0xFF6B6358),
@@ -990,7 +1020,7 @@ class _PoDetailViewState extends State<PoDetailView> {
                           ),
                         ),
                         Text(
-                          '₹78,400',
+                          '₹0.00',
                           style: GoogleFonts.inter(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w700,
@@ -1024,7 +1054,10 @@ class _PoDetailViewState extends State<PoDetailView> {
 
                     // Total Order Value Highlighted Box
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFBF6EF),
                         borderRadius: BorderRadius.circular(6),
@@ -1042,7 +1075,7 @@ class _PoDetailViewState extends State<PoDetailView> {
                             ),
                           ),
                           Text(
-                            '₹78,400',
+                            '₹0.00',
                             style: GoogleFonts.inter(
                               fontSize: 18.5,
                               fontWeight: FontWeight.w800,

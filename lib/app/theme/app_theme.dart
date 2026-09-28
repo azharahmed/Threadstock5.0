@@ -140,7 +140,11 @@ class ThreadStockTheme {
         backgroundColor: const Color(0xFF181614),
         indicatorColor: champagne.withValues(alpha: 0.20),
         labelTextStyle: const WidgetStatePropertyAll(
-          TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white),
+          TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
         ),
       ),
       textTheme: baseText.copyWith(
@@ -217,12 +221,13 @@ class ThreadStockTheme {
   );
 
   /// Good morning, Alex: Cormorant Garamond 500, 44–48 px
-  static TextStyle heroGreeting([Color? color]) => GoogleFonts.cormorantGaramond(
-    fontSize: 46,
-    fontWeight: FontWeight.w500,
-    color: color ?? graphite,
-    letterSpacing: -0.4,
-  );
+  static TextStyle heroGreeting([Color? color]) =>
+      GoogleFonts.cormorantGaramond(
+        fontSize: 46,
+        fontWeight: FontWeight.w500,
+        color: color ?? graphite,
+        letterSpacing: -0.4,
+      );
 
   /// Greeting subtitle: Inter 400, 16–18 px
   static TextStyle greetingSubtitle([Color? color]) => GoogleFonts.inter(
@@ -240,12 +245,13 @@ class ThreadStockTheme {
   );
 
   /// AI briefing headline: Cormorant Garamond 500, 24–26 px
-  static TextStyle aiBriefingHeadline([Color? color]) => GoogleFonts.cormorantGaramond(
-    fontSize: 25,
-    fontWeight: FontWeight.w500,
-    color: color ?? const Color(0xFF181513),
-    height: 1.25,
-  );
+  static TextStyle aiBriefingHeadline([Color? color]) =>
+      GoogleFonts.cormorantGaramond(
+        fontSize: 25,
+        fontWeight: FontWeight.w500,
+        color: color ?? const Color(0xFF181513),
+        height: 1.25,
+      );
 
   /// AI briefing description: Inter 400, 14–15 px
   static TextStyle aiBriefingDesc([Color? color]) => GoogleFonts.inter(

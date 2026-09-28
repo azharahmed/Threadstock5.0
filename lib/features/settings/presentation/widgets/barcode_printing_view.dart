@@ -47,7 +47,9 @@ class BarcodePrintingView extends StatefulWidget {
 
 class _BarcodePrintingViewState extends State<BarcodePrintingView> {
   String _selectedSymbology = 'Code 128 (Standard)';
-  final TextEditingController _prefixController = TextEditingController(text: 'TS-');
+  final TextEditingController _prefixController = TextEditingController(
+    text: 'TS-',
+  );
   LabelTemplateType _selectedTemplate = LabelTemplateType.standard;
 
   final List<String> _symbologyOptions = const [
@@ -115,7 +117,9 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
       builder: (dialogCtx) => StatefulBuilder(
         builder: (context, setDialogState) => Dialog(
           backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 460),
             child: Padding(
@@ -183,8 +187,10 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
                         fontSize: 13,
                         color: const Color(0xFFA59E92),
                       ),
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(color: Color(0xFFDFD4C5)),
@@ -213,8 +219,10 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
                     controller: locationCtrl,
                     style: GoogleFonts.inter(fontSize: 13),
                     decoration: InputDecoration(
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: const BorderSide(color: Color(0xFFDFD4C5)),
@@ -311,14 +319,18 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
                               );
                             });
                             Navigator.of(dialogCtx).pop();
-                            _showFeedback('Printer "$name" connected successfully.');
+                            _showFeedback(
+                              'Printer "$name" connected successfully.',
+                            );
                           }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1E1C1A),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 10),
+                            horizontal: 18,
+                            vertical: 10,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -378,18 +390,12 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Left Column: Barcode Config & Connected Devices (Flex 58%)
-                      Expanded(
-                        flex: 58,
-                        child: _buildLeftColumn(),
-                      ),
+                      Expanded(flex: 58, child: _buildLeftColumn()),
 
                       const SizedBox(width: 24),
 
                       // Right Column: Label Preview, Active Template & Tips (Flex 42%)
-                      Expanded(
-                        flex: 42,
-                        child: _buildRightColumn(),
-                      ),
+                      Expanded(flex: 42, child: _buildRightColumn()),
                     ],
                   ),
                 ],
@@ -553,15 +559,9 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    flex: 5,
-                    child: _buildSymbologyField(),
-                  ),
+                  Expanded(flex: 5, child: _buildSymbologyField()),
                   const SizedBox(width: 18),
-                  Expanded(
-                    flex: 5,
-                    child: _buildPrefixField(),
-                  ),
+                  Expanded(flex: 5, child: _buildPrefixField()),
                 ],
               );
             },
@@ -750,8 +750,10 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
                 ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Color(0xFFDFD4C5)),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -773,8 +775,10 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
               children: [
                 // Table Header Row
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: const BoxDecoration(
                     color: Color(0xFFFAF7F2),
                     borderRadius: BorderRadius.only(
@@ -842,7 +846,10 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
 
                 // Table Rows
                 for (int i = 0; i < _printers.length; i++) ...[
-                  _buildPrinterRow(_printers[i], isLast: i == _printers.length - 1),
+                  _buildPrinterRow(
+                    _printers[i],
+                    isLast: i == _printers.length - 1,
+                  ),
                 ],
               ],
             ),
@@ -859,9 +866,7 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
         color: Colors.white,
         border: isLast
             ? null
-            : const Border(
-                bottom: BorderSide(color: Color(0xFFEFE8DE)),
-              ),
+            : const Border(bottom: BorderSide(color: Color(0xFFEFE8DE))),
       ),
       child: Row(
         children: [
@@ -930,8 +935,10 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
             child: Align(
               alignment: Alignment.centerLeft,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 9,
+                  vertical: 3.5,
+                ),
                 decoration: BoxDecoration(
                   color: printer.isReady
                       ? const Color(0xFFE8F5E9)
@@ -990,13 +997,18 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
                     value: 'test',
                     child: Row(
                       children: [
-                        const Icon(Icons.receipt_long_outlined,
-                            size: 16, color: Color(0xFF5E574E)),
+                        const Icon(
+                          Icons.receipt_long_outlined,
+                          size: 16,
+                          color: Color(0xFF5E574E),
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Print Test Label',
                           style: GoogleFonts.inter(
-                              fontSize: 13, color: const Color(0xFF181513)),
+                            fontSize: 13,
+                            color: const Color(0xFF181513),
+                          ),
                         ),
                       ],
                     ),
@@ -1005,13 +1017,18 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
                     value: 'calibrate',
                     child: Row(
                       children: [
-                        const Icon(Icons.tune_rounded,
-                            size: 16, color: Color(0xFF5E574E)),
+                        const Icon(
+                          Icons.tune_rounded,
+                          size: 16,
+                          color: Color(0xFF5E574E),
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Calibrate Sensor',
                           style: GoogleFonts.inter(
-                              fontSize: 13, color: const Color(0xFF181513)),
+                            fontSize: 13,
+                            color: const Color(0xFF181513),
+                          ),
                         ),
                       ],
                     ),
@@ -1031,11 +1048,11 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          printer.isReady
-                              ? 'Set to Offline'
-                              : 'Set to Ready',
+                          printer.isReady ? 'Set to Offline' : 'Set to Ready',
                           style: GoogleFonts.inter(
-                              fontSize: 13, color: const Color(0xFF181513)),
+                            fontSize: 13,
+                            color: const Color(0xFF181513),
+                          ),
                         ),
                       ],
                     ),
@@ -1044,16 +1061,19 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
                 onSelected: (val) {
                   if (val == 'test') {
                     _showFeedback(
-                        'Sending test print job to ${printer.name}...');
+                      'Sending test print job to ${printer.name}...',
+                    );
                   } else if (val == 'calibrate') {
                     _showFeedback(
-                        'Sensor calibration initiated on ${printer.name}.');
+                      'Sensor calibration initiated on ${printer.name}.',
+                    );
                   } else if (val == 'toggle_status') {
                     setState(() {
                       printer.isReady = !printer.isReady;
                     });
                     _showFeedback(
-                        '${printer.name} status changed to ${printer.isReady ? "Ready" : "Offline"}.');
+                      '${printer.name} status changed to ${printer.isReady ? "Ready" : "Offline"}.',
+                    );
                   }
                 },
               ),
@@ -1237,7 +1257,7 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
 
           // Product Description
           Text(
-            'Oxford Linen Shirt — M / Blk',
+            'Sample Barcode Label — Standard',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
               fontSize: 13,
@@ -1259,18 +1279,14 @@ class _BarcodePrintingViewState extends State<BarcodePrintingView> {
                 border: Border.all(color: const Color(0xFF181513), width: 1.5),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: CustomPaint(
-                painter: _QrCodePainter(),
-              ),
+              child: CustomPaint(painter: _QrCodePainter()),
             ),
           ] else ...[
             // Realistic 1D Barcode
             SizedBox(
               height: 48,
               width: 220,
-              child: CustomPaint(
-                painter: _RealisticBarcodePainter(),
-              ),
+              child: CustomPaint(painter: _RealisticBarcodePainter()),
             ),
           ],
 
@@ -1441,10 +1457,53 @@ class _RealisticBarcodePainter extends CustomPainter {
 
     // Fixed sequence of bar thicknesses replicating standard Code 128
     final barPattern = [
-      2.0, 1.0, 3.0, 1.5, 2.0, 1.0, 4.0, 1.5, 2.0, 1.0, 1.5, 3.0, 1.5,
-      2.0, 1.0, 4.0, 2.0, 1.5, 3.0, 1.0, 2.0, 3.5, 1.0, 2.0, 1.5, 4.0,
-      1.0, 2.5, 1.5, 3.0, 1.0, 2.0, 1.5, 4.0, 2.0, 1.0, 3.0, 1.5, 2.0,
-      1.0, 4.0, 1.5, 2.0, 1.0, 3.0, 1.5, 2.0
+      2.0,
+      1.0,
+      3.0,
+      1.5,
+      2.0,
+      1.0,
+      4.0,
+      1.5,
+      2.0,
+      1.0,
+      1.5,
+      3.0,
+      1.5,
+      2.0,
+      1.0,
+      4.0,
+      2.0,
+      1.5,
+      3.0,
+      1.0,
+      2.0,
+      3.5,
+      1.0,
+      2.0,
+      1.5,
+      4.0,
+      1.0,
+      2.5,
+      1.5,
+      3.0,
+      1.0,
+      2.0,
+      1.5,
+      4.0,
+      2.0,
+      1.0,
+      3.0,
+      1.5,
+      2.0,
+      1.0,
+      4.0,
+      1.5,
+      2.0,
+      1.0,
+      3.0,
+      1.5,
+      2.0,
     ];
 
     double currentX = 2.0;
@@ -1454,10 +1513,7 @@ class _RealisticBarcodePainter extends CustomPainter {
       if (currentX + width > size.width - 2.0) break;
 
       if (isBar) {
-        canvas.drawRect(
-          Rect.fromLTWH(currentX, 0, width, size.height),
-          paint,
-        );
+        canvas.drawRect(Rect.fromLTWH(currentX, 0, width, size.height), paint);
       }
       currentX += width + 1.2;
       isBar = !isBar;
@@ -1483,11 +1539,13 @@ class _QrCodePainter extends CustomPainter {
       canvas.drawRect(Rect.fromLTWH(x, y, step * 2.2, step * 2.2), paint);
       final whitePaint = Paint()..color = Colors.white;
       canvas.drawRect(
-          Rect.fromLTWH(x + step * 0.45, y + step * 0.45, step * 1.3, step * 1.3),
-          whitePaint);
+        Rect.fromLTWH(x + step * 0.45, y + step * 0.45, step * 1.3, step * 1.3),
+        whitePaint,
+      );
       canvas.drawRect(
-          Rect.fromLTWH(x + step * 0.75, y + step * 0.75, step * 0.7, step * 0.7),
-          paint);
+        Rect.fromLTWH(x + step * 0.75, y + step * 0.75, step * 0.7, step * 0.7),
+        paint,
+      );
     }
 
     drawFinder(0, 0);
@@ -1495,10 +1553,22 @@ class _QrCodePainter extends CustomPainter {
     drawFinder(0, size.height - step * 2.2);
 
     // Some decorative data dots
-    canvas.drawRect(Rect.fromLTWH(step * 3, step * 2, step * 0.8, step * 0.8), paint);
-    canvas.drawRect(Rect.fromLTWH(step * 4, step * 3, step * 0.8, step * 0.8), paint);
-    canvas.drawRect(Rect.fromLTWH(step * 2.5, step * 4, step * 0.8, step * 0.8), paint);
-    canvas.drawRect(Rect.fromLTWH(step * 4.2, step * 4.5, step * 0.8, step * 0.8), paint);
+    canvas.drawRect(
+      Rect.fromLTWH(step * 3, step * 2, step * 0.8, step * 0.8),
+      paint,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(step * 4, step * 3, step * 0.8, step * 0.8),
+      paint,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(step * 2.5, step * 4, step * 0.8, step * 0.8),
+      paint,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(step * 4.2, step * 4.5, step * 0.8, step * 0.8),
+      paint,
+    );
   }
 
   @override

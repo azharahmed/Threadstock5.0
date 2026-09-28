@@ -75,10 +75,7 @@ class _AutomationRule {
   final String estimatedValue;
   final bool isActive;
 
-  _AutomationRule copyWith({
-    bool? isActive,
-    String? automationMode,
-  }) {
+  _AutomationRule copyWith({bool? isActive, String? automationMode}) {
     return _AutomationRule(
       id: id,
       title: title,
@@ -116,17 +113,6 @@ class _AutomationsPageState extends State<AutomationsPage> {
   void initState() {
     super.initState();
     _mode = widget.initialMode;
-    if (_mode == AutomationsViewMode.runDetail) {
-      widget.onTitleChanged?.call('Run #RUN-1847 — Failed');
-    } else if (_mode == AutomationsViewMode.runHistory) {
-      widget.onTitleChanged?.call('Run History');
-    } else if (_mode == AutomationsViewMode.lowStockAutoReorder) {
-      widget.onTitleChanged?.call('Low Stock Auto-Reorder');
-    } else if (_mode == AutomationsViewMode.createAutomation) {
-      widget.onTitleChanged?.call('Create Automation');
-    } else {
-      widget.onTitleChanged?.call('Rules Workspace');
-    }
     _rules = [
       const _AutomationRule(
         id: 'rule-1',
@@ -145,8 +131,7 @@ class _AutomationsPageState extends State<AutomationsPage> {
         automationMode: 'Prepare for Approval',
         triggerCondition:
             'Daily velocity tracking shows depletion of critical sizes (M, L) within 14 business days.',
-        preferredSupplier:
-            'Biella Fabric Group (Milan, Italy) – 12 days lead time.',
+        preferredSupplier: 'Preferred supplier partner – 12 days lead time.',
         safetyThreshold:
             'Requires manual authorization for order values exceeding ₹2,50,000.',
         affectedSkus: '18 SKUs',
@@ -171,7 +156,7 @@ class _AutomationsPageState extends State<AutomationsPage> {
         automationMode: 'Suggest',
         triggerCondition:
             'External market scraping detects pricing divergence on matched product taxonomy.',
-        preferredSupplier: 'Direct Atelier Pricing Matrix',
+        preferredSupplier: 'Direct ThreadStock Pricing Matrix',
         safetyThreshold: 'Requires merchandising director review.',
         affectedSkus: '6 SKUs',
         recommendedUnits: '—',
@@ -193,7 +178,8 @@ class _AutomationsPageState extends State<AutomationsPage> {
         naturalDefinition:
             'Automatically flag inventory holding units that have not logged a sale across all boutique channels for 60 consecutive days.',
         automationMode: 'Automatic',
-        triggerCondition: 'Sales ledger records zero units moved within 60 days.',
+        triggerCondition:
+            'Sales ledger records zero units moved within 60 days.',
         preferredSupplier: 'Regional Warehouse Redistribution',
         safetyThreshold: 'Applies only to items with on-hand value > ₹50,000.',
         affectedSkus: '12 SKUs',
@@ -216,7 +202,8 @@ class _AutomationsPageState extends State<AutomationsPage> {
         naturalDefinition:
             'Prepare collection transition markdown and archival proposals 30 days prior to the official seasonal calendar change.',
         automationMode: 'Suggest',
-        triggerCondition: 'Calendar reaches 30-day threshold before seasonal closing date.',
+        triggerCondition:
+            'Calendar reaches 30-day threshold before seasonal closing date.',
         preferredSupplier: 'Outlet Distribution Network',
         safetyThreshold: 'Requires seasonal markdown budget approval.',
         affectedSkus: '24 SKUs',
@@ -237,9 +224,10 @@ class _AutomationsPageState extends State<AutomationsPage> {
         statusColor: Color(0xFF1F7A46),
         icon: Icons.local_shipping_outlined,
         naturalDefinition:
-            'Balance inventory nodes by routing excess central warehouse stock to regional boutiques projected to run out of stock.',
+            'Balance inventory nodes by routing excess main warehouse stock to regional boutiques projected to run out of stock.',
         automationMode: 'Automatic',
-        triggerCondition: 'Regional boutique stock falls below safety buffer while Central Warehouse has excess stock.',
+        triggerCondition:
+            'Regional boutique stock falls below safety buffer while primary warehouse has excess stock.',
         preferredSupplier: 'Vrindavan Express Regional Logistics',
         safetyThreshold: 'Auto-approves transfer lots up to ₹1,50,000.',
         affectedSkus: '8 SKUs',
@@ -262,9 +250,11 @@ class _AutomationsPageState extends State<AutomationsPage> {
         naturalDefinition:
             'Send automated reminder notifications to approvers when purchase orders remain pending without sign-off for over 48 hours.',
         automationMode: 'Suggest',
-        triggerCondition: 'Purchase order status == Awaiting Approval && elapsed time > 48h.',
+        triggerCondition:
+            'Purchase order status == Awaiting Approval && elapsed time > 48h.',
         preferredSupplier: 'Internal Procurement Operations',
-        safetyThreshold: 'Escalates to Central Admin if unacknowledged after 72h.',
+        safetyThreshold:
+            'Escalates to Central Admin if unacknowledged after 72h.',
         affectedSkus: '—',
         recommendedUnits: '—',
         estimatedValue: '—',
@@ -303,7 +293,8 @@ class _AutomationsPageState extends State<AutomationsPage> {
 
       // 2. Search query filter
       if (query.isNotEmpty) {
-        final matches = rule.title.toLowerCase().contains(query) ||
+        final matches =
+            rule.title.toLowerCase().contains(query) ||
             rule.description.toLowerCase().contains(query) ||
             rule.badge.toLowerCase().contains(query);
         if (!matches) return false;
@@ -318,8 +309,11 @@ class _AutomationsPageState extends State<AutomationsPage> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -381,13 +375,17 @@ class _AutomationsPageState extends State<AutomationsPage> {
                     });
                   },
                   onViewAllAffectedItems: () {
-                    _showFeedback('Viewing complete manifest of 18 affected variants');
+                    _showFeedback(
+                      'Viewing complete manifest of 18 affected variants',
+                    );
                   },
                   onSelectRelatedRun: (runId) {
                     _showFeedback('Opening run log $runId');
                   },
                   onGetAiRecommendation: () {
-                    _showFeedback('AI generated recommendation: Switch endpoint to secondary gateway with 45s timeout.');
+                    _showFeedback(
+                      'AI generated recommendation: Switch endpoint to secondary gateway with 45s timeout.',
+                    );
                   },
                 ),
                 const SizedBox(height: 40),
@@ -415,7 +413,9 @@ class _AutomationsPageState extends State<AutomationsPage> {
                         widget.onTitleChanged?.call('Low Stock Auto-Reorder');
                       });
                     } else {
-                      _showFeedback('Viewing execution profile for $automationName');
+                      _showFeedback(
+                        'Viewing execution profile for $automationName',
+                      );
                     }
                   },
                   onSelectRun: (runId) {
@@ -425,10 +425,14 @@ class _AutomationsPageState extends State<AutomationsPage> {
                     });
                   },
                   onExportLogs: () {
-                    _showFeedback('Exporting all 234 automation run records to CSV');
+                    _showFeedback(
+                      'Exporting all 234 automation run records to CSV',
+                    );
                   },
                   onViewInsights: () {
-                    _showFeedback('Navigating to full 30-day automation performance audit');
+                    _showFeedback(
+                      'Navigating to full 30-day automation performance audit',
+                    );
                   },
                 ),
                 const SizedBox(height: 40),
@@ -471,7 +475,9 @@ class _AutomationsPageState extends State<AutomationsPage> {
                     _showFeedback('Delete automation confirmation triggered');
                   },
                   onViewRecommendations: () {
-                    _showFeedback('Analyzing stock levels & generating transfer/reorder recommendations');
+                    _showFeedback(
+                      'Analyzing stock levels & generating transfer/reorder recommendations',
+                    );
                   },
                   onViewAllActivity: () {
                     setState(() {
@@ -594,7 +600,10 @@ class _AutomationsPageState extends State<AutomationsPage> {
               },
               borderRadius: BorderRadius.circular(6),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
@@ -603,7 +612,11 @@ class _AutomationsPageState extends State<AutomationsPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.arrow_back_rounded, size: 14, color: Color(0xFF8C5A2B)),
+                    const Icon(
+                      Icons.arrow_back_rounded,
+                      size: 14,
+                      color: Color(0xFF8C5A2B),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Back to Auto-Reorder',
@@ -662,7 +675,8 @@ class _AutomationsPageState extends State<AutomationsPage> {
             color: Colors.transparent,
             child: InkWell(
               borderRadius: BorderRadius.circular(8),
-              onTap: () => _showFeedback('Create automation rule workflow opened.'),
+              onTap: () =>
+                  _showFeedback('Create automation rule workflow opened.'),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -723,7 +737,10 @@ class _AutomationsPageState extends State<AutomationsPage> {
             return InkWell(
               onTap: () => setState(() => _selectedTab = index),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
@@ -741,8 +758,9 @@ class _AutomationsPageState extends State<AutomationsPage> {
                       tab['label']!,
                       style: GoogleFonts.inter(
                         fontSize: 13.5,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                         color: isSelected
                             ? const Color(0xFF1E1C1A)
                             : const Color(0xFF7E766B),
@@ -923,7 +941,9 @@ class _AutomationsPageState extends State<AutomationsPage> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF2A231A).withOpacity(isSelected ? 0.04 : 0.02),
+                    color: const Color(
+                      0xFF2A231A,
+                    ).withOpacity(isSelected ? 0.04 : 0.02),
                     blurRadius: 10,
                     offset: const Offset(0, 2),
                   ),
@@ -1211,7 +1231,8 @@ class _AutomationsPageState extends State<AutomationsPage> {
                 color: const Color(0xFF7E766B),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
-                onPressed: () => _showFeedback('Rule configuration options menu'),
+                onPressed: () =>
+                    _showFeedback('Rule configuration options menu'),
               ),
             ],
           ),
@@ -1261,9 +1282,11 @@ class _AutomationsPageState extends State<AutomationsPage> {
                             _rules[idx] = _rules[idx].copyWith(isActive: val);
                           }
                         });
-                        _showFeedback(val
-                            ? '${rule.title} enabled.'
-                            : '${rule.title} paused.');
+                        _showFeedback(
+                          val
+                              ? '${rule.title} enabled.'
+                              : '${rule.title} paused.',
+                        );
                       },
                     ),
                   ),
@@ -1406,7 +1429,11 @@ class _AutomationsPageState extends State<AutomationsPage> {
                         subtitle: 'Below threshold',
                       ),
                     ),
-                    Container(width: 1, height: 32, color: const Color(0xFFEADBCA)),
+                    Container(
+                      width: 1,
+                      height: 32,
+                      color: const Color(0xFFEADBCA),
+                    ),
                     Expanded(
                       child: _buildEstMetricTile(
                         icon: Icons.track_changes_rounded,
@@ -1414,7 +1441,11 @@ class _AutomationsPageState extends State<AutomationsPage> {
                         subtitle: 'Recommended',
                       ),
                     ),
-                    Container(width: 1, height: 32, color: const Color(0xFFEADBCA)),
+                    Container(
+                      width: 1,
+                      height: 32,
+                      color: const Color(0xFFEADBCA),
+                    ),
                     Expanded(
                       child: _buildEstMetricTile(
                         icon: Icons.shopping_bag_outlined,
@@ -1495,12 +1526,16 @@ class _AutomationsPageState extends State<AutomationsPage> {
                   setState(() {
                     final idx = _rules.indexWhere((r) => r.id == rule.id);
                     if (idx != -1) {
-                      _rules[idx] = _rules[idx].copyWith(isActive: !rule.isActive);
+                      _rules[idx] = _rules[idx].copyWith(
+                        isActive: !rule.isActive,
+                      );
                     }
                   });
-                  _showFeedback(rule.isActive
-                      ? '${rule.title} paused.'
-                      : '${rule.title} activated.');
+                  _showFeedback(
+                    rule.isActive
+                        ? '${rule.title} paused.'
+                        : '${rule.title} activated.',
+                  );
                 },
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),

@@ -37,10 +37,7 @@ class SettingsCategoryGroup {
 }
 
 class SystemSettingsView extends StatefulWidget {
-  const SystemSettingsView({
-    super.key,
-    this.onSelectSection,
-  });
+  const SystemSettingsView({super.key, this.onSelectSection});
 
   final ValueChanged<String>? onSelectSection;
 
@@ -168,10 +165,7 @@ class _SystemSettingsViewState extends State<SystemSettingsView> {
           badgeTextColor: Color(0xFFD97706),
           sectionKey: 'sync_queue',
         ),
-        SettingsCategoryItem(
-          title: 'Integrations',
-          sectionKey: 'integrations',
-        ),
+        SettingsCategoryItem(title: 'Integrations', sectionKey: 'integrations'),
         SettingsCategoryItem(
           title: 'Notifications Schema',
           sectionKey: 'notifications_schema',
@@ -204,10 +198,7 @@ class _SystemSettingsViewState extends State<SystemSettingsView> {
           title: 'Personal Preferences',
           sectionKey: 'preferences',
         ),
-        SettingsCategoryItem(
-          title: 'Support & Help',
-          sectionKey: 'help',
-        ),
+        SettingsCategoryItem(title: 'Support & Help', sectionKey: 'help'),
       ],
     ),
   ];
@@ -226,7 +217,11 @@ class _SystemSettingsViewState extends State<SystemSettingsView> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.info_outline_rounded, color: Color(0xFFBA8A55), size: 18),
+              const Icon(
+                Icons.info_outline_rounded,
+                color: Color(0xFFBA8A55),
+                size: 18,
+              ),
               const SizedBox(width: 10),
               Text(
                 'Opening ${item.title} configuration...',
@@ -248,20 +243,29 @@ class _SystemSettingsViewState extends State<SystemSettingsView> {
     // Filter groups based on search query
     final filteredGroups = _searchQuery.isEmpty
         ? _groups
-        : _groups.map((group) {
-            final matchingItems = group.items.where((item) {
-              return item.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                  group.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                  group.subtitle.toLowerCase().contains(_searchQuery.toLowerCase());
-            }).toList();
-            return SettingsCategoryGroup(
-              id: group.id,
-              title: group.title,
-              subtitle: group.subtitle,
-              icon: group.icon,
-              items: matchingItems,
-            );
-          }).where((group) => group.items.isNotEmpty).toList();
+        : _groups
+              .map((group) {
+                final matchingItems = group.items.where((item) {
+                  return item.title.toLowerCase().contains(
+                        _searchQuery.toLowerCase(),
+                      ) ||
+                      group.title.toLowerCase().contains(
+                        _searchQuery.toLowerCase(),
+                      ) ||
+                      group.subtitle.toLowerCase().contains(
+                        _searchQuery.toLowerCase(),
+                      );
+                }).toList();
+                return SettingsCategoryGroup(
+                  id: group.id,
+                  title: group.title,
+                  subtitle: group.subtitle,
+                  icon: group.icon,
+                  items: matchingItems,
+                );
+              })
+              .where((group) => group.items.isNotEmpty)
+              .toList();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -278,8 +282,12 @@ class _SystemSettingsViewState extends State<SystemSettingsView> {
               // 6 Category Cards in a 3-Column Layout
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final crossAxisCount = constraints.maxWidth > 860 ? 3 : (constraints.maxWidth > 580 ? 2 : 1);
-                  final itemWidth = (constraints.maxWidth - (crossAxisCount - 1) * 20) / crossAxisCount;
+                  final crossAxisCount = constraints.maxWidth > 860
+                      ? 3
+                      : (constraints.maxWidth > 580 ? 2 : 1);
+                  final itemWidth =
+                      (constraints.maxWidth - (crossAxisCount - 1) * 20) /
+                      crossAxisCount;
 
                   return Wrap(
                     spacing: 20,
@@ -427,7 +435,12 @@ class _SystemSettingsViewState extends State<SystemSettingsView> {
         children: [
           // Card Header: Amber Badge Icon + Title + Subtitle
           Padding(
-            padding: const EdgeInsets.only(left: 18, right: 18, top: 18, bottom: 14),
+            padding: const EdgeInsets.only(
+              left: 18,
+              right: 18,
+              top: 18,
+              bottom: 14,
+            ),
             child: Row(
               children: [
                 Container(
@@ -476,11 +489,7 @@ class _SystemSettingsViewState extends State<SystemSettingsView> {
           ),
 
           // Hairline separator below header
-          const Divider(
-            height: 1,
-            thickness: 1,
-            color: Color(0xFFF1EAE0),
-          ),
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF1EAE0)),
 
           // 4 Category Items
           ...List.generate(group.items.length, (index) {
@@ -493,12 +502,18 @@ class _SystemSettingsViewState extends State<SystemSettingsView> {
                 bottom: isLast ? const Radius.circular(12) : Radius.zero,
               ),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 13,
+                ),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: isLast
                         ? BorderSide.none
-                        : const BorderSide(color: Color(0xFFF6F1EA), width: 1.0),
+                        : const BorderSide(
+                            color: Color(0xFFF6F1EA),
+                            width: 1.0,
+                          ),
                   ),
                 ),
                 child: Row(
@@ -517,7 +532,10 @@ class _SystemSettingsViewState extends State<SystemSettingsView> {
                     if (item.badgeText != null) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: item.badgeBgColor ?? const Color(0xFFEAF2FB),
                           borderRadius: BorderRadius.circular(4),
@@ -528,7 +546,8 @@ class _SystemSettingsViewState extends State<SystemSettingsView> {
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.4,
-                            color: item.badgeTextColor ?? const Color(0xFF2A6496),
+                            color:
+                                item.badgeTextColor ?? const Color(0xFF2A6496),
                           ),
                         ),
                       ),

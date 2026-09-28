@@ -2,10 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/business/current_business_service.dart';
 import '../../../../core/responsive/desktop_layout.dart';
 import '../widgets/access_restricted_view.dart';
 import '../widgets/create_purchase_order_view.dart';
-import '../widgets/po_10482_detail_view.dart';
 import '../widgets/po_detail_view.dart';
 import '../widgets/return_to_supplier_view.dart';
 
@@ -15,14 +16,13 @@ enum PurchasingViewMode {
   accessRestricted,
   returnToSupplier,
   createPo,
-  poDetail10482,
 }
 
 class PurchasingPage extends StatefulWidget {
   const PurchasingPage({
     super.key,
     this.initialMode = PurchasingViewMode.accessRestricted,
-    this.initialPoNumber = 'PO-2024-8902',
+    this.initialPoNumber = 'PO-8902',
     this.onTitleChanged,
     this.onNavigateToDashboard,
   });
@@ -87,123 +87,13 @@ class _PoItem {
 class _PurchasingPageState extends State<PurchasingPage> {
   late PurchasingViewMode _mode;
   late String _selectedPoNumber;
-  int _selectedTab = 2; // Default to 'Awaiting Approval' tab as in screenshot
-  String _selectedPoId = 'PO-4098'; // Selected PO in screenshot
+  int _selectedTab = 0;
+  String _selectedPoId = '';
+  bool _isLoadingOrders = true;
   final Set<String> _selectedRowIds = {};
   final _searchController = TextEditingController();
 
-  final List<_PurchaseOrder> _orders = const [
-    _PurchaseOrder(
-      id: 'PO-4098',
-      poNumber: 'PO-4098',
-      supplier: 'Surat Denim Ltd',
-      destination: 'Delhi Store Hub',
-      itemsSummary: '1,200 units',
-      totalValue: '₹15,20,000',
-      eta: 'Feb 18, 2027',
-      status: 'Awaiting Approval',
-      statusBg: Color(0xFFFBF0DF),
-      statusColor: Color(0xFF9E6516),
-      createdOn: 'Oct 15, 2024, 10:24 AM',
-      createdBy: 'Alex Mercer',
-      notes: 'Urgent stock for new collection.\nPlease review and approve.',
-      items: [
-        _PoItem(
-          name: 'Raw Denim Jeans',
-          variant: 'Indigo / L',
-          quantity: '800 pcs',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-        _PoItem(
-          name: 'Raw Denim Jeans',
-          variant: 'Black / M',
-          quantity: '400 pcs',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-      ],
-    ),
-    _PurchaseOrder(
-      id: 'PO-4091',
-      poNumber: 'PO-4091',
-      supplier: 'Bialla Mills',
-      destination: 'Central Warehouse',
-      itemsSummary: '850 units',
-      totalValue: '₹24,50,000',
-      eta: 'Today',
-      status: 'Arrived',
-      statusBg: Color(0xFFE9F6EE),
-      statusColor: Color(0xFF1F7A46),
-      createdOn: 'Oct 12, 2024, 02:15 PM',
-      createdBy: 'Elena Rostova',
-      notes: 'Cotton jersey fabric rolls for Atelier production run.',
-      items: [
-        _PoItem(
-          name: 'Combed Cotton Jersey',
-          variant: 'Natural / 280gsm',
-          quantity: '550 pcs',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-        _PoItem(
-          name: 'Ribbed Collar Trim',
-          variant: 'Oatmeal / 120m',
-          quantity: '300 pcs',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-      ],
-    ),
-    _PurchaseOrder(
-      id: 'PO-4094',
-      poNumber: 'PO-4094',
-      supplier: 'Prato Knitwear Co.',
-      destination: 'Central Warehouse',
-      itemsSummary: '400 units',
-      totalValue: '₹8,40,000',
-      eta: 'Today',
-      status: 'In Transit',
-      statusBg: Color(0xFFEAF1FB),
-      statusColor: Color(0xFF2662BA),
-      createdOn: 'Oct 14, 2024, 11:30 AM',
-      createdBy: 'Marcus Vance',
-      notes: 'Merino wool cardigans shipment dispatched via express freight.',
-      items: [
-        _PoItem(
-          name: 'Fine Merino Cardigan',
-          variant: 'Camel / S-M',
-          quantity: '250 pcs',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-        _PoItem(
-          name: 'Fine Merino Cardigan',
-          variant: 'Charcoal / L-XL',
-          quantity: '150 pcs',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-      ],
-    ),
-    _PurchaseOrder(
-      id: 'PO-4102',
-      poNumber: 'PO-4102',
-      supplier: 'Bialla Mills',
-      destination: 'Central Warehouse',
-      itemsSummary: '300 units',
-      totalValue: '₹11,80,000',
-      eta: 'Feb 24, 2027',
-      status: 'Draft',
-      statusBg: Color(0xFFF0EBE3),
-      statusColor: Color(0xFF6B6358),
-      createdOn: 'Oct 17, 2024, 04:45 PM',
-      createdBy: 'Alex Mercer',
-      notes: 'Draft PO under review for Spring/Summer initial batch.',
-      items: [
-        _PoItem(
-          name: 'Mulberry Silk Blend',
-          variant: 'Ivory / 140cm',
-          quantity: '300 pcs',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-      ],
-    ),
-  ];
+  List<_PurchaseOrder> _orders = [];
 
   _PurchaseOrder? get _selectedOrder {
     try {
@@ -230,12 +120,11 @@ class _PurchasingPageState extends State<PurchasingPage> {
         widget.onTitleChanged?.call('Return to Supplier');
       } else if (_mode == PurchasingViewMode.createPo) {
         widget.onTitleChanged?.call('Create Purchase Order');
-      } else if (_mode == PurchasingViewMode.poDetail10482) {
-        widget.onTitleChanged?.call('PO #10482');
       } else {
         widget.onTitleChanged?.call('Purchase Orders');
       }
     });
+    _loadOrders();
   }
 
   List<_PurchaseOrder> get _filteredOrders {
@@ -255,13 +144,133 @@ class _PurchasingPageState extends State<PurchasingPage> {
     super.dispose();
   }
 
+  Future<void> _loadOrders() async {
+    try {
+      final sb = Supabase.instance.client;
+      final businessId = CurrentBusinessService.instance.currentBusinessId;
+      if (businessId == null ||
+          businessId.isEmpty ||
+          businessId.startsWith('biz_')) {
+        if (mounted) setState(() => _isLoadingOrders = false);
+        return;
+      }
+      final response = await sb
+          .from('purchase_orders')
+          .select(
+            'id, po_number, status, created_at, expected_delivery_date, total_amount_cents, notes',
+          )
+          .eq('business_id', businessId)
+          .order('created_at', ascending: false)
+          .limit(50);
+      final list = (response as List).map((row) {
+        final status = row['status'] as String? ?? 'draft';
+        final (statusBg, statusColor) = _poStatusColors(status);
+        final totalCents = (row['total_amount_cents'] as num?)?.toDouble() ?? 0;
+        return _PurchaseOrder(
+          id: row['id'] as String,
+          poNumber:
+              row['po_number'] as String? ??
+              (row['id'] as String).substring(0, 8).toUpperCase(),
+          supplier: '—',
+          destination: '—',
+          itemsSummary: '—',
+          totalValue: totalCents > 0
+              ? _poFormatCurrency(totalCents / 100)
+              : '—',
+          eta: _poFormatDate(row['expected_delivery_date'] as String? ?? ''),
+          status: _poStatusDisplayName(status),
+          statusBg: statusBg,
+          statusColor: statusColor,
+          createdOn: _poFormatDate(row['created_at'] as String? ?? ''),
+          createdBy: '—',
+          notes: row['notes'] as String? ?? '',
+          items: const [],
+        );
+      }).toList();
+      if (mounted) {
+        setState(() {
+          _orders = list;
+          _isLoadingOrders = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[PurchasingPage] _loadOrders error: $e');
+      if (mounted) setState(() => _isLoadingOrders = false);
+    }
+  }
+
+  static (Color, Color) _poStatusColors(String status) {
+    switch (status.toLowerCase()) {
+      case 'awaiting_approval':
+      case 'pending_approval':
+      case 'pending':
+        return (const Color(0xFFFBF0DF), const Color(0xFF9E6516));
+      case 'ordered':
+      case 'in_transit':
+        return (const Color(0xFFEAF1FB), const Color(0xFF2662BA));
+      case 'arrived':
+      case 'received':
+        return (const Color(0xFFE9F6EE), const Color(0xFF1F7A46));
+      case 'cancelled':
+      case 'rejected':
+        return (const Color(0xFFFEE2E2), const Color(0xFFDC2626));
+      default:
+        return (const Color(0xFFF0EBE3), const Color(0xFF6B6358));
+    }
+  }
+
+  static String _poStatusDisplayName(String status) {
+    return status
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w)
+        .join(' ');
+  }
+
+  static String _poFormatCurrency(double amount) {
+    if (amount >= 10000000)
+      return '₹${(amount / 10000000).toStringAsFixed(1)}Cr';
+    if (amount >= 100000) return '₹${(amount / 100000).toStringAsFixed(1)}L';
+    if (amount >= 1000) {
+      return '₹${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d+?)(?=(\d\d)+(\d)(?!\d))'), (m) => '${m[1]},')}';
+    }
+    return '₹${amount.toStringAsFixed(0)}';
+  }
+
+  static String _poFormatDate(String iso) {
+    if (iso.isEmpty) return '—';
+    try {
+      final dt = DateTime.parse(iso);
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      return '${dt.day} ${months[dt.month - 1]} ${dt.year}';
+    } catch (_) {
+      return iso;
+    }
+  }
+
   void _showFeedback(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -280,20 +289,20 @@ class _PurchasingPageState extends State<PurchasingPage> {
   @override
   Widget build(BuildContext context) {
     if (_mode == PurchasingViewMode.returnToSupplier) {
+      final rPo = _selectedOrder;
       return ReturnToSupplierView(
-        poNumber: 'PO #10482',
-        supplier: 'Milano Tessuti',
-        poDate: '12 Jan 2027',
-        receivedDate: '18 Jan 2027',
+        poNumber: rPo?.poNumber ?? '—',
+        supplier: rPo?.supplier ?? '—',
+        poDate: rPo?.createdOn ?? '—',
+        receivedDate: '—',
         onViewOriginalPo: () {
           setState(() {
-            _mode = PurchasingViewMode.poDetail;
-            _selectedPoNumber = 'PO #10482';
-            widget.onTitleChanged?.call('PO #10482');
+            _mode = PurchasingViewMode.overview;
+            widget.onTitleChanged?.call('Purchase Orders');
           });
         },
         onCreatePurchaseReturn: () {
-          _showFeedback('Purchase return created successfully for Milano Tessuti.');
+          _showFeedback('Purchase return created successfully.');
         },
         onSaveDraft: () {
           _showFeedback('Return draft saved.');
@@ -310,31 +319,11 @@ class _PurchasingPageState extends State<PurchasingPage> {
             onCreateOrder: () {
               _showFeedback('Purchase Order created successfully.');
               setState(() {
-                _mode = PurchasingViewMode.poDetail10482;
-                widget.onTitleChanged?.call('PO #10482');
-              });
-            },
-            onSaveDraft: () => _showFeedback('Draft saved.'),
-          ),
-        ),
-      );
-    }
-
-    if (_mode == PurchasingViewMode.poDetail10482) {
-      return Scaffold(
-        backgroundColor: Colors.transparent,
-        body: DesktopContentConstraint(
-          maxWidth: 1320,
-          child: PO10482DetailView(
-            onBackToOverview: () {
-              setState(() {
                 _mode = PurchasingViewMode.overview;
                 widget.onTitleChanged?.call('Purchase Orders');
               });
             },
-            onNavigateToInvoice: () {
-              _showFeedback('Opening PO #10482 invoice...');
-            },
+            onSaveDraft: () => _showFeedback('Draft saved.'),
           ),
         ),
       );
@@ -405,9 +394,7 @@ class _PurchasingPageState extends State<PurchasingPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Left: Table Card
-                        Expanded(
-                          child: _buildTableCard(),
-                        ),
+                        Expanded(child: _buildTableCard()),
                         const SizedBox(width: 18),
 
                         // Right: PO Detail Panel (360 px width)
@@ -458,7 +445,9 @@ class _PurchasingPageState extends State<PurchasingPage> {
             ),
             const SizedBox(width: 14),
             Text(
-              '4 active orders',
+              _isLoadingOrders
+                  ? 'Loading...'
+                  : '${_orders.length} order${_orders.length == 1 ? '' : 's'}',
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
@@ -609,12 +598,26 @@ class _PurchasingPageState extends State<PurchasingPage> {
   // 2. TABS ROW
   // ========================================================
   Widget _buildTabsRow() {
+    final draftCount = _orders
+        .where((o) => o.status.toLowerCase() == 'draft')
+        .length;
+    final awaitingCount = _orders
+        .where((o) => o.status.toLowerCase().contains('awaiting'))
+        .length;
+    final orderedCount = _orders
+        .where(
+          (o) => ['ordered', 'in transit'].contains(o.status.toLowerCase()),
+        )
+        .length;
+    final receivedCount = _orders
+        .where((o) => ['received', 'arrived'].contains(o.status.toLowerCase()))
+        .length;
     final tabs = [
-      {'label': 'All', 'count': '12'},
-      {'label': 'Draft', 'count': '3'},
-      {'label': 'Awaiting Approval', 'count': '1'},
-      {'label': 'Ordered', 'count': '5'},
-      {'label': 'Received', 'count': '3'},
+      {'label': 'All', 'count': _orders.length.toString()},
+      {'label': 'Draft', 'count': draftCount.toString()},
+      {'label': 'Awaiting Approval', 'count': awaitingCount.toString()},
+      {'label': 'Ordered', 'count': orderedCount.toString()},
+      {'label': 'Received', 'count': receivedCount.toString()},
     ];
 
     return Container(
@@ -633,7 +636,10 @@ class _PurchasingPageState extends State<PurchasingPage> {
             return InkWell(
               onTap: () => setState(() => _selectedTab = index),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
@@ -651,8 +657,9 @@ class _PurchasingPageState extends State<PurchasingPage> {
                       tab['label']!,
                       style: GoogleFonts.inter(
                         fontSize: 13.5,
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                         color: isSelected
                             ? const Color(0xFF1E1C1A)
                             : const Color(0xFF7E766B),
@@ -865,10 +872,16 @@ class _PurchasingPageState extends State<PurchasingPage> {
                 children: [
                   // Table Header
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: const BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(color: Color(0xFFEDE5DA), width: 1.0),
+                        bottom: BorderSide(
+                          color: Color(0xFFEDE5DA),
+                          width: 1.0,
+                        ),
                       ),
                     ),
                     child: Row(
@@ -878,7 +891,9 @@ class _PurchasingPageState extends State<PurchasingPage> {
                           onChanged: (val) {
                             setState(() {
                               if (val == true) {
-                                _selectedRowIds.addAll(_orders.map((o) => o.id));
+                                _selectedRowIds.addAll(
+                                  _orders.map((o) => o.id),
+                                );
                               } else {
                                 _selectedRowIds.clear();
                               }
@@ -907,175 +922,230 @@ class _PurchasingPageState extends State<PurchasingPage> {
                   ),
 
                   // Table Rows
-                  ..._filteredOrders.map((order) {
-                    final isRowSelected = _selectedPoId == order.id;
-                    final isChecked = _selectedRowIds.contains(order.id);
-
-                    return InkWell(
-                      onTap: () {
-                        setState(() {
-                          _selectedPoId = order.id;
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 150),
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: isRowSelected
-                              ? const Color(0xFFFDF7EE)
-                              : Colors.transparent,
-                          border: const Border(
-                            bottom: BorderSide(
-                              color: Color(0xFFF1EAE0),
-                              width: 1.0,
-                            ),
-                          ),
+                  if (_isLoadingOrders)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFFBA8A55),
                         ),
-                        child: Row(
+                      ),
+                    )
+                  else if (_filteredOrders.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 48),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            _buildCheckbox(
-                              value: isChecked,
-                              onChanged: (val) {
-                                setState(() {
-                                  if (val == true) {
-                                    _selectedRowIds.add(order.id);
-                                  } else {
-                                    _selectedRowIds.remove(order.id);
-                                  }
-                                });
-                              },
-                            ),
-                            const SizedBox(width: 14),
-
-                            // PO Number
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                order.poNumber,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF1E1C1A),
-                                ),
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF5EDE1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.receipt_long_outlined,
+                                size: 24,
+                                color: Color(0xFFBA8A55),
                               ),
                             ),
-
-                            // Supplier
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                order.supplier,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF2A2520),
-                                ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No purchase orders yet',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1E1C1A),
                               ),
                             ),
-
-                            // Destination
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                order.destination,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color(0xFF5E574E),
-                                ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Create your first PO to start tracking purchases.',
+                              style: GoogleFonts.inter(
+                                fontSize: 12.5,
+                                color: const Color(0xFF7E766B),
                               ),
-                            ),
-
-                            // Items
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                order.itemsSummary,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color(0xFF5E574E),
-                                ),
-                              ),
-                            ),
-
-                            // Total Value
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                order.totalValue,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF1E1C1A),
-                                ),
-                              ),
-                            ),
-
-                            // ETA
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                order.eta,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color(0xFF5E574E),
-                                ),
-                              ),
-                            ),
-
-                            // Status Badge
-                            Expanded(
-                              flex: 3,
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: order.statusBg,
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    order.status,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: order.statusColor,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            // Trailing Arrow
-                            const Icon(
-                              Icons.chevron_right_rounded,
-                              size: 18,
-                              color: Color(0xFF8A8275),
                             ),
                           ],
                         ),
                       ),
-                    );
-                  }),
+                    )
+                  else
+                    ..._filteredOrders.map((order) {
+                      final isRowSelected = _selectedPoId == order.id;
+                      final isChecked = _selectedRowIds.contains(order.id);
+
+                      return InkWell(
+                        onTap: () {
+                          setState(() {
+                            _selectedPoId = order.id;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isRowSelected
+                                ? const Color(0xFFFDF7EE)
+                                : Colors.transparent,
+                            border: const Border(
+                              bottom: BorderSide(
+                                color: Color(0xFFF1EAE0),
+                                width: 1.0,
+                              ),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              _buildCheckbox(
+                                value: isChecked,
+                                onChanged: (val) {
+                                  setState(() {
+                                    if (val == true) {
+                                      _selectedRowIds.add(order.id);
+                                    } else {
+                                      _selectedRowIds.remove(order.id);
+                                    }
+                                  });
+                                },
+                              ),
+                              const SizedBox(width: 14),
+
+                              // PO Number
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  order.poNumber,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1E1C1A),
+                                  ),
+                                ),
+                              ),
+
+                              // Supplier
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  order.supplier,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFF2A2520),
+                                  ),
+                                ),
+                              ),
+
+                              // Destination
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  order.destination,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF5E574E),
+                                  ),
+                                ),
+                              ),
+
+                              // Items
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  order.itemsSummary,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF5E574E),
+                                  ),
+                                ),
+                              ),
+
+                              // Total Value
+                              Expanded(
+                                flex: 3,
+                                child: Text(
+                                  order.totalValue,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1E1C1A),
+                                  ),
+                                ),
+                              ),
+
+                              // ETA
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  order.eta,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF5E574E),
+                                  ),
+                                ),
+                              ),
+
+                              // Status Badge
+                              Expanded(
+                                flex: 3,
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: order.statusBg,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: Text(
+                                      order.status,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11.5,
+                                        fontWeight: FontWeight.w600,
+                                        color: order.statusColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              // Trailing Arrow
+                              const Icon(
+                                Icons.chevron_right_rounded,
+                                size: 18,
+                                color: Color(0xFF8A8275),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
                 ],
               ),
             ),
@@ -1088,9 +1158,11 @@ class _PurchasingPageState extends State<PurchasingPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  _filteredOrders.isEmpty
-                      ? 'No orders found matching search'
-                      : 'Showing 1–${_filteredOrders.length} of ${_filteredOrders.length} orders',
+                  _isLoadingOrders
+                      ? 'Loading orders...'
+                      : _filteredOrders.isEmpty
+                      ? 'No purchase orders yet'
+                      : 'Showing 1–${_filteredOrders.length} of ${_orders.length} orders',
                   style: GoogleFonts.inter(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w400,
@@ -1100,7 +1172,10 @@ class _PurchasingPageState extends State<PurchasingPage> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(6),
@@ -1184,10 +1259,7 @@ class _PurchasingPageState extends State<PurchasingPage> {
               ),
             ),
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: 4),
-            trailing,
-          ],
+          if (trailing != null) ...[const SizedBox(width: 4), trailing],
         ],
       ),
     );
@@ -1388,10 +1460,10 @@ class _PurchasingPageState extends State<PurchasingPage> {
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
                             const Icon(
-                          Icons.checkroom_rounded,
-                          color: Color(0xFFBA8A55),
-                          size: 20,
-                        ),
+                              Icons.checkroom_rounded,
+                              color: Color(0xFFBA8A55),
+                              size: 20,
+                            ),
                       ),
                     ),
                   ),
@@ -1446,11 +1518,7 @@ class _PurchasingPageState extends State<PurchasingPage> {
           const SizedBox(height: 8),
 
           // Total Value
-          _buildSummaryRow(
-            'Total Value',
-            po.totalValue,
-            isBold: true,
-          ),
+          _buildSummaryRow('Total Value', po.totalValue, isBold: true),
           const SizedBox(height: 8),
 
           // Status
@@ -1579,8 +1647,8 @@ class _PurchasingPageState extends State<PurchasingPage> {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
-                onTap: () => _showFeedback(
-                    'Purchase Order ${po.poNumber} rejected.'),
+                onTap: () =>
+                    _showFeedback('Purchase Order ${po.poNumber} rejected.'),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 11),
                   child: Row(

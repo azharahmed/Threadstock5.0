@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../data/demand_forecast_repository.dart';
+
 class DemandForecastProductRow {
   const DemandForecastProductRow({
     required this.name,
@@ -14,7 +16,7 @@ class DemandForecastProductRow {
     required this.riskBg,
     required this.riskColor,
     required this.suggestedAction,
-    required this.imageAsset,
+    this.imageAsset,
   });
 
   final String name;
@@ -27,18 +29,20 @@ class DemandForecastProductRow {
   final Color riskBg;
   final Color riskColor;
   final String suggestedAction;
-  final String imageAsset;
+  final String? imageAsset;
 }
 
 class DemandForecastView extends StatefulWidget {
   const DemandForecastView({
     super.key,
+    this.locationId,
     this.onPreparePo,
     this.onViewFullForecast,
     this.onCreatePoForRow,
     this.onViewAllProducts,
   });
 
+  final String? locationId;
   final ValueChanged<String>? onPreparePo;
   final VoidCallback? onViewFullForecast;
   final ValueChanged<DemandForecastProductRow>? onCreatePoForRow;
@@ -49,52 +53,57 @@ class DemandForecastView extends StatefulWidget {
 }
 
 class _DemandForecastViewState extends State<DemandForecastView> {
-  int _selectedDateFilterIndex = 1; // 0: 7 Days, 1: 30 Days, 2: 60 Days, 3: 90 Days
+  int _selectedDateFilterIndex =
+      1; // 0: 7 Days, 1: 30 Days, 2: 60 Days, 3: 90 Days
+  bool _isLoading = true;
+  DemandForecastSummary? _summary;
+  final DemandForecastRepository _repository = DemandForecastRepository();
 
-  final List<DemandForecastProductRow> _products = const [
-    DemandForecastProductRow(
-      name: 'Oxford Linen Shirt',
-      sku: 'TS-10432-W / M',
-      currentStock: '18 units',
-      forecastDemand: '120 units',
-      incoming: '+150',
-      coverage: '11.4 Days',
-      riskLevel: 'Reorder Required',
-      riskBg: Color(0xFFFEF3C7),
-      riskColor: Color(0xFFB45309),
-      suggestedAction: 'Create PO',
-      imageAsset: 'Assets/oxford_linen_shirt.jpg',
-    ),
-    DemandForecastProductRow(
-      name: 'Silk Evening Dress',
-      sku: 'SED-16166-S',
-      currentStock: '0 units',
-      forecastDemand: '30 units',
-      incoming: '+80',
-      coverage: '0.0 Days',
-      riskLevel: 'High Out-of-Stock',
-      riskBg: Color(0xFFFEE2E2),
-      riskColor: Color(0xFFDC2626),
-      suggestedAction: 'Create PO',
-      imageAsset: 'Assets/silk_evening_dress.jpg',
-    ),
-    DemandForecastProductRow(
-      name: 'Raw Denim Jeans',
-      sku: 'RDJ-22011-L',
-      currentStock: '88 units',
-      forecastDemand: '45 units',
-      incoming: '--',
-      coverage: '58.0 Days',
-      riskLevel: 'Healthy Cover',
-      riskBg: Color(0xFFECFDF5),
-      riskColor: Color(0xFF059669),
-      suggestedAction: 'Monitor',
-      imageAsset: 'Assets/raw_denim_jeans.jpg',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadForecastData();
+  }
+
+  @override
+  void didUpdateWidget(covariant DemandForecastView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.locationId != widget.locationId) {
+      _loadForecastData();
+    }
+  }
+
+  Future<void> _loadForecastData() async {
+    if (mounted) {
+      setState(() => _isLoading = true);
+    }
+    final summary = await _repository.loadDemandForecast(
+      locationId: widget.locationId,
+    );
+    if (mounted) {
+      setState(() {
+        _summary = summary;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(48),
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFBA8A55)),
+          ),
+        ),
+      );
+    }
+
+    final isReady = _summary?.isReady ?? false;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: LayoutBuilder(
@@ -105,18 +114,22 @@ class _DemandForecastViewState extends State<DemandForecastView> {
             return Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Left Column: Header, KPIs, Velocity Chart, Attention Table
+                // Left Column: Header, Readiness Banner, KPIs, Velocity Chart, Attention Table
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildHeader(),
+                      if (!isReady) ...[
+                        const SizedBox(height: 18),
+                        _buildReadinessBanner(),
+                      ],
                       const SizedBox(height: 18),
-                      _buildKpiCards(),
+                      _buildKpiCards(isReady),
                       const SizedBox(height: 18),
-                      _buildVelocityChartCard(),
+                      _buildVelocityChartCard(isReady),
                       const SizedBox(height: 22),
-                      _buildProductsTableCard(),
+                      _buildProductsTableCard(isReady),
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -124,10 +137,7 @@ class _DemandForecastViewState extends State<DemandForecastView> {
                 const SizedBox(width: 24),
 
                 // Right Column: Forecast Inspector Panel
-                SizedBox(
-                  width: 350,
-                  child: _buildForecastInspector(),
-                ),
+                SizedBox(width: 350, child: _buildForecastInspector(isReady)),
               ],
             );
           }
@@ -137,14 +147,18 @@ class _DemandForecastViewState extends State<DemandForecastView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildHeader(),
+              if (!isReady) ...[
+                const SizedBox(height: 18),
+                _buildReadinessBanner(),
+              ],
               const SizedBox(height: 18),
-              _buildKpiCards(),
+              _buildKpiCards(isReady),
               const SizedBox(height: 18),
-              _buildVelocityChartCard(),
+              _buildVelocityChartCard(isReady),
               const SizedBox(height: 22),
-              _buildProductsTableCard(),
+              _buildProductsTableCard(isReady),
               const SizedBox(height: 24),
-              _buildForecastInspector(),
+              _buildForecastInspector(isReady),
               const SizedBox(height: 32),
             ],
           );
@@ -153,7 +167,9 @@ class _DemandForecastViewState extends State<DemandForecastView> {
     );
   }
 
-  // 1. Header with Title & Date Pills
+  // ===========================================================================
+  // 1. Header with Title & Date Range Pills
+  // ===========================================================================
   Widget _buildHeader() {
     final dateFilters = ['7 Days', '30 Days', '60 Days', '90 Days'];
 
@@ -205,17 +221,26 @@ class _DemandForecastViewState extends State<DemandForecastView> {
                 },
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF181513) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFF181513)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
                     dateFilters[idx],
                     style: GoogleFonts.inter(
                       fontSize: 12,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                      color: isSelected ? Colors.white : const Color(0xFF64748B),
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF64748B),
                     ),
                   ),
                 ),
@@ -227,8 +252,169 @@ class _DemandForecastViewState extends State<DemandForecastView> {
     );
   }
 
-  // 2. 3 KPI Metric Cards
-  Widget _buildKpiCards() {
+  // ===========================================================================
+  // 1b. Readiness & Insufficient Data State Banner
+  // ===========================================================================
+  Widget _buildReadinessBanner() {
+    final conditions = _summary?.readinessConditions ?? [];
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDFBF7),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFEADBCE)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.01),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEF3C7),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.hourglass_empty_rounded,
+                  size: 18,
+                  color: Color(0xFFB45309),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Not enough data yet',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF181513),
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'ThreadStock AI will build demand forecasts once there is enough sales and inventory history to identify reliable trends.',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFF64748B),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (conditions.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            const Divider(color: Color(0xFFF1ECE4), height: 1),
+            const SizedBox(height: 14),
+            Text(
+              'FORECAST READINESS CHECKLIST',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.6,
+                color: const Color(0xFF8C827A),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 16,
+              runSpacing: 10,
+              children: conditions.map((c) => _buildConditionPill(c)).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConditionPill(ForecastReadinessCondition condition) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 420),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Icon(
+              condition.isMet
+                  ? Icons.check_circle_rounded
+                  : Icons.radio_button_unchecked_rounded,
+              size: 16,
+              color: condition.isMet
+                  ? const Color(0xFF16A34A)
+                  : const Color(0xFF94A3B8),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 4,
+              children: [
+                Text(
+                  condition.title,
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    fontWeight: condition.isMet
+                        ? FontWeight.w600
+                        : FontWeight.w500,
+                    color: condition.isMet
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFF64748B),
+                  ),
+                ),
+                if (condition.details.isNotEmpty)
+                  Text(
+                    '(${condition.details})',
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w400,
+                      color: condition.isMet
+                          ? const Color(0xFF64748B)
+                          : const Color(0xFF94A3B8),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ===========================================================================
+  // 2. 3 Summary Metric KPI Cards
+  // ===========================================================================
+  Widget _buildKpiCards(bool isReady) {
+    final forecastedSales = isReady ? (_summary?.forecastedSales ?? '—') : '—';
+    final recommendedOrders = isReady
+        ? (_summary?.recommendedOrders ?? '—')
+        : '—';
+    final highRiskSkus = isReady ? (_summary?.highRiskSkus ?? '—') : '—';
+
+    final subtitle = isReady
+        ? 'Based on real velocity'
+        : 'Awaiting sufficient history';
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isSmall = constraints.maxWidth < 640;
@@ -237,29 +423,29 @@ class _DemandForecastViewState extends State<DemandForecastView> {
             children: [
               _buildKpiCard(
                 icon: Icons.bar_chart_rounded,
-                iconColor: const Color(0xFFD97706),
-                iconBg: const Color(0xFFFEF3C7),
+                iconColor: const Color(0xFF94A3B8),
+                iconBg: const Color(0xFFF1F5F9),
                 label: 'FORECASTED SALES',
-                value: '₹6,84,000',
-                subtitle: 'Based on 30-day velocity',
+                value: forecastedSales,
+                subtitle: subtitle,
               ),
               const SizedBox(height: 12),
               _buildKpiCard(
                 icon: Icons.inventory_2_outlined,
-                iconColor: const Color(0xFFD97706),
-                iconBg: const Color(0xFFFEF3C7),
+                iconColor: const Color(0xFF94A3B8),
+                iconBg: const Color(0xFFF1F5F9),
                 label: 'RECOMMENDED ORDERS',
-                value: '1,420 units',
-                subtitle: 'Optimized shipping',
+                value: recommendedOrders,
+                subtitle: subtitle,
               ),
               const SizedBox(height: 12),
               _buildKpiCard(
                 icon: Icons.warning_amber_rounded,
-                iconColor: const Color(0xFFDC2626),
-                iconBg: const Color(0xFFFEE2E2),
+                iconColor: const Color(0xFF94A3B8),
+                iconBg: const Color(0xFFF1F5F9),
                 label: 'HIGH RISK SKUS',
-                value: '3 styles',
-                subtitle: 'Urgent focus required',
+                value: highRiskSkus,
+                subtitle: subtitle,
               ),
             ],
           );
@@ -270,33 +456,45 @@ class _DemandForecastViewState extends State<DemandForecastView> {
             Expanded(
               child: _buildKpiCard(
                 icon: Icons.bar_chart_rounded,
-                iconColor: const Color(0xFFD97706),
-                iconBg: const Color(0xFFFEF3C7),
+                iconColor: isReady
+                    ? const Color(0xFFD97706)
+                    : const Color(0xFF94A3B8),
+                iconBg: isReady
+                    ? const Color(0xFFFEF3C7)
+                    : const Color(0xFFF1F5F9),
                 label: 'FORECASTED SALES',
-                value: '₹6,84,000',
-                subtitle: 'Based on 30-day velocity',
+                value: forecastedSales,
+                subtitle: subtitle,
               ),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: _buildKpiCard(
                 icon: Icons.inventory_2_outlined,
-                iconColor: const Color(0xFFD97706),
-                iconBg: const Color(0xFFFEF3C7),
+                iconColor: isReady
+                    ? const Color(0xFFD97706)
+                    : const Color(0xFF94A3B8),
+                iconBg: isReady
+                    ? const Color(0xFFFEF3C7)
+                    : const Color(0xFFF1F5F9),
                 label: 'RECOMMENDED ORDERS',
-                value: '1,420 units',
-                subtitle: 'Optimized shipping',
+                value: recommendedOrders,
+                subtitle: subtitle,
               ),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: _buildKpiCard(
                 icon: Icons.warning_amber_rounded,
-                iconColor: const Color(0xFFDC2626),
-                iconBg: const Color(0xFFFEE2E2),
+                iconColor: isReady
+                    ? const Color(0xFFDC2626)
+                    : const Color(0xFF94A3B8),
+                iconBg: isReady
+                    ? const Color(0xFFFEE2E2)
+                    : const Color(0xFFF1F5F9),
                 label: 'HIGH RISK SKUS',
-                value: '3 styles',
-                subtitle: 'Urgent focus required',
+                value: highRiskSkus,
+                subtitle: subtitle,
               ),
             ),
           ],
@@ -365,7 +563,9 @@ class _DemandForecastViewState extends State<DemandForecastView> {
                       style: GoogleFonts.inter(
                         fontSize: 18.5,
                         fontWeight: FontWeight.w700,
-                        color: const Color(0xFF181513),
+                        color: value == '—'
+                            ? const Color(0xFF94A3B8)
+                            : const Color(0xFF181513),
                       ),
                     ),
                   ],
@@ -389,8 +589,10 @@ class _DemandForecastViewState extends State<DemandForecastView> {
     );
   }
 
+  // ===========================================================================
   // 3. Velocity Tracking Chart Card
-  Widget _buildVelocityChartCard() {
+  // ===========================================================================
+  Widget _buildVelocityChartCard(bool isReady) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -408,9 +610,11 @@ class _DemandForecastViewState extends State<DemandForecastView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header + Legend
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 8,
             children: [
               Text(
                 'Velocity Tracking — Actual vs Forecast',
@@ -421,22 +625,29 @@ class _DemandForecastViewState extends State<DemandForecastView> {
                 ),
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildLegendItem(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF181513),
+                    color: isReady
+                        ? const Color(0xFF181513)
+                        : const Color(0xFFCBD5E1),
                     label: 'Actual Sales',
                   ),
                   const SizedBox(width: 14),
                   _buildLegendItem(
                     shape: BoxShape.circle,
-                    color: const Color(0xFFD97706),
+                    color: isReady
+                        ? const Color(0xFFD97706)
+                        : const Color(0xFFE2E8F0),
                     label: 'AI Forecast Model',
                   ),
                   const SizedBox(width: 14),
                   _buildLegendItem(
                     shape: BoxShape.rectangle,
-                    color: const Color(0xFFFEF3C7),
+                    color: isReady
+                        ? const Color(0xFFFEF3C7)
+                        : const Color(0xFFF1F5F9),
                     label: 'Confidence Range',
                   ),
                 ],
@@ -445,12 +656,43 @@ class _DemandForecastViewState extends State<DemandForecastView> {
           ),
           const SizedBox(height: 20),
 
-          // Custom Painted Chart
-          SizedBox(
+          // Real empty state if not ready / insufficient history
+          Container(
             height: 190,
             width: double.infinity,
-            child: CustomPaint(
-              painter: _VelocityTrackingChartPainter(),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAFAFA),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.auto_graph_outlined,
+                  size: 32,
+                  color: Color(0xFFCBD5E1),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'No forecast available yet',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF475569),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Historical sales over at least 14 days are required to generate velocity predictions.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF94A3B8),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -471,7 +713,9 @@ class _DemandForecastViewState extends State<DemandForecastView> {
           decoration: BoxDecoration(
             color: color,
             shape: shape,
-            borderRadius: shape == BoxShape.rectangle ? BorderRadius.circular(2) : null,
+            borderRadius: shape == BoxShape.rectangle
+                ? BorderRadius.circular(2)
+                : null,
           ),
         ),
         const SizedBox(width: 6),
@@ -487,8 +731,13 @@ class _DemandForecastViewState extends State<DemandForecastView> {
     );
   }
 
+  // ===========================================================================
   // 4. Products Requiring Attention Table
-  Widget _buildProductsTableCard() {
+  // ===========================================================================
+  Widget _buildProductsTableCard(bool isReady) {
+    final products = _summary?.productsRequiringAttention ?? [];
+    final trackedCount = _summary?.productsCount ?? 0;
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -503,6 +752,7 @@ class _DemandForecastViewState extends State<DemandForecastView> {
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Row
           Padding(
@@ -510,13 +760,36 @@ class _DemandForecastViewState extends State<DemandForecastView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Products Requiring Attention',
-                  style: GoogleFonts.inter(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF181513),
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'Products Requiring Attention',
+                      style: GoogleFonts.inter(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF181513),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '$trackedCount tracked',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 InkWell(
                   onTap: widget.onViewAllProducts,
@@ -532,7 +805,11 @@ class _DemandForecastViewState extends State<DemandForecastView> {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFFB45309)),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        size: 16,
+                        color: Color(0xFFB45309),
+                      ),
                     ],
                   ),
                 ),
@@ -541,178 +818,224 @@ class _DemandForecastViewState extends State<DemandForecastView> {
           ),
           const Divider(color: Color(0xFFF1F5F9), height: 1),
 
-          // Column Headers
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            color: const Color(0xFFF8FAFC),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    'Product',
-                    style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+          // Empty state when no real AI recommendations exist
+          if (products.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.inventory_2_outlined,
+                    size: 32,
+                    color: Color(0xFFCBD5E1),
                   ),
-                ),
-                SizedBox(
-                  width: 90,
-                  child: Text(
-                    'Current Stock',
-                    style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                  const SizedBox(height: 10),
+                  Text(
+                    'No AI recommendations yet',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF475569),
+                    ),
                   ),
-                ),
-                SizedBox(
-                  width: 95,
-                  child: Text(
-                    'Forecast Demand',
-                    style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Products will be flagged here for reorder or overstock risk once sufficient sales velocity has been established.',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF94A3B8),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                SizedBox(
-                  width: 70,
-                  child: Text(
-                    'Incoming',
-                    style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
-                  ),
-                ),
-                SizedBox(
-                  width: 80,
-                  child: Text(
-                    'Coverage',
-                    style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
-                  ),
-                ),
-                SizedBox(
-                  width: 120,
-                  child: Text(
-                    'Risk Level',
-                    style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
-                  ),
-                ),
-                SizedBox(
-                  width: 95,
-                  child: Text(
-                    'Suggested Action',
-                    style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
-                  ),
-                ),
-                const SizedBox(width: 24),
-              ],
-            ),
-          ),
-
-          // Rows
-          ...List.generate(_products.length, (index) {
-            final item = _products[index];
-            final isLast = index == _products.length - 1;
-
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              decoration: BoxDecoration(
-                border: isLast ? null : const Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
+                ],
               ),
+            )
+          else ...[
+            // Column Headers
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              color: const Color(0xFFF8FAFC),
               child: Row(
                 children: [
-                  // Product info with image
                   Expanded(
                     flex: 3,
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.asset(
-                            item.imageAsset,
-                            width: 38,
-                            height: 38,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Container(
-                              width: 38,
-                              height: 38,
-                              color: const Color(0xFFE2E8F0),
-                              child: const Icon(Icons.image_outlined, size: 18, color: Color(0xFF94A3B8)),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF181513),
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                item.sku,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color(0xFF64748B),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Current Stock
-                  SizedBox(
-                    width: 90,
                     child: Text(
-                      item.currentStock,
-                      style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF181513)),
-                    ),
-                  ),
-
-                  // Forecast Demand
-                  SizedBox(
-                    width: 95,
-                    child: Text(
-                      item.forecastDemand,
-                      style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF181513)),
-                    ),
-                  ),
-
-                  // Incoming (+150, +80, --)
-                  SizedBox(
-                    width: 70,
-                    child: Text(
-                      item.incoming,
+                      'Product',
                       style: GoogleFonts.inter(
-                        fontSize: 12.5,
-                        fontWeight: item.incoming.startsWith('+') ? FontWeight.w600 : FontWeight.w400,
-                        color: item.incoming.startsWith('+') ? const Color(0xFF16A34A) : const Color(0xFF94A3B8),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF64748B),
                       ),
                     ),
                   ),
-
-                  // Coverage
+                  SizedBox(
+                    width: 90,
+                    child: Text(
+                      'Current Stock',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 95,
+                    child: Text(
+                      'Forecast Demand',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 70,
+                    child: Text(
+                      'Incoming',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
                   SizedBox(
                     width: 80,
                     child: Text(
-                      item.coverage,
-                      style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF181513)),
+                      'Coverage',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF64748B),
+                      ),
                     ),
                   ),
-
-                  // Risk Level Pill
                   SizedBox(
                     width: 120,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Risk Level',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 95,
+                    child: Text(
+                      'Suggested Action',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 24),
+                ],
+              ),
+            ),
+            // Real products rows
+            ...List.generate(products.length, (index) {
+              final item = products[index];
+              final isLast = index == products.length - 1;
+
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  border: isLast
+                      ? null
+                      : const Border(
+                          bottom: BorderSide(color: Color(0xFFF1F5F9)),
+                        ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF181513),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            item.sku,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: const Color(0xFF64748B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      width: 90,
+                      child: Text(
+                        item.currentStock,
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          color: const Color(0xFF181513),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 95,
+                      child: Text(
+                        item.forecastDemand,
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          color: const Color(0xFF181513),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 70,
+                      child: Text(
+                        item.incoming,
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          color: const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 80,
+                      child: Text(
+                        item.coverage,
+                        style: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          color: const Color(0xFF181513),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 120,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: item.riskBg,
                           borderRadius: BorderRadius.circular(6),
@@ -729,18 +1052,16 @@ class _DemandForecastViewState extends State<DemandForecastView> {
                         ),
                       ),
                     ),
-                  ),
-
-                  // Suggested Action Button
-                  SizedBox(
-                    width: 95,
-                    child: Align(
-                      alignment: Alignment.centerLeft,
+                    SizedBox(
+                      width: 95,
                       child: InkWell(
                         onTap: () => widget.onCreatePoForRow?.call(item),
                         borderRadius: BorderRadius.circular(6),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(6),
@@ -757,29 +1078,21 @@ class _DemandForecastViewState extends State<DemandForecastView> {
                         ),
                       ),
                     ),
-                  ),
-
-                  // More action ⋮
-                  SizedBox(
-                    width: 24,
-                    child: IconButton(
-                      icon: const Icon(Icons.more_vert_rounded, size: 16, color: Color(0xFF94A3B8)),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () {},
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                    const SizedBox(width: 24),
+                  ],
+                ),
+              );
+            }),
+          ],
         ],
       ),
     );
   }
 
+  // ===========================================================================
   // 5. Right Column: Forecast Inspector Panel
-  Widget _buildForecastInspector() {
+  // ===========================================================================
+  Widget _buildForecastInspector(bool isReady) {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -809,61 +1122,63 @@ class _DemandForecastViewState extends State<DemandForecastView> {
                   color: const Color(0xFF181513),
                 ),
               ),
-              const Icon(Icons.more_vert_rounded, size: 18, color: Color(0xFF94A3B8)),
+              const Icon(
+                Icons.tune_rounded,
+                size: 18,
+                color: Color(0xFF94A3B8),
+              ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 20),
 
-          // Hero Image
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(
-              'Assets/silk_evening_dress_mannequin.jpg',
-              height: 175,
-              width: double.infinity,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
-                height: 175,
-                width: double.infinity,
-                color: const Color(0xFFE2E8F0),
-                child: const Icon(Icons.image_outlined, size: 36, color: Color(0xFF94A3B8)),
-              ),
+          // Clean empty state when no forecast is selected or exists
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.analytics_outlined,
+                    size: 22,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Select a forecast to inspect',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF181513),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Forecast details will appear here once enough data is available.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF64748B),
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 14),
-
-          // Title + SKU
-          Text(
-            'Silk Evening Dress',
-            style: GoogleFonts.inter(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF181513),
-            ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            'SED-16166 • Lucknow Regent',
-            style: GoogleFonts.inter(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w400,
-              color: const Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Metadata key-value rows
-          _buildInspectorRow('Historical Sell-Through', '90.0%', isBold: true),
-          const SizedBox(height: 10),
-          _buildInspectorRow('Projected Holiday Velocity', 'Critical Stockout', valueColor: const Color(0xFFDC2626), isBold: true),
-          const SizedBox(height: 10),
-          _buildInspectorRow('Seasonal Trend', '↗ +32%', valueColor: const Color(0xFFDC2626), isBold: true),
-          const SizedBox(height: 10),
-          _buildInspectorRow('Recommended Order', '80 units', isBold: true),
-          const SizedBox(height: 10),
-          _buildInspectorRow('Estimated Value', '₹1,82,000', isBold: true),
-          const SizedBox(height: 10),
-          _buildInspectorRow('Lead Time', '14 Days', isBold: true),
           const SizedBox(height: 16),
 
           // AI Insight Callout Card
@@ -877,7 +1192,11 @@ class _DemandForecastViewState extends State<DemandForecastView> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.auto_awesome_rounded, size: 16, color: Color(0xFFB45309)),
+                const Icon(
+                  Icons.auto_awesome_rounded,
+                  size: 16,
+                  color: Color(0xFFB45309),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -893,7 +1212,7 @@ class _DemandForecastViewState extends State<DemandForecastView> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'This style is expected to run out in 11 days based on current velocity. Place an order of 80 units to maintain > 28 days of coverage.',
+                        'No AI insight available yet.',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
@@ -909,37 +1228,49 @@ class _DemandForecastViewState extends State<DemandForecastView> {
           ),
           const SizedBox(height: 16),
 
-          // Primary: Prepare PO (80 units)
-          InkWell(
-            onTap: () => widget.onPreparePo?.call('SED-16166'),
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              width: double.infinity,
-              height: 42,
-              decoration: BoxDecoration(
-                color: const Color(0xFF181513),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.shopping_cart_outlined, size: 16, color: Colors.white),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Prepare PO (80 units)',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+          // Prepare PO CTA (disabled when no recommendation exists)
+          Container(
+            width: double.infinity,
+            height: 42,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.shopping_cart_outlined,
+                  size: 16,
+                  color: Color(0xFF94A3B8),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Prepare PO',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF94A3B8),
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Center(
+            child: Text(
+              'Requires active replenishment recommendation',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFF94A3B8),
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
 
-          // Secondary: View Full Forecast
+          // Secondary Action: View Full Forecast
           InkWell(
             onTap: widget.onViewFullForecast,
             borderRadius: BorderRadius.circular(8),
@@ -962,319 +1293,8 @@ class _DemandForecastViewState extends State<DemandForecastView> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
-
-          // Related Insights
-          Text(
-            'Related Insights',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: const Color(0xFF181513),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // Item 1: Similar styles trending +28%
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFECFDF5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_upward_rounded, size: 14, color: Color(0xFF059669)),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Similar styles trending +28%',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF181513),
-                    ),
-                  ),
-                ),
-                const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF94A3B8)),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-
-          // Item 2: Check alternate suppliers
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFEFF6FF),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.arrow_downward_rounded, size: 14, color: Color(0xFF2563EB)),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Check alternate suppliers',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF181513),
-                    ),
-                  ),
-                ),
-                const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF94A3B8)),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
-
-  Widget _buildInspectorRow(String label, String value, {Color? valueColor, bool isBold = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w400,
-            color: const Color(0xFF64748B),
-          ),
-        ),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 12.5,
-            fontWeight: isBold ? FontWeight.w600 : FontWeight.w500,
-            color: valueColor ?? const Color(0xFF181513),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// Custom Painter for Velocity Tracking (Actual Sales vs AI Forecast & Confidence Band)
-class _VelocityTrackingChartPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    const leftPad = 36.0;
-    const bottomPad = 24.0;
-    const topPad = 8.0;
-    const rightPad = 12.0;
-
-    final chartW = size.width - leftPad - rightPad;
-    final chartH = size.height - topPad - bottomPad;
-
-    // Y-Axis Ticks & Gridlines
-    final yTicks = [0, 50, 100, 150, 200];
-    final gridPaint = Paint()
-      ..color = const Color(0xFFF1F5F9)
-      ..strokeWidth = 1.0;
-
-    final textStyle = GoogleFonts.inter(
-      fontSize: 10,
-      fontWeight: FontWeight.w400,
-      color: const Color(0xFF94A3B8),
-    );
-
-    for (final tick in yTicks) {
-      final y = topPad + chartH - (tick / 200.0) * chartH;
-      canvas.drawLine(Offset(leftPad, y), Offset(size.width - rightPad, y), gridPaint);
-
-      final textSpan = TextSpan(text: '$tick', style: textStyle);
-      final textPainter = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
-      )..layout();
-      textPainter.paint(canvas, Offset(leftPad - textPainter.width - 8, y - textPainter.height / 2));
-    }
-
-    // X-Axis Dates
-    final dates = ['Jan 1', 'Jan 5', 'Jan 10', 'Jan 15', 'Jan 20', 'Jan 25', 'Jan 30'];
-    final xStep = chartW / (dates.length - 1);
-
-    for (int i = 0; i < dates.length; i++) {
-      final x = leftPad + i * xStep;
-      final textSpan = TextSpan(text: dates[i], style: textStyle);
-      final textPainter = TextPainter(
-        text: textSpan,
-        textDirection: TextDirection.ltr,
-      )..layout();
-      textPainter.paint(canvas, Offset(x - textPainter.width / 2, size.height - bottomPad + 6));
-    }
-
-    // Coordinates mapping
-    double getX(int index) => leftPad + index * xStep;
-    double getY(double val) => topPad + chartH - (val / 200.0) * chartH;
-
-    // Actual Sales Points (Jan 1, Jan 5, Jan 10, Jan 15)
-    final actualValues = [25.0, 75.0, 35.0, 165.0];
-    final actualPoints = List.generate(
-      actualValues.length,
-      (i) => Offset(getX(i), getY(actualValues[i])),
-    );
-
-    // AI Forecast Model Center Points (Jan 15, Jan 20, Jan 25, Jan 30)
-    final forecastValues = [165.0, 125.0, 170.0, 155.0];
-    final forecastPoints = List.generate(
-      forecastValues.length,
-      (i) => Offset(getX(i + 3), getY(forecastValues[i])),
-    );
-
-    // Upper Confidence Band (Jan 15: 165, Jan 20: 160, Jan 25: 195, Jan 30: 185)
-    final upperBand = [165.0, 160.0, 195.0, 185.0];
-    // Lower Confidence Band (Jan 15: 165, Jan 20: 105, Jan 25: 145, Jan 30: 130)
-    final lowerBand = [165.0, 105.0, 145.0, 130.0];
-
-    // 1. Draw Confidence Range Filled Band
-    final bandPath = Path();
-    bandPath.moveTo(forecastPoints[0].dx, forecastPoints[0].dy);
-
-    // Curve along upper band
-    bandPath.cubicTo(
-      getX(3) + xStep * 0.45, getY(162),
-      getX(4) - xStep * 0.45, getY(upperBand[1]),
-      getX(4), getY(upperBand[1]),
-    );
-    bandPath.cubicTo(
-      getX(4) + xStep * 0.45, getY(178),
-      getX(5) - xStep * 0.45, getY(upperBand[2]),
-      getX(5), getY(upperBand[2]),
-    );
-    bandPath.cubicTo(
-      getX(5) + xStep * 0.45, getY(190),
-      getX(6) - xStep * 0.45, getY(upperBand[3]),
-      getX(6), getY(upperBand[3]),
-    );
-
-    // Line down to lower band at Jan 30
-    bandPath.lineTo(getX(6), getY(lowerBand[3]));
-
-    // Curve back along lower band
-    bandPath.cubicTo(
-      getX(6) - xStep * 0.45, getY(138),
-      getX(5) + xStep * 0.45, getY(lowerBand[2]),
-      getX(5), getY(lowerBand[2]),
-    );
-    bandPath.cubicTo(
-      getX(5) - xStep * 0.45, getY(125),
-      getX(4) + xStep * 0.45, getY(lowerBand[1]),
-      getX(4), getY(lowerBand[1]),
-    );
-    bandPath.cubicTo(
-      getX(4) - xStep * 0.45, getY(135),
-      getX(3) + xStep * 0.45, getY(lowerBand[0]),
-      getX(3), getY(lowerBand[0]),
-    );
-    bandPath.close();
-
-    final bandPaint = Paint()
-      ..color = const Color(0xFFFEF3C7).withOpacity(0.55)
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(bandPath, bandPaint);
-
-    // 2. Draw Actual Sales Solid Dark Line
-    final actualPath = Path();
-    actualPath.moveTo(actualPoints[0].dx, actualPoints[0].dy);
-    for (int i = 1; i < actualPoints.length; i++) {
-      actualPath.lineTo(actualPoints[i].dx, actualPoints[i].dy);
-    }
-
-    final actualPaint = Paint()
-      ..color = const Color(0xFF181513)
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-    canvas.drawPath(actualPath, actualPaint);
-
-    // Draw Actual Nodes (Dots)
-    final nodePaint = Paint()
-      ..color = const Color(0xFF181513)
-      ..style = PaintingStyle.fill;
-    for (final pt in actualPoints) {
-      canvas.drawCircle(pt, 3.5, nodePaint);
-    }
-
-    // 3. Draw AI Forecast Model Center Dashed Amber Line
-    final forecastPath = Path();
-    forecastPath.moveTo(forecastPoints[0].dx, forecastPoints[0].dy);
-    forecastPath.cubicTo(
-      getX(3) + xStep * 0.45, getY(145),
-      getX(4) - xStep * 0.45, getY(125),
-      getX(4), getY(125),
-    );
-    forecastPath.cubicTo(
-      getX(4) + xStep * 0.45, getY(148),
-      getX(5) - xStep * 0.45, getY(170),
-      getX(5), getY(170),
-    );
-    forecastPath.cubicTo(
-      getX(5) + xStep * 0.45, getY(162),
-      getX(6) - xStep * 0.45, getY(155),
-      getX(6), getY(155),
-    );
-
-    // Draw dashed path
-    _drawDashedPath(
-      canvas,
-      forecastPath,
-      Paint()
-        ..color = const Color(0xFFD97706)
-        ..strokeWidth = 2.0
-        ..style = PaintingStyle.stroke,
-      dashWidth: 4.0,
-      dashSpace: 3.5,
-    );
-
-    // Draw Amber Node at Jan 20
-    final amberNodePaint = Paint()
-      ..color = const Color(0xFFD97706)
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(getX(4), getY(125)), 3.5, amberNodePaint);
-  }
-
-  void _drawDashedPath(
-    Canvas canvas,
-    Path path,
-    Paint paint, {
-    required double dashWidth,
-    required double dashSpace,
-  }) {
-    final metrics = path.computeMetrics();
-    for (final metric in metrics) {
-      double distance = 0.0;
-      while (distance < metric.length) {
-        final length = (distance + dashWidth < metric.length)
-            ? dashWidth
-            : metric.length - distance;
-        final extractPath = metric.extractPath(distance, distance + length);
-        canvas.drawPath(extractPath, paint);
-        distance += dashWidth + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -51,7 +51,11 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
-            const Icon(Icons.history_edu_rounded, size: 20, color: Color(0xFF8C5E33)),
+            const Icon(
+              Icons.history_edu_rounded,
+              size: 20,
+              color: Color(0xFF8C5E33),
+            ),
             const SizedBox(width: 10),
             Text(
               'Inventory Audit Log',
@@ -70,13 +74,28 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Recent physical stock count audits and adjustments across Central Warehouse (Zone A):',
-                style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6B6358)),
+                'Recent physical stock count audits and adjustments across Primary Facility (Zone A):',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF6B6358),
+                ),
               ),
               const SizedBox(height: 14),
-              _buildAuditRow('Today, 11:20 AM', 'Physical Count verified for Shirts', '+12 units adjusted'),
-              _buildAuditRow('Yesterday, 04:45 PM', 'Cycle Count: Knitwear Autumn 27', 'Zero variance'),
-              _buildAuditRow('16 Sep, 02:15 PM', 'Transfer dispatch #TR-8829 to Delhi', '-40 units dispatched'),
+              _buildAuditRow(
+                'Today, 11:20 AM',
+                'Physical Count verified for inventory lines',
+                '+12 units adjusted',
+              ),
+              _buildAuditRow(
+                'Yesterday, 04:45 PM',
+                'Cycle Count: Verified stock',
+                'Zero variance',
+              ),
+              _buildAuditRow(
+                '16 Sep, 02:15 PM',
+                'Transfer dispatch #TR-8829 to Regional Store',
+                '-40 units dispatched',
+              ),
             ],
           ),
         ),
@@ -108,11 +127,18 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
               children: [
                 Text(
                   desc,
-                  style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF181512)),
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF181512),
+                  ),
                 ),
                 Text(
                   date,
-                  style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF)),
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: const Color(0xFF9CA3AF),
+                  ),
                 ),
               ],
             ),
@@ -125,7 +151,11 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
             ),
             child: Text(
               delta,
-              style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF8C5E33)),
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF8C5E33),
+              ),
             ),
           ),
         ],
@@ -141,7 +171,11 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
-            const Icon(Icons.auto_awesome_rounded, size: 20, color: Color(0xFFBA8A55)),
+            const Icon(
+              Icons.auto_awesome_rounded,
+              size: 20,
+              color: Color(0xFFBA8A55),
+            ),
             const SizedBox(width: 10),
             Text(
               'AI Stock Recommendations',
@@ -160,13 +194,26 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'AI Optimization Plan for Central Warehouse (Zone A):',
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF181512)),
+                'AI Optimization Plan for Primary Facility (Zone A):',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF181512),
+                ),
               ),
               const SizedBox(height: 12),
-              _buildRecItem('1. Inter-store Balancing', 'Transfer 12% of Autumn 27 blazers (48 units) to Delhi Flagship to capture unmet regional peak demand.'),
-              _buildRecItem('2. Markdown Campaign', 'Initiate a 15% promotional markdown on slow-moving dresses to prevent carrying costs into Winter season.'),
-              _buildRecItem('3. Replenishment Alert', 'Issue an expedited purchase order for Black Oxford Shirts (M) before Delhi stock depletion in 48 hours.'),
+              _buildRecItem(
+                '1. Inter-store Balancing',
+                'Transfer 12% of seasonal surplus stock (48 units) to Regional Store to capture unmet regional peak demand.',
+              ),
+              _buildRecItem(
+                '2. Markdown Campaign',
+                'Initiate promotional markdown on slow-moving inventory to optimize carrying costs.',
+              ),
+              _buildRecItem(
+                '3. Replenishment Alert',
+                'Issue an expedited purchase order for low-stock SKUs before retail stock depletion in 48 hours.',
+              ),
             ],
           ),
         ),
@@ -197,11 +244,16 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF181512),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: Text(
               'Apply Plan',
-              style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: Colors.white),
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
@@ -260,8 +312,12 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
                 season,
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  fontWeight: season == _selectedSeason ? FontWeight.w600 : FontWeight.w400,
-                  color: season == _selectedSeason ? const Color(0xFF8C5E33) : const Color(0xFF181512),
+                  fontWeight: season == _selectedSeason
+                      ? FontWeight.w600
+                      : FontWeight.w400,
+                  color: season == _selectedSeason
+                      ? const Color(0xFF8C5E33)
+                      : const Color(0xFF181512),
                 ),
               ),
             );
@@ -277,7 +333,11 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.calendar_today_outlined, size: 14, color: Color(0xFF6B6358)),
+                const Icon(
+                  Icons.calendar_today_outlined,
+                  size: 14,
+                  color: Color(0xFF6B6358),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   _selectedSeason,
@@ -288,7 +348,11 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF6B6358)),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Color(0xFF6B6358),
+                ),
               ],
             ),
           ),
@@ -313,8 +377,12 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
                 cat,
                 style: GoogleFonts.inter(
                   fontSize: 13,
-                  fontWeight: cat == _selectedCategory ? FontWeight.w600 : FontWeight.w400,
-                  color: cat == _selectedCategory ? const Color(0xFF8C5E33) : const Color(0xFF181512),
+                  fontWeight: cat == _selectedCategory
+                      ? FontWeight.w600
+                      : FontWeight.w400,
+                  color: cat == _selectedCategory
+                      ? const Color(0xFF8C5E33)
+                      : const Color(0xFF181512),
                 ),
               ),
             );
@@ -330,7 +398,11 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.local_offer_outlined, size: 14, color: Color(0xFF6B6358)),
+                const Icon(
+                  Icons.local_offer_outlined,
+                  size: 14,
+                  color: Color(0xFF6B6358),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   _selectedCategory,
@@ -341,7 +413,11 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF6B6358)),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Color(0xFF6B6358),
+                ),
               ],
             ),
           ),
@@ -421,10 +497,7 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Hero Left Card: Overall Inventory Health (~38% flex)
-        Expanded(
-          flex: 38,
-          child: _buildOverallHealthCard(),
-        ),
+        Expanded(flex: 38, child: _buildOverallHealthCard()),
         const SizedBox(width: 16),
 
         // 4 KPI Cards Grid (~62% flex)
@@ -535,7 +608,9 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
                       value: 0.86,
                       strokeWidth: 12,
                       backgroundColor: const Color(0xFFF0EDE8),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC89748)),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFFC89748),
+                      ),
                       strokeCap: StrokeCap.round,
                     ),
                   ),
@@ -580,7 +655,11 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.arrow_upward_rounded, size: 12, color: Color(0xFF16A34A)),
+                  const Icon(
+                    Icons.arrow_upward_rounded,
+                    size: 12,
+                    color: Color(0xFF16A34A),
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     '6% vs last month',
@@ -608,7 +687,11 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
               children: [
                 const Padding(
                   padding: EdgeInsets.only(top: 1),
-                  child: Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF6B6358)),
+                  child: Icon(
+                    Icons.info_outline_rounded,
+                    size: 16,
+                    color: Color(0xFF6B6358),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -735,17 +818,11 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Left Table: Seasonality Stock Distribution Matrix (~60% flex)
-        Expanded(
-          flex: 60,
-          child: _buildSeasonalityMatrixCard(),
-        ),
+        Expanded(flex: 60, child: _buildSeasonalityMatrixCard()),
         const SizedBox(width: 16),
 
         // Right Column: Active Inventory Alerts (~40% flex)
-        Expanded(
-          flex: 40,
-          child: _buildActiveAlertsCard(),
-        ),
+        Expanded(flex: 40, child: _buildActiveAlertsCard()),
       ],
     );
   }
@@ -923,7 +1000,9 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
       decoration: BoxDecoration(
-        border: isLast ? null : const Border(bottom: BorderSide(color: Color(0xFFF8F5F0))),
+        border: isLast
+            ? null
+            : const Border(bottom: BorderSide(color: Color(0xFFF8F5F0))),
       ),
       child: Row(
         children: [
@@ -1018,10 +1097,7 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(
-            color: dotColor,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
         Text(
@@ -1085,7 +1161,11 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
                       ),
                     ),
                     const SizedBox(width: 3),
-                    const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFF946A36)),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: Color(0xFF946A36),
+                    ),
                   ],
                 ),
               ),
@@ -1102,20 +1182,23 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
             priorityLabel: 'High Priority',
             priorityBg: const Color(0xFFFEE2E2),
             priorityColor: const Color(0xFFDC2626),
-            description: 'Black Oxford Shirt — M is running critically low in Delhi (3 units left).',
+            description:
+                'Key apparel inventory is running critically low in retail node (3 units left).',
             actionText: 'Trigger Transfer →',
-            onAction: widget.onTriggerTransfer ?? () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Initiating urgent stock transfer #TR-9041 for Black Oxford Shirt — M to Delhi Flagship.',
-                    style: GoogleFonts.inter(fontSize: 13),
-                  ),
-                  backgroundColor: const Color(0xFF181512),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
+            onAction:
+                widget.onTriggerTransfer ??
+                () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Initiating urgent stock transfer #TR-9041 for replenishment to retail branch.',
+                        style: GoogleFonts.inter(fontSize: 13),
+                      ),
+                      backgroundColor: const Color(0xFF181512),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
           ),
           const SizedBox(height: 10),
 
@@ -1128,20 +1211,23 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
             priorityLabel: 'Medium',
             priorityBg: const Color(0xFFFEF3C7),
             priorityColor: const Color(0xFFB45309),
-            description: 'Raw Denim — L has stayed stagnant in Mumbai for 45 days (80 units over).',
+            description:
+                'Overstocked variants have stayed stagnant for 45 days.',
             actionText: 'Plan Markdown →',
-            onAction: widget.onPlanMarkdown ?? () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Opening Markdown Planning tool for Raw Denim — L (Mumbai Boutique).',
-                    style: GoogleFonts.inter(fontSize: 13),
-                  ),
-                  backgroundColor: const Color(0xFF181512),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
+            onAction:
+                widget.onPlanMarkdown ??
+                () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Opening Markdown Planning tool for slow-moving inventory.',
+                        style: GoogleFonts.inter(fontSize: 13),
+                      ),
+                      backgroundColor: const Color(0xFF181512),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
           ),
           const SizedBox(height: 10),
 
@@ -1154,20 +1240,23 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
             priorityLabel: 'Low',
             priorityBg: const Color(0xFFF1F5F9),
             priorityColor: const Color(0xFF64748B),
-            description: 'Linen Blazer — Cream has a low turnover index of 0.8x this season.',
+            description:
+                'Linen Blazer — Cream has a low turnover index of 0.8x this season.',
             actionText: 'Investigate →',
-            onAction: widget.onInvestigate ?? () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Opening SKU Diagnostics for Linen Blazer — Cream...',
-                    style: GoogleFonts.inter(fontSize: 13),
-                  ),
-                  backgroundColor: const Color(0xFF181512),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
+            onAction:
+                widget.onInvestigate ??
+                () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Opening SKU Diagnostics for Linen Blazer — Cream...',
+                        style: GoogleFonts.inter(fontSize: 13),
+                      ),
+                      backgroundColor: const Color(0xFF181512),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
           ),
         ],
       ),
@@ -1281,17 +1370,26 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
                     PopupMenuItem(
                       value: 'Acknowledge',
                       height: 32,
-                      child: Text('Acknowledge', style: GoogleFonts.inter(fontSize: 12)),
+                      child: Text(
+                        'Acknowledge',
+                        style: GoogleFonts.inter(fontSize: 12),
+                      ),
                     ),
                     PopupMenuItem(
                       value: 'Snooze 24h',
                       height: 32,
-                      child: Text('Snooze 24h', style: GoogleFonts.inter(fontSize: 12)),
+                      child: Text(
+                        'Snooze 24h',
+                        style: GoogleFonts.inter(fontSize: 12),
+                      ),
                     ),
                     PopupMenuItem(
                       value: 'Assign to Team',
                       height: 32,
-                      child: Text('Assign to Team', style: GoogleFonts.inter(fontSize: 12)),
+                      child: Text(
+                        'Assign to Team',
+                        style: GoogleFonts.inter(fontSize: 12),
+                      ),
                     ),
                   ],
                   child: const Icon(
@@ -1339,7 +1437,7 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Moving 12% of Autumn 27 blazers to Delhi and running a targeted promotion on slow-moving dresses could reduce excess stock by 18%.',
+                  'Rebalancing inventory across active locations and running a targeted promotion on slow-moving items could reduce excess stock by 18%.',
                   style: GoogleFonts.inter(
                     fontSize: 12,
                     fontWeight: FontWeight.w400,
@@ -1397,12 +1495,20 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
         children: [
           Text(
             title,
-            style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFF181512)),
+            style: GoogleFonts.inter(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF181512),
+            ),
           ),
           const SizedBox(height: 2),
           Text(
             desc,
-            style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B6358), height: 1.3),
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              color: const Color(0xFF6B6358),
+              height: 1.3,
+            ),
           ),
         ],
       ),
@@ -1410,10 +1516,4 @@ class _InventoryAnalyticsViewState extends State<InventoryAnalyticsView> {
   }
 }
 
-enum _StockStatus {
-  optimal,
-  healthy,
-  highStock,
-  lowStock,
-  stockout,
-}
+enum _StockStatus { optimal, healthy, highStock, lowStock, stockout }

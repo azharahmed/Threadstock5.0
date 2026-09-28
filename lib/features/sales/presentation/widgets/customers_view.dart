@@ -1,8 +1,14 @@
 // ignore_for_file: deprecated_member_use
+// ignore_for_file: unused_field, unused_element_parameter
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/business/current_business_service.dart';
+import '../../data/sales_repository.dart';
+import '../../domain/models/customer.dart';
+
 /// Customers — Sales sub-section showing the full customer list + profile panel.
+/// Data comes from public.customers via SalesRepository, scoped to the current business.
 class CustomersView extends StatefulWidget {
   const CustomersView({super.key});
 
@@ -15,146 +21,70 @@ class _CustomersViewState extends State<CustomersView> {
   final TextEditingController _searchCtrl = TextEditingController();
   String _searchQuery = '';
 
-  // Selected row for profile panel
-  _CustomerItem? _selected;
+  // Data state
+  List<Customer> _customers = [];
+  bool _isLoading = true;
+  String? _error;
 
-  // Customer data
-  late List<_CustomerItem> _customers;
+  // Selected row for profile panel
+  Customer? _selected;
 
   @override
   void initState() {
     super.initState();
-    _customers = _buildCustomers();
-    _selected = _customers.first;
-  }
-
-  List<_CustomerItem> _buildCustomers() => [
-        _CustomerItem(
-          initials: 'EC',
-          color: const Color(0xFF6E9DC8),
-          name: 'Emma Carter',
-          email: 'emma.c@gmail.com',
-          orders: 12,
-          lifetimeSpend: '₹84,290',
-          lifetimeSpendNum: 84290,
-          avgOrderValue: '₹7,024',
-          returns: 1,
-          lastPurchaseRelative: 'Yesterday',
-          lastPurchaseDate: '14 Feb 2027',
-          storeLocation: 'Central Store',
-          status: _CustomerStatus.active,
-          memberSince: 'Mar 2024',
-          phone: '+91 98402 10492',
-          tags: ['VIP', 'Regular', "Women's Wear"],
-          hasPhoto: true,
-        ),
-        _CustomerItem(
-          initials: 'DP',
-          color: const Color(0xFF8BC4A0),
-          name: 'Dev Patel',
-          email: 'dev.patel@domain.com',
-          orders: 8,
-          lifetimeSpend: '₹52,800',
-          lifetimeSpendNum: 52800,
-          avgOrderValue: '₹6,600',
-          returns: 0,
-          lastPurchaseRelative: '3 days ago',
-          lastPurchaseDate: '11 Feb 2027',
-          storeLocation: 'Mumbai Flagship',
-          status: _CustomerStatus.active,
-          memberSince: 'Jun 2024',
-          phone: '+91 98765 43210',
-          tags: ['Regular', "Men's Wear"],
-        ),
-        _CustomerItem(
-          initials: 'PN',
-          color: const Color(0xFFD4A5C0),
-          name: 'Priya Nair',
-          email: 'priya.nair@domain.com',
-          orders: 15,
-          lifetimeSpend: '₹1,12,400',
-          lifetimeSpendNum: 112400,
-          avgOrderValue: '₹7,493',
-          returns: 2,
-          lastPurchaseRelative: '1 week ago',
-          lastPurchaseDate: '07 Feb 2027',
-          storeLocation: 'Bangalore Hub',
-          status: _CustomerStatus.active,
-          memberSince: 'Jan 2024',
-          phone: '+91 91234 56789',
-          tags: ['VIP', "Women's Wear", 'Loyalty Plus'],
-        ),
-        _CustomerItem(
-          initials: 'AM',
-          color: const Color(0xFFB3A9C4),
-          name: 'Arjun Mehta',
-          email: 'arjun.mehta@domain.com',
-          orders: 3,
-          lifetimeSpend: '₹18,200',
-          lifetimeSpendNum: 18200,
-          avgOrderValue: '₹6,067',
-          returns: 0,
-          lastPurchaseRelative: 'Feb 10, 2027',
-          lastPurchaseDate: 'Feb 10, 2027',
-          storeLocation: 'Central Store',
-          status: _CustomerStatus.inactive,
-          memberSince: 'Oct 2024',
-          phone: '+91 70987 65432',
-          tags: ["Men's Wear"],
-        ),
-        _CustomerItem(
-          initials: 'SR',
-          color: const Color(0xFFE8A87C),
-          name: 'Siddharth Rao',
-          email: 'siddharth.rao@domain.com',
-          orders: 20,
-          lifetimeSpend: '₹1,84,600',
-          lifetimeSpendNum: 184600,
-          avgOrderValue: '₹9,230',
-          returns: 4,
-          lastPurchaseRelative: 'Jan 28, 2027',
-          lastPurchaseDate: 'Jan 28, 2027',
-          storeLocation: 'Delhi Boutique',
-          status: _CustomerStatus.active,
-          memberSince: 'Nov 2023',
-          phone: '+91 98001 23456',
-          tags: ['VIP', 'High Spender', "Men's Wear"],
-        ),
-        _CustomerItem(
-          initials: 'KS',
-          color: const Color(0xFF82C4B8),
-          name: 'Kirti Sen',
-          email: 'kirti.sen@domain.com',
-          orders: 5,
-          lifetimeSpend: '₹34,500',
-          lifetimeSpendNum: 34500,
-          avgOrderValue: '₹6,900',
-          returns: 1,
-          lastPurchaseRelative: 'Jan 15, 2027',
-          lastPurchaseDate: 'Jan 15, 2027',
-          storeLocation: 'Mumbai Flagship',
-          status: _CustomerStatus.active,
-          memberSince: 'May 2024',
-          phone: '+91 77889 90011',
-          tags: ['Regular', "Women's Wear"],
-        ),
-      ];
-
-  List<_CustomerItem> get _filtered {
-    if (_searchQuery.isEmpty) return _customers;
-    final q = _searchQuery.toLowerCase();
-    return _customers
-        .where((c) =>
-            c.name.toLowerCase().contains(q) ||
-            c.email.toLowerCase().contains(q) ||
-            c.storeLocation.toLowerCase().contains(q))
-        .toList();
+    _loadCustomers();
+    CustomerChangeNotifier.instance.addListener(_onCustomerChanged);
   }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
+    CustomerChangeNotifier.instance.removeListener(_onCustomerChanged);
     super.dispose();
+  }
+
+  void _onCustomerChanged() {
+    if (mounted) _loadCustomers();
+  }
+
+  Future<void> _loadCustomers() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+    try {
+      final businessId = CurrentBusinessService.instance.currentBusinessId;
+      if (businessId == null || businessId.isEmpty || businessId.startsWith('biz_')) {
+        if (mounted) setState(() => _isLoading = false);
+        return;
+      }
+      final list = await SalesRepository.instance.getCustomers(businessId: businessId);
+      if (mounted) {
+        setState(() {
+          _customers = list;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  List<Customer> get _filtered {
+    if (_searchQuery.isEmpty) return _customers;
+    final q = _searchQuery.toLowerCase();
+    return _customers.where((c) {
+      final nameMatch = c.name.toLowerCase().contains(q);
+      final emailMatch = c.email != null && c.email!.toLowerCase().contains(q);
+      final phoneMatch = c.phone != null && c.phone!.contains(q);
+      return nameMatch || emailMatch || phoneMatch;
+    }).toList();
   }
 
   @override
@@ -169,29 +99,36 @@ class _CustomersViewState extends State<CustomersView> {
           _buildMetricsStrip(),
           const SizedBox(height: 20),
 
-          // Main split layout
-          LayoutBuilder(builder: (context, constraints) {
-            final showPanel = constraints.maxWidth >= 900;
-            if (showPanel) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          // Main layout
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // When no customer is selected, do NOT reserve space for the profile panel.
+              if (_selected == null) {
+                return _buildTableSection();
+              }
+
+              // At wide widths (>= 1080), display side-by-side with an inspector panel (~320px).
+              final canDisplaySideBySide = constraints.maxWidth >= 1080;
+              if (canDisplaySideBySide) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: _buildTableSection()),
+                    const SizedBox(width: 20),
+                    SizedBox(width: 320, child: _buildProfilePanel()),
+                  ],
+                );
+              }
+
+              return Column(
                 children: [
-                  Expanded(child: _buildTableSection()),
-                  const SizedBox(width: 20),
-                  SizedBox(width: 290, child: _buildProfilePanel()),
-                ],
-              );
-            }
-            return Column(
-              children: [
-                _buildTableSection(),
-                if (_selected != null) ...[
+                  _buildTableSection(),
                   const SizedBox(height: 20),
                   _buildProfilePanel(),
                 ],
-              ],
-            );
-          }),
+              );
+            },
+          ),
           const SizedBox(height: 32),
         ],
       ),
@@ -203,90 +140,83 @@ class _CustomersViewState extends State<CustomersView> {
   // ---------------------------------------------------------------------------
 
   Widget _buildHeader() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 720;
+        final titleSection = Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Customers',
+              style: GoogleFonts.inter(
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF181614),
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 3),
+            Text(
+              'Manage your customers, purchase history and relationships.',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF6B6358),
+              ),
+            ),
+          ],
+        );
+
+        final actionButtons = Wrap(
+          spacing: 10,
+          runSpacing: 8,
+          children: [
+            // Refresh
+            InkWell(
+              onTap: _loadCustomers,
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: const Color(0xFFD5C9BC)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.refresh_rounded, size: 15, color: Color(0xFF5C4F44)),
+                    const SizedBox(width: 7),
+                    Text(
+                      'Refresh',
+                      style: GoogleFonts.inter(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF5C4F44),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+
+        if (isNarrow) {
+          return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Customers',
-                style: GoogleFonts.inter(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF181614),
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                'Manage your customers, purchase history and relationships.',
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  color: const Color(0xFF6B6358),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 16),
-        // Export
-        InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFD5C9BC)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.download_outlined, size: 15, color: Color(0xFF5C4F44)),
-                const SizedBox(width: 7),
-                Text(
-                  'Export Customers',
-                  style: GoogleFonts.inter(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF5C4F44),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        // Add Customer
-        InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1816),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.add_rounded, size: 15, color: Colors.white),
-                const SizedBox(width: 7),
-                Text(
-                  'Add Customer',
-                  style: GoogleFonts.inter(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+            children: [titleSection, const SizedBox(height: 14), actionButtons],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(child: titleSection),
+            const SizedBox(width: 16),
+            actionButtons,
+          ],
+        );
+      },
     );
   }
 
@@ -295,48 +225,72 @@ class _CustomersViewState extends State<CustomersView> {
   // ---------------------------------------------------------------------------
 
   Widget _buildMetricsStrip() {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildMetricCard(
-            icon: Icons.people_outline_rounded,
-            label: 'Active Customers',
-            value: '3,842',
-            trend: '↑ 12% MoM',
-            trendColor: const Color(0xFF16A34A),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildMetricCard(
-            icon: Icons.shopping_cart_outlined,
-            label: 'Repeat Purchase Rate',
-            value: '68.2%',
-            trend: '↑ 6% MoM',
-            trendColor: const Color(0xFF16A34A),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildMetricCard(
-            icon: Icons.currency_rupee_rounded,
-            label: 'Avg. Lifetime Spend',
-            value: '₹18,450',
-            trend: '↑ 450 growth avg',
-            trendColor: const Color(0xFF16A34A),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _buildMetricCard(
-            icon: Icons.inventory_2_outlined,
-            label: 'Total Orders',
-            value: '24,120',
-            trend: '↑ 18% MoM',
-            trendColor: const Color(0xFF16A34A),
-          ),
-        ),
-      ],
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 840;
+        final card1 = _buildMetricCard(
+          icon: Icons.people_outline_rounded,
+          label: 'Total Customers',
+          value: '${_customers.length}',
+          trend: '—',
+          trendColor: const Color(0xFF7E766B),
+        );
+        final card2 = _buildMetricCard(
+          icon: Icons.shopping_cart_outlined,
+          label: 'Repeat Purchase Rate',
+          value: '—',
+          trend: '—',
+          trendColor: const Color(0xFF7E766B),
+        );
+        final card3 = _buildMetricCard(
+          icon: Icons.payments_outlined,
+          label: 'Avg. Lifetime Spend',
+          value: '—',
+          trend: '—',
+          trendColor: const Color(0xFF7E766B),
+        );
+        final card4 = _buildMetricCard(
+          icon: Icons.inventory_2_outlined,
+          label: 'Total Orders',
+          value: '—',
+          trend: '—',
+          trendColor: const Color(0xFF7E766B),
+        );
+
+        if (isCompact) {
+          return Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(child: card1),
+                  const SizedBox(width: 12),
+                  Expanded(child: card2),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(child: card3),
+                  const SizedBox(width: 12),
+                  Expanded(child: card4),
+                ],
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: card1),
+            const SizedBox(width: 12),
+            Expanded(child: card2),
+            const SizedBox(width: 12),
+            Expanded(child: card3),
+            const SizedBox(width: 12),
+            Expanded(child: card4),
+          ],
+        );
+      },
     );
   }
 
@@ -373,6 +327,8 @@ class _CustomersViewState extends State<CustomersView> {
               Expanded(
                 child: Text(
                   label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
                     fontSize: 12.5,
                     color: const Color(0xFF7E766B),
@@ -384,6 +340,8 @@ class _CustomersViewState extends State<CustomersView> {
           const SizedBox(height: 10),
           Text(
             value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.inter(
               fontSize: 22,
               fontWeight: FontWeight.w700,
@@ -393,6 +351,8 @@ class _CustomersViewState extends State<CustomersView> {
           const SizedBox(height: 4),
           Text(
             trend,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -421,12 +381,13 @@ class _CustomersViewState extends State<CustomersView> {
   }
 
   Widget _buildSearchAndFilters() {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Search
-        Expanded(
+        SizedBox(
+          width: double.infinity,
+          height: 40,
           child: Container(
-            height: 40,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
@@ -446,79 +407,115 @@ class _CustomersViewState extends State<CustomersView> {
             ),
           ),
         ),
-        const SizedBox(width: 10),
-        _buildFilterChip('Preferred Location'),
-        const SizedBox(width: 8),
-        _buildFilterChip('Spend Tier'),
-        const SizedBox(width: 8),
-        _buildFilterChip('Returns Logged'),
-        const SizedBox(width: 8),
-        // More Filters
-        InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFD5C9BC)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.tune_rounded, size: 14, color: Color(0xFF5C4F44)),
-                const SizedBox(width: 5),
-                Text(
-                  'More Filters',
-                  style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500, color: const Color(0xFF5C4F44)),
-                ),
-              ],
-            ),
-          ),
-        ),
       ],
     );
   }
 
-  Widget _buildFilterChip(String label) {
-    return InkWell(
-      onTap: () {},
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: const Color(0xFFD5C9BC)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(label, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w400, color: const Color(0xFF3D3530))),
-            const SizedBox(width: 4),
-            const Icon(Icons.keyboard_arrow_down_rounded, size: 15, color: Color(0xFF7E766B)),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildTable() {
-    final rows = _filtered;
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE8DFD3)),
-      ),
-      child: Column(
-        children: [
-          _buildTableHeader(),
-          ...rows.asMap().entries.map((entry) {
-            return _buildTableRow(entry.value, isLast: entry.key == rows.length - 1);
-          }),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tableWidget = Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE8DFD3)),
+          ),
+          child: Column(
+            children: [
+              _buildTableHeader(),
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 48),
+                  child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                )
+              else if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.error_outline_rounded, size: 32, color: Color(0xFFEF4444)),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Failed to load customers',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1E1C1A),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        TextButton(onPressed: _loadCustomers, child: const Text('Retry')),
+                      ],
+                    ),
+                  ),
+                )
+              else if (_filtered.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 48),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF5EDE1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.people_outline_rounded,
+                            size: 24,
+                            color: Color(0xFFBA8A55),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          _searchQuery.isEmpty ? 'No customers yet' : 'No customers found',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF1E1C1A),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _searchQuery.isEmpty
+                              ? 'Customers created during sales will appear here.'
+                              : 'Try a different name, email or phone.',
+                          style: GoogleFonts.inter(
+                            fontSize: 12.5,
+                            color: const Color(0xFF7E766B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                ..._filtered.asMap().entries.map((entry) {
+                  return _buildTableRow(
+                    entry.value,
+                    isLast: entry.key == _filtered.length - 1,
+                  );
+                }),
+            ],
+          ),
+        );
+
+        if (constraints.maxWidth < 800) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 800),
+              child: tableWidget,
+            ),
+          );
+        }
+        return tableWidget;
+      },
     );
   }
 
@@ -527,39 +524,96 @@ class _CustomersViewState extends State<CustomersView> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: const BoxDecoration(
         color: Color(0xFFFAF7F2),
-        borderRadius: BorderRadius.only(topLeft: Radius.circular(11), topRight: Radius.circular(11)),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(11),
+          topRight: Radius.circular(11),
+        ),
         border: Border(bottom: BorderSide(color: Color(0xFFEEE5D8))),
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 36,
-            child: Checkbox(
-              value: false,
-              onChanged: (_) {},
-              side: const BorderSide(color: Color(0xFFD5C9BC), width: 1.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+          // Customer Name (flex 30)
+          const Expanded(
+            flex: 30,
+            child: Padding(
+              padding: EdgeInsets.only(right: 12),
+              child: Text(
+                'CUSTOMER',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF8E7F72),
+                  letterSpacing: 0.3,
+                ),
+              ),
             ),
           ),
-          const Expanded(flex: 26, child: Text('CUSTOMER NAME', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF8E7F72), letterSpacing: 0.3))),
-          Expanded(flex: 10, child: Row(children: [
-            const Text('ORDERS', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF8E7F72), letterSpacing: 0.3)),
-            const SizedBox(width: 3),
-            const Icon(Icons.unfold_more_rounded, size: 13, color: Color(0xFF9E8E7E)),
-          ])),
-          const Expanded(flex: 14, child: Text('LIFETIME SPEND', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF8E7F72), letterSpacing: 0.3))),
-          const Expanded(flex: 9, child: Text('RETURNS', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF8E7F72), letterSpacing: 0.3))),
-          const Expanded(flex: 16, child: Text('LAST PURCHASE', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF8E7F72), letterSpacing: 0.3))),
-          const Expanded(flex: 16, child: Text('STORE LOCATION', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF8E7F72), letterSpacing: 0.3))),
-          const Expanded(flex: 10, child: Text('STATUS', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF8E7F72), letterSpacing: 0.3))),
-          const SizedBox(width: 40),
+
+          // Phone (flex 18)
+          const Expanded(
+            flex: 18,
+            child: Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Text(
+                'PHONE',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF8E7F72),
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+          ),
+
+          // Email (flex 24)
+          const Expanded(
+            flex: 24,
+            child: Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Text(
+                'EMAIL',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF8E7F72),
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ),
+          ),
+
+          // Member Since (flex 14)
+          const Expanded(
+            flex: 14,
+            child: Text(
+              'MEMBER SINCE',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF8E7F72),
+                letterSpacing: 0.3,
+              ),
+            ),
+          ),
+
+          // Actions spacer (width: 32)
+          const SizedBox(width: 32),
         ],
       ),
     );
   }
 
-  Widget _buildTableRow(_CustomerItem c, {bool isLast = false}) {
-    final isSelected = _selected?.email == c.email;
+  Widget _buildTableRow(Customer c, {bool isLast = false}) {
+    final isSelected = _selected?.id == c.id;
     return InkWell(
       onTap: () => setState(() => _selected = c),
       child: AnimatedContainer(
@@ -569,122 +623,85 @@ class _CustomersViewState extends State<CustomersView> {
           color: isSelected ? const Color(0xFFFFF8EF) : Colors.white,
           border: isLast
               ? null
-              : const Border(bottom: BorderSide(color: Color(0xFFF4EDE5), width: 0.8)),
+              : const Border(
+                  bottom: BorderSide(color: Color(0xFFF4EDE5), width: 0.8),
+                ),
         ),
         child: Row(
           children: [
-            // Checkbox
-            SizedBox(
-              width: 36,
-              child: Checkbox(
-                value: isSelected,
-                onChanged: (_) => setState(() => _selected = c),
-                side: const BorderSide(color: Color(0xFFD5C9BC), width: 1.5),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                activeColor: const Color(0xFF8C5E33),
-              ),
-            ),
-
-            // Avatar + Name
+            // Avatar + Name (flex 30)
             Expanded(
-              flex: 26,
-              child: Row(
-                children: [
-                  _buildAvatar(c),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          c.name,
-                          style: GoogleFonts.inter(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1A1816),
+              flex: 30,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Row(
+                  children: [
+                    _buildAvatar(c),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            c.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1A1816),
+                            ),
                           ),
-                        ),
-                        Text(
-                          c.email,
-                          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF7E766B)),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Orders
-            Expanded(
-              flex: 10,
-              child: Text(
-                '${c.orders}',
-                style: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF1A1816)),
-              ),
-            ),
-
-            // Lifetime Spend
-            Expanded(
-              flex: 14,
-              child: Text(
-                c.lifetimeSpend,
-                style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w500, color: const Color(0xFF1A1816)),
-              ),
-            ),
-
-            // Returns
-            Expanded(
-              flex: 9,
-              child: Text(
-                '${c.returns}',
-                style: GoogleFonts.inter(
-                  fontSize: 13.5,
-                  fontWeight: c.returns > 0 ? FontWeight.w600 : FontWeight.w400,
-                  color: c.returns > 0 ? const Color(0xFFEF4444) : const Color(0xFF7E766B),
+                  ],
                 ),
               ),
             ),
 
-            // Last Purchase
+            // Phone (flex 18)
             Expanded(
-              flex: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    c.lastPurchaseRelative,
-                    style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF1A1816)),
-                  ),
-                  if (c.lastPurchaseDate != c.lastPurchaseRelative)
-                    Text(
-                      c.lastPurchaseDate,
-                      style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF9E8E7E)),
-                    ),
-                ],
+              flex: 18,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Text(
+                  c.phone ?? '—',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF5C5047)),
+                ),
               ),
             ),
 
-            // Store Location
+            // Email (flex 24)
             Expanded(
-              flex: 16,
+              flex: 24,
+              child: Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Text(
+                  c.email ?? '—',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF5C5047)),
+                ),
+              ),
+            ),
+
+            // Member Since (flex 14)
+            Expanded(
+              flex: 14,
               child: Text(
-                c.storeLocation,
-                style: GoogleFonts.inter(fontSize: 13.5, color: const Color(0xFF5C5047)),
+                _formatDate(c.createdAt),
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF7E766B)),
               ),
             ),
 
-            // Status
-            Expanded(
-              flex: 10,
-              child: _buildStatusBadge(c.status),
-            ),
-
-            // Actions
+            // Actions (width: 32)
             SizedBox(
-              width: 40,
+              width: 32,
               child: InkWell(
                 onTap: () {},
                 borderRadius: BorderRadius.circular(6),
@@ -700,124 +717,37 @@ class _CustomersViewState extends State<CustomersView> {
     );
   }
 
-  Widget _buildAvatar(_CustomerItem c) {
-    if (c.hasPhoto) {
-      return CircleAvatar(
-        radius: 18,
-        backgroundColor: c.color,
-        child: ClipOval(
-          child: Container(
-            width: 36,
-            height: 36,
-            color: c.color,
-            alignment: Alignment.center,
-            child: Text(
-              c.initials,
-              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
-            ),
-          ),
-        ),
-      );
-    }
+  Widget _buildAvatar(Customer c) {
+    final initials = _initials(c.name);
+    final color = _colorForName(c.name);
     return CircleAvatar(
       radius: 18,
-      backgroundColor: c.color,
+      backgroundColor: color,
       child: Text(
-        c.initials,
-        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _buildStatusBadge(_CustomerStatus status) {
-    final isActive = status == _CustomerStatus.active;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: isActive ? const Color(0xFFDCFCE7) : const Color(0xFFF1F0EE),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        isActive ? 'Active' : 'Inactive',
+        initials,
         style: GoogleFonts.inter(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: isActive ? const Color(0xFF16A34A) : const Color(0xFF6B6358),
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
         ),
       ),
     );
   }
 
   Widget _buildPagination() {
-    return Row(
-      children: [
-        Text(
-          'Showing 1–6 of 3,842 customers',
+    if (_customers.isEmpty && !_isLoading) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          _isLoading
+              ? 'Loading...'
+              : 'Showing ${_filtered.length} of ${_customers.length} customer${_customers.length == 1 ? '' : 's'}',
           style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF7E766B)),
         ),
-        const Spacer(),
-        // Prev
-        _pageBtn(Icons.chevron_left_rounded, enabled: false, onTap: () {}),
-        const SizedBox(width: 4),
-        ...[1, 2, 3, 4, 5].map((p) => Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: GestureDetector(
-                onTap: () {},
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: p == 1 ? const Color(0xFF1A1816) : Colors.white,
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: p == 1 ? const Color(0xFF1A1816) : const Color(0xFFD5C9BC)),
-                  ),
-                  child: Text(
-                    '$p',
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: p == 1 ? FontWeight.w600 : FontWeight.w400,
-                      color: p == 1 ? Colors.white : const Color(0xFF5C4F44),
-                    ),
-                  ),
-                ),
-              ),
-            )),
-        _pageBtn(Icons.chevron_right_rounded, enabled: true, onTap: () {}),
-        const SizedBox(width: 16),
-        // Show dropdown
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(7),
-            border: Border.all(color: const Color(0xFFD5C9BC)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Show  10', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF3D3530))),
-              const SizedBox(width: 4),
-              const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Color(0xFF7E766B)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _pageBtn(IconData icon, {required bool enabled, required VoidCallback onTap}) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: Container(
-        width: 30,
-        height: 30,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: const Color(0xFFD5C9BC)),
-          color: enabled ? Colors.white : const Color(0xFFF4EDE4),
-        ),
-        child: Icon(icon, size: 17, color: enabled ? const Color(0xFF5C4F44) : const Color(0xFFB0A89E)),
       ),
     );
   }
@@ -846,6 +776,9 @@ class _CustomersViewState extends State<CustomersView> {
       );
     }
 
+    final initials = _initials(c.name);
+    final color = _colorForName(c.name);
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -870,11 +803,11 @@ class _CustomersViewState extends State<CustomersView> {
                 ),
                 const Spacer(),
                 InkWell(
-                  onTap: () {},
+                  onTap: () => setState(() => _selected = null),
                   borderRadius: BorderRadius.circular(6),
                   child: const Padding(
                     padding: EdgeInsets.all(4),
-                    child: Icon(Icons.more_horiz_rounded, size: 17, color: Color(0xFF9E8E7E)),
+                    child: Icon(Icons.close_rounded, size: 17, color: Color(0xFF9E8E7E)),
                   ),
                 ),
               ],
@@ -889,9 +822,9 @@ class _CustomersViewState extends State<CustomersView> {
               children: [
                 CircleAvatar(
                   radius: 36,
-                  backgroundColor: c.color,
+                  backgroundColor: color,
                   child: Text(
-                    c.initials,
+                    initials,
                     style: GoogleFonts.inter(
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
@@ -912,25 +845,21 @@ class _CustomersViewState extends State<CustomersView> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                   decoration: BoxDecoration(
-                    color: c.status == _CustomerStatus.active
-                        ? const Color(0xFFDCFCE7)
-                        : const Color(0xFFF1F0EE),
+                    color: const Color(0xFFDCFCE7),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    c.status == _CustomerStatus.active ? 'Active Customer' : 'Inactive Customer',
+                    'Active Customer',
                     style: GoogleFonts.inter(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w500,
-                      color: c.status == _CustomerStatus.active
-                          ? const Color(0xFF16A34A)
-                          : const Color(0xFF6B6358),
+                      color: const Color(0xFF16A34A),
                     ),
                   ),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Member since ${c.memberSince}',
+                  'Member since ${_formatDate(c.createdAt)}',
                   style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF9E8E7E)),
                 ),
               ],
@@ -946,73 +875,9 @@ class _CustomersViewState extends State<CustomersView> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: [
-                _buildContactRow(Icons.email_outlined, c.email),
+                _buildContactRow(Icons.email_outlined, c.email ?? '—'),
                 const SizedBox(height: 8),
-                _buildContactRow(Icons.phone_outlined, c.phone),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on_outlined, size: 15, color: Color(0xFF8E7F72)),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFD5C9BC)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(c.storeLocation, style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF3D3530))),
-                          const SizedBox(width: 4),
-                          const Icon(Icons.keyboard_arrow_down_rounded, size: 13, color: Color(0xFF7E766B)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 14),
-          const Divider(color: Color(0xFFF0E8DF), height: 1),
-          const SizedBox(height: 12),
-
-          // Stats
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: [
-                _buildStatRow('Total Orders', '${c.orders} Orders'),
-                const SizedBox(height: 8),
-                _buildStatRow('Avg. Order Value', c.avgOrderValue),
-                const SizedBox(height: 8),
-                _buildStatRow('Lifetime Spend', c.lifetimeSpend, valueColor: const Color(0xFF16A34A)),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-          const Divider(color: Color(0xFFF0E8DF), height: 1),
-          const SizedBox(height: 12),
-
-          // Tags
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tags',
-                  style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF7E766B)),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: c.tags.map((tag) => _buildTag(tag)).toList(),
-                ),
+                _buildContactRow(Icons.phone_outlined, c.phone ?? '—'),
               ],
             ),
           ),
@@ -1022,70 +887,35 @@ class _CustomersViewState extends State<CustomersView> {
           // CTA buttons
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: InkWell(
-                    onTap: () {},
+            child: SizedBox(
+              width: double.infinity,
+              child: InkWell(
+                onTap: () {},
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 11),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFF1A1816)),
+                    border: Border.all(color: const Color(0xFF1A1816)),
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.history_rounded, size: 15, color: Color(0xFF1A1816)),
+                      const SizedBox(width: 7),
+                      Text(
+                        'View Purchase History',
+                        style: GoogleFonts.inter(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1A1816),
+                        ),
                       ),
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.history_rounded, size: 15, color: Color(0xFF1A1816)),
-                          const SizedBox(width: 7),
-                          Text(
-                            'View Detailed History',
-                            style: GoogleFonts.inter(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF1A1816),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: InkWell(
-                    onTap: () {},
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 11),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFD5C9BC)),
-                      ),
-                      alignment: Alignment.center,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.shopping_cart_outlined, size: 15, color: Color(0xFF5C4F44)),
-                          const SizedBox(width: 7),
-                          Text(
-                            'New Quick Sale',
-                            style: GoogleFonts.inter(
-                              fontSize: 13.5,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF5C4F44),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -1109,96 +939,35 @@ class _CustomersViewState extends State<CustomersView> {
     );
   }
 
-  Widget _buildStatRow(String label, String value, {Color? valueColor}) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF7E766B)),
-          ),
-        ),
-        Text(
-          value,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: valueColor ?? const Color(0xFF1A1816),
-          ),
-        ),
-      ],
-    );
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
   }
 
-  Widget _buildTag(String label) {
-    Color bg;
-    Color fg;
-    if (label == 'VIP') {
-      bg = const Color(0xFFFEF3C7);
-      fg = const Color(0xFFD97706);
-    } else if (label == 'High Spender') {
-      bg = const Color(0xFFFFEDE5);
-      fg = const Color(0xFFEA580C);
-    } else if (label == 'Loyalty Plus') {
-      bg = const Color(0xFFEDE9FE);
-      fg = const Color(0xFF7C3AED);
-    } else {
-      bg = const Color(0xFFF1EBE3);
-      fg = const Color(0xFF5C4F44);
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(label, style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500, color: fg)),
-    );
+  Color _colorForName(String name) {
+    const colors = [
+      Color(0xFF8C5E33),
+      Color(0xFF5B6FBB),
+      Color(0xFF1A8B6F),
+      Color(0xFF9B3A5A),
+      Color(0xFF6B47DC),
+      Color(0xFF2E7D9E),
+      Color(0xFF7A5C28),
+      Color(0xFF4A7C5B),
+    ];
+    final idx = name.codeUnits.fold(0, (sum, c) => sum + c) % colors.length;
+    return colors[idx];
   }
-}
 
-// ---------------------------------------------------------------------------
-// Data models
-// ---------------------------------------------------------------------------
-
-enum _CustomerStatus { active, inactive }
-
-class _CustomerItem {
-  final String initials;
-  final Color color;
-  final String name;
-  final String email;
-  final int orders;
-  final String lifetimeSpend;
-  final int lifetimeSpendNum;
-  final String avgOrderValue;
-  final int returns;
-  final String lastPurchaseRelative;
-  final String lastPurchaseDate;
-  final String storeLocation;
-  final _CustomerStatus status;
-  final String memberSince;
-  final String phone;
-  final List<String> tags;
-  final bool hasPhoto;
-
-  const _CustomerItem({
-    required this.initials,
-    required this.color,
-    required this.name,
-    required this.email,
-    required this.orders,
-    required this.lifetimeSpend,
-    required this.lifetimeSpendNum,
-    required this.avgOrderValue,
-    required this.returns,
-    required this.lastPurchaseRelative,
-    required this.lastPurchaseDate,
-    required this.storeLocation,
-    required this.status,
-    required this.memberSince,
-    required this.phone,
-    required this.tags,
-    this.hasPhoto = false,
-  });
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return '—';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+  }
 }

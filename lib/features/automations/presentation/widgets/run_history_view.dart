@@ -203,11 +203,7 @@ class _RunHistoryViewState extends State<RunHistoryView> {
         final segmentedTabs = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildStatusTab(
-              label: 'All',
-              count: '234',
-              status: _RunStatus.all,
-            ),
+            _buildStatusTab(label: 'All', count: '234', status: _RunStatus.all),
             const SizedBox(width: 8),
             _buildStatusTab(
               label: 'Success',
@@ -277,9 +273,9 @@ class _RunHistoryViewState extends State<RunHistoryView> {
               value: _selectedLocation,
               items: const [
                 'All Locations',
-                'Central Warehouse',
-                'Delhi Flagship',
-                'Mumbai Boutique',
+                'Primary Facility',
+                'Regional Store',
+                'Distribution Depot',
               ],
               onChanged: (val) {
                 if (val != null) {
@@ -309,10 +305,7 @@ class _RunHistoryViewState extends State<RunHistoryView> {
 
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            segmentedTabs,
-            dropdowns,
-          ],
+          children: [segmentedTabs, dropdowns],
         );
       },
     );
@@ -338,7 +331,9 @@ class _RunHistoryViewState extends State<RunHistoryView> {
           color: isSelected ? const Color(0xFF181513) : Colors.white,
           borderRadius: BorderRadius.circular(6),
           border: Border.all(
-            color: isSelected ? const Color(0xFF181513) : const Color(0xFFDFD7CB),
+            color: isSelected
+                ? const Color(0xFF181513)
+                : const Color(0xFFDFD7CB),
           ),
         ),
         child: Row(
@@ -600,7 +595,9 @@ class _RunHistoryViewState extends State<RunHistoryView> {
                       const SizedBox(width: 7),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 1.5),
+                          horizontal: 5,
+                          vertical: 1.5,
+                        ),
                         decoration: BoxDecoration(
                           color: badgeBg ?? const Color(0xFFEAF7EE),
                           borderRadius: BorderRadius.circular(3.5),
@@ -688,11 +685,15 @@ class _RunHistoryViewState extends State<RunHistoryView> {
                 ],
               ),
               InkWell(
-                onTap: widget.onExportLogs ??
+                onTap:
+                    widget.onExportLogs ??
                     () => _showToast('Exporting automation run logs to CSV...'),
                 borderRadius: BorderRadius.circular(6),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7.5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 7.5,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(6),
@@ -759,7 +760,10 @@ class _RunHistoryViewState extends State<RunHistoryView> {
               final run = runs[index];
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12.5,
+                ),
                 child: Row(
                   children: [
                     // Run ID
@@ -770,7 +774,9 @@ class _RunHistoryViewState extends State<RunHistoryView> {
                           if (widget.onSelectRun != null) {
                             widget.onSelectRun!(run.runId);
                           } else {
-                            _showToast('Viewing execution profile for ${run.runId}');
+                            _showToast(
+                              'Viewing execution profile for ${run.runId}',
+                            );
                           }
                         },
                         child: Text(
@@ -792,7 +798,9 @@ class _RunHistoryViewState extends State<RunHistoryView> {
                           if (widget.onSelectAutomation != null) {
                             widget.onSelectAutomation!(run.automationName);
                           } else {
-                            _showToast('Viewing details for ${run.automationName}');
+                            _showToast(
+                              'Viewing details for ${run.automationName}',
+                            );
                           }
                         },
                         child: Text(
@@ -921,7 +929,10 @@ class _RunHistoryViewState extends State<RunHistoryView> {
                   _buildPageNumberButton(5),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 5),
-                    child: Text('...', style: TextStyle(color: Color(0xFF8C8276))),
+                    child: Text(
+                      '...',
+                      style: TextStyle(color: Color(0xFF8C8276)),
+                    ),
                   ),
                   _buildPageNumberButton(24),
                   const SizedBox(width: 4),
@@ -1107,7 +1118,8 @@ class _RunHistoryViewState extends State<RunHistoryView> {
           ),
           const SizedBox(width: 16),
           InkWell(
-            onTap: widget.onViewInsights ??
+            onTap:
+                widget.onViewInsights ??
                 () => _showToast('Opening 30-day performance report...'),
             borderRadius: BorderRadius.circular(8),
             child: Container(

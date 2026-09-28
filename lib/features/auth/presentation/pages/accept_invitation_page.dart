@@ -7,6 +7,7 @@ import '../../../../app/theme/app_theme.dart';
 import '../../../../core/auth/auth_service.dart';
 import '../../../../core/auth/authorization_service.dart';
 import '../../../../core/business/current_business_service.dart';
+import '../../../../core/navigation/navigation_guard.dart';
 
 class AcceptInvitationPage extends StatefulWidget {
   const AcceptInvitationPage({super.key, this.initialToken});
@@ -109,7 +110,11 @@ class _AcceptInvitationPageState extends State<AcceptInvitationPage> {
 
         await Future<void>.delayed(const Duration(milliseconds: 1200));
         if (!mounted) return;
-        Navigator.of(context).pushReplacementNamed(AppRoutes.overview);
+        await NavigationGuard.safePushReplacementNamed(
+          context,
+          AppRoutes.overview,
+          source: 'AcceptInvitationPage._handleAccept.success',
+        );
       } else {
         setState(() {
           _errorMessage = 'Invitation accepted but business resolution was incomplete.';
@@ -377,9 +382,11 @@ class _AcceptInvitationPageState extends State<AcceptInvitationPage> {
                                 key: const Key('invite_switch_account_link'),
                                 onTap: () async {
                                   await AuthService.instance.signOut();
-                                  if (mounted) {
-                                    Navigator.of(context).pushReplacementNamed(
+                                  if (context.mounted) {
+                                    await NavigationGuard.safePushReplacementNamed(
+                                      context,
                                       AppRoutes.login,
+                                      source: 'AcceptInvitationPage.switchAccount',
                                     );
                                   }
                                 },

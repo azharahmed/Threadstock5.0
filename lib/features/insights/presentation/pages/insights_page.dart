@@ -103,48 +103,48 @@ class _InsightsPageState extends State<InsightsPage> {
         widget.onTitleChanged?.call('Insights & Analytics');
       }
 
-      if (widget.showScheduleDialogOnInit && _currentMode == InsightsViewMode.reportStudio && mounted) {
+      if (widget.showScheduleDialogOnInit &&
+          _currentMode == InsightsViewMode.reportStudio &&
+          mounted) {
         ScheduleAutomatedReportDialog.show(context);
       }
     });
   }
 
-  final List<_StylePerformance> _topStyles = const [
-    _StylePerformance(
-      name: 'Oxford Linen Shirt',
-      sku: 'TS-1042',
-      unitsSold: '847 sold',
-      growth: '↑ 74%',
-      imageAsset: 'Assets/oxford_linen_shirt_blue.jpg',
-    ),
-    _StylePerformance(
-      name: 'Merino Wool Blazer',
-      sku: 'MWB-2018',
-      unitsSold: '624 sold',
-      growth: '↑ 52%',
-      imageAsset: 'Assets/merino_wool_blazer.jpg',
-    ),
-    _StylePerformance(
-      name: 'Silk Evening Dress',
-      sku: 'SED-1048',
-      unitsSold: '98 sold',
-      growth: '↑ 58%',
-      imageAsset: 'Assets/silk_evening_dress.jpg',
-    ),
-    _StylePerformance(
-      name: 'Gabardine Trench',
-      sku: 'GTC-2793',
-      unitsSold: '45 sold',
-      growth: '↑ 83%',
-      imageAsset: 'Assets/gabardine_trench.jpg',
-    ),
-  ];
+  final List<_StylePerformance> _topStyles = const [];
 
   // 30 Days of sales trend in lakhs (max ~10L)
   final List<double> _dailySales = const [
-    1.3, 1.8, 1.5, 2.2, 2.7, 3.4, 2.9, 3.2, 3.8, 3.6,
-    4.0, 3.9, 4.6, 4.2, 4.2, 4.7, 4.5, 5.2, 5.6, 5.9,
-    6.2, 5.8, 5.9, 6.4, 6.0, 6.5, 7.1, 7.8, 7.6, 8.92,
+    1.3,
+    1.8,
+    1.5,
+    2.2,
+    2.7,
+    3.4,
+    2.9,
+    3.2,
+    3.8,
+    3.6,
+    4.0,
+    3.9,
+    4.6,
+    4.2,
+    4.2,
+    4.7,
+    4.5,
+    5.2,
+    5.6,
+    5.9,
+    6.2,
+    5.8,
+    5.9,
+    6.4,
+    6.0,
+    6.5,
+    7.1,
+    7.8,
+    7.6,
+    8.92,
   ];
 
   void _showFeedback(String message) {
@@ -152,8 +152,11 @@ class _InsightsPageState extends State<InsightsPage> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -202,9 +205,7 @@ class _InsightsPageState extends State<InsightsPage> {
         backgroundColor: Colors.transparent,
         body: DesktopContentConstraint(
           verticalPadding: 24,
-          child: SingleChildScrollView(
-            child: DeadStockView(),
-          ),
+          child: SingleChildScrollView(child: DeadStockView()),
         ),
       );
     }
@@ -361,17 +362,11 @@ class _InsightsPageState extends State<InsightsPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Left: Daily Sales Trend (60% width)
-                        Expanded(
-                          flex: 3,
-                          child: _buildDailySalesCard(),
-                        ),
+                        Expanded(flex: 3, child: _buildDailySalesCard()),
                         const SizedBox(width: 20),
 
                         // Right: Top Performing Styles (40% width)
-                        Expanded(
-                          flex: 2,
-                          child: _buildTopStylesCard(),
-                        ),
+                        Expanded(flex: 2, child: _buildTopStylesCard()),
                       ],
                     );
                   }
@@ -405,10 +400,7 @@ class _InsightsPageState extends State<InsightsPage> {
                         const SizedBox(width: 20),
 
                         // Right: AI Insights (40% width)
-                        Expanded(
-                          flex: 2,
-                          child: _buildAiInsightsCard(),
-                        ),
+                        Expanded(flex: 2, child: _buildAiInsightsCard()),
                       ],
                     );
                   }
@@ -462,25 +454,24 @@ class _InsightsPageState extends State<InsightsPage> {
                 setState(() => _selectedTimeframe = val);
                 _showFeedback('Timeframe changed to $val');
               },
-              itemBuilder: (context) => [
-                'Last 7 Days',
-                'Last 30 Days',
-                'Last 90 Days',
-                'This Year',
-              ]
-                  .map(
-                    (t) => PopupMenuItem(
-                      value: t,
-                      height: 36,
-                      child: Text(
-                        t,
-                        style: GoogleFonts.inter(fontSize: 12.5),
-                      ),
-                    ),
-                  )
-                  .toList(),
+              itemBuilder: (context) =>
+                  ['Last 7 Days', 'Last 30 Days', 'Last 90 Days', 'This Year']
+                      .map(
+                        (t) => PopupMenuItem(
+                          value: t,
+                          height: 36,
+                          child: Text(
+                            t,
+                            style: GoogleFonts.inter(fontSize: 12.5),
+                          ),
+                        ),
+                      )
+                      .toList(),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFEAF1FB),
                   borderRadius: BorderRadius.circular(6),
@@ -571,7 +562,9 @@ class _InsightsPageState extends State<InsightsPage> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
-                  onTap: () => _showFeedback('Exporting executive insights CSV report...'),
+                  onTap: () => _showFeedback(
+                    'Exporting executive insights CSV report...',
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 14,
@@ -619,7 +612,8 @@ class _InsightsPageState extends State<InsightsPage> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
-                  onTap: () => _showFeedback('Schedule automated report dialog opened.'),
+                  onTap: () =>
+                      _showFeedback('Schedule automated report dialog opened.'),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -685,9 +679,7 @@ class _InsightsPageState extends State<InsightsPage> {
         const SizedBox(width: 16),
 
         // 3. Sell-Through Velocity
-        Expanded(
-          child: _buildVelocityKpiCard(),
-        ),
+        Expanded(child: _buildVelocityKpiCard()),
       ],
     );
   }
@@ -924,24 +916,24 @@ class _InsightsPageState extends State<InsightsPage> {
                   setState(() => _selectedMetric = val);
                   _showFeedback('Metric changed to $val');
                 },
-                itemBuilder: (context) => [
-                  'Sales Value',
-                  'Units Sold',
-                  'Gross Margin',
-                ]
-                    .map(
-                      (m) => PopupMenuItem(
-                        value: m,
-                        height: 36,
-                        child: Text(
-                          m,
-                          style: GoogleFonts.inter(fontSize: 12.5),
-                        ),
-                      ),
-                    )
-                    .toList(),
+                itemBuilder: (context) =>
+                    ['Sales Value', 'Units Sold', 'Gross Margin']
+                        .map(
+                          (m) => PopupMenuItem(
+                            value: m,
+                            height: 36,
+                            child: Text(
+                              m,
+                              style: GoogleFonts.inter(fontSize: 12.5),
+                            ),
+                          ),
+                        )
+                        .toList(),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(6),
@@ -972,7 +964,7 @@ class _InsightsPageState extends State<InsightsPage> {
           ),
           const SizedBox(height: 22),
 
-          // Custom Atelier Bar Chart
+          // Custom ThreadStock Bar Chart
           SizedBox(
             height: 210,
             child: Row(
@@ -1018,32 +1010,44 @@ class _InsightsPageState extends State<InsightsPage> {
                             final barCount = _dailySales.length;
                             final availableWidth = constraints.maxWidth;
                             final spacing = 4.0;
-                            final barWidth = ((availableWidth - (barCount - 1) * spacing) / barCount)
-                                .clamp(4.0, 16.0);
+                            final barWidth =
+                                ((availableWidth - (barCount - 1) * spacing) /
+                                        barCount)
+                                    .clamp(4.0, 16.0);
 
                             return Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: List.generate(barCount, (index) {
                                 final val = _dailySales[index];
-                                final heightRatio = (val / 10.0).clamp(0.05, 1.0);
-                                final isPeak = index == barCount - 1; // Day 30 is highlighted in gold!
+                                final heightRatio = (val / 10.0).clamp(
+                                  0.05,
+                                  1.0,
+                                );
+                                final isPeak =
+                                    index ==
+                                    barCount -
+                                        1; // Day 30 is highlighted in gold!
 
                                 return Column(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
                                     Tooltip(
-                                      message: 'Day ${index + 1}: ₹${(val * 100000).toInt()}',
+                                      message:
+                                          'Day ${index + 1}: ₹${(val * 100000).toInt()}',
                                       child: Container(
                                         width: barWidth,
-                                        height: (constraints.maxHeight - 20) * heightRatio,
+                                        height:
+                                            (constraints.maxHeight - 20) *
+                                            heightRatio,
                                         decoration: BoxDecoration(
                                           color: isPeak
                                               ? const Color(0xFFBA8A55)
                                               : const Color(0xFF1E1C1A),
-                                          borderRadius: const BorderRadius.vertical(
-                                            top: Radius.circular(2),
-                                          ),
+                                          borderRadius:
+                                              const BorderRadius.vertical(
+                                                top: Radius.circular(2),
+                                              ),
                                         ),
                                       ),
                                     ),
@@ -1052,7 +1056,9 @@ class _InsightsPageState extends State<InsightsPage> {
                                       'D${index + 1}',
                                       style: GoogleFonts.inter(
                                         fontSize: 8.5,
-                                        fontWeight: isPeak ? FontWeight.w700 : FontWeight.w400,
+                                        fontWeight: isPeak
+                                            ? FontWeight.w700
+                                            : FontWeight.w400,
                                         color: isPeak
                                             ? const Color(0xFFBA8A55)
                                             : const Color(0xFF8A8275),
@@ -1096,7 +1102,7 @@ class _InsightsPageState extends State<InsightsPage> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'Delhi Flagship driving 42% volume',
+                    'Retail channels driving volume',
                     style: GoogleFonts.inter(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
@@ -1157,7 +1163,8 @@ class _InsightsPageState extends State<InsightsPage> {
                 ),
               ),
               InkWell(
-                onTap: () => _showFeedback('All styles performance ranking opened.'),
+                onTap: () =>
+                    _showFeedback('All styles performance ranking opened.'),
                 child: Row(
                   children: [
                     Text(
@@ -1229,100 +1236,118 @@ class _InsightsPageState extends State<InsightsPage> {
           const Divider(color: Color(0xFFF1EAE0), height: 1),
           const SizedBox(height: 10),
 
-          // 5 Product Style Rows
-          ..._topStyles.map((style) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                children: [
-                  // Product Thumbnail Image
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      color: const Color(0xFF1E1C1A),
-                      child: Image.asset(
-                        style.imageAsset,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.checkroom_rounded,
-                          color: Color(0xFFBA8A55),
-                          size: 18,
+          // Product Style Rows
+          if (_topStyles.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text(
+                  'No style performance data recorded yet.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    color: const Color(0xFF7E766B),
+                  ),
+                ),
+              ),
+            )
+          else
+            ..._topStyles.map((style) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Row(
+                  children: [
+                    // Product Thumbnail Image
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Container(
+                        width: 38,
+                        height: 38,
+                        color: const Color(0xFF1E1C1A),
+                        child: Image.asset(
+                          style.imageAsset,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
+                                Icons.checkroom_rounded,
+                                color: Color(0xFFBA8A55),
+                                size: 18,
+                              ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
+                    const SizedBox(width: 10),
 
-                  // Style Name & SKU
-                  Expanded(
-                    flex: 4,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          style.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.inter(
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1E1C1A),
+                    // Style Name & SKU
+                    Expanded(
+                      flex: 4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            style.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF1E1C1A),
+                            ),
                           ),
+                          Text(
+                            style.sku,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w400,
+                              color: const Color(0xFF7E766B),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Units Sold
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        style.unitsSold,
+                        textAlign: TextAlign.right,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF5E574E),
                         ),
-                        Text(
-                          style.sku,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+
+                    // Growth Pill
+                    Container(
+                      width: 64,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE9F6EE),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Center(
+                        child: Text(
+                          style.growth,
                           style: GoogleFonts.inter(
                             fontSize: 11,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF7E766B),
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF1F7A46),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-
-                  // Units Sold
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      style.unitsSold,
-                      textAlign: TextAlign.right,
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF5E574E),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 14),
-
-                  // Growth Pill
-                  Container(
-                    width: 64,
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE9F6EE),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Center(
-                      child: Text(
-                        style.growth,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1F7A46),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -1362,7 +1387,8 @@ class _InsightsPageState extends State<InsightsPage> {
                 ),
               ),
               InkWell(
-                onTap: () => _showFeedback('Inventory diagnostics modal opened.'),
+                onTap: () =>
+                    _showFeedback('Inventory diagnostics modal opened.'),
                 child: Row(
                   children: [
                     Text(
@@ -1572,16 +1598,18 @@ class _InsightsPageState extends State<InsightsPage> {
             icon: Icons.inventory_2_outlined,
             title: 'Increase purchase qty for linen blend shirts',
             subtitle: 'Expected 25% demand increase next month.',
-            onTap: () => _showFeedback('Opening purchase proposal for linen blend shirts...'),
+            onTap: () => _showFeedback(
+              'Opening purchase proposal for linen blend shirts...',
+            ),
           ),
           const SizedBox(height: 10),
 
           // Suggestion 2: Reallocate stock
           _buildAiInsightItem(
             icon: Icons.sync_alt_rounded,
-            title: 'Reallocate stock from Mumbai to Delhi',
-            subtitle: 'Delhi showing 42% higher velocity.',
-            onTap: () => _showFeedback('Drafting transfer: Mumbai to Delhi...'),
+            title: 'Reallocate stock to high-demand locations',
+            subtitle: 'Secondary store showing higher velocity.',
+            onTap: () => _showFeedback('Drafting stock transfer proposal...'),
           ),
           const SizedBox(height: 10),
 

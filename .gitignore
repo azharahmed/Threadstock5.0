@@ -53,4 +53,12 @@ supabase/functions/.env.local
 
 # Database backups and dumps
 supabase/backups/
+supabase/.temp/
+
+# Runtime local config and user cache
+config/onboarding_progress_*.json
+config/locations_cache.json
+config/user_preferences.json
+scratch/
+.cursor/
 

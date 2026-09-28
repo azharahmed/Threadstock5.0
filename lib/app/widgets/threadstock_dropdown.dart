@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// An item for the luxury Atelier Dropdown menu.
-class AtelierDropdownItem<T> {
+/// An item for the ThreadStock Dropdown menu.
+class ThreadStockDropdownItem<T> {
   final T value;
   final String title;
   final String? subtitle;
   final IconData? icon;
 
-  const AtelierDropdownItem({
+  const ThreadStockDropdownItem({
     required this.value,
     required this.title,
     this.subtitle,
@@ -17,36 +17,36 @@ class AtelierDropdownItem<T> {
 }
 
 /// An optional footer action item at the bottom of the dropdown menu.
-class AtelierDropdownAction {
+class ThreadStockDropdownAction {
   final String label;
   final IconData icon;
   final VoidCallback onTap;
 
-  const AtelierDropdownAction({
+  const ThreadStockDropdownAction({
     required this.label,
     required this.icon,
     required this.onTap,
   });
 }
 
-/// A luxury atelier-styled dropdown menu adhering to ThreadStock's visual design.
+/// A ThreadStock-styled dropdown menu adhering to ThreadStock's visual design.
 ///
 /// Features:
 /// - Warm parchment pill trigger with custom prefix and arrow
 /// - Ivory floating card overlay with rounded corners and soft shadow
 /// - Rich item rows with icon badges, bold title, muted subtitle, and checkmark
 /// - Optional divider and footer action (e.g. "Manage locations")
-class AtelierDropdown<T> extends StatefulWidget {
+class ThreadStockDropdown<T> extends StatefulWidget {
   final T value;
-  final List<AtelierDropdownItem<T>> items;
+  final List<ThreadStockDropdownItem<T>> items;
   final ValueChanged<T> onChanged;
   final IconData? prefixIcon;
-  final String Function(AtelierDropdownItem<T> item)? triggerLabel;
-  final AtelierDropdownAction? footerAction;
+  final String Function(ThreadStockDropdownItem<T> item)? triggerLabel;
+  final ThreadStockDropdownAction? footerAction;
   final double menuWidth;
   final bool isBorderless;
 
-  const AtelierDropdown({
+  const ThreadStockDropdown({
     super.key,
     required this.value,
     required this.items,
@@ -59,13 +59,13 @@ class AtelierDropdown<T> extends StatefulWidget {
   });
 
   @override
-  State<AtelierDropdown<T>> createState() => _AtelierDropdownState<T>();
+  State<ThreadStockDropdown<T>> createState() => _ThreadStockDropdownState<T>();
 }
 
-class _AtelierDropdownState<T> extends State<AtelierDropdown<T>> {
+class _ThreadStockDropdownState<T> extends State<ThreadStockDropdown<T>> {
   final MenuController _controller = MenuController();
 
-  AtelierDropdownItem<T>? get _selectedItem {
+  ThreadStockDropdownItem<T>? get _selectedItem {
     for (final item in widget.items) {
       if (item.value == widget.value) return item;
     }
@@ -93,7 +93,9 @@ class _AtelierDropdownState<T> extends State<AtelierDropdown<T>> {
         backgroundColor: const WidgetStatePropertyAll(Color(0xFFFAF7F2)),
         surfaceTintColor: const WidgetStatePropertyAll(Colors.transparent),
         elevation: const WidgetStatePropertyAll(12),
-        shadowColor: WidgetStatePropertyAll(Colors.black.withValues(alpha: 0.12)),
+        shadowColor: WidgetStatePropertyAll(
+          Colors.black.withValues(alpha: 0.12),
+        ),
         shape: WidgetStatePropertyAll(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -118,17 +120,23 @@ class _AtelierDropdownState<T> extends State<AtelierDropdown<T>> {
             borderRadius: BorderRadius.circular(8),
             child: Container(
               height: 36,
-              padding: EdgeInsets.symmetric(horizontal: widget.isBorderless ? 4 : 10),
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.isBorderless ? 4 : 10,
+              ),
               decoration: widget.isBorderless
                   ? BoxDecoration(
-                      color: isOpen ? const Color(0xFFBA8A55).withValues(alpha: 0.08) : Colors.transparent,
+                      color: isOpen
+                          ? const Color(0xFFBA8A55).withValues(alpha: 0.08)
+                          : Colors.transparent,
                       borderRadius: BorderRadius.circular(6),
                     )
                   : BoxDecoration(
                       color: const Color(0xFFF3EDE3),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isOpen ? const Color(0xFFBA8A55) : const Color(0xFFDFD4C5),
+                        color: isOpen
+                            ? const Color(0xFFBA8A55)
+                            : const Color(0xFFDFD4C5),
                         width: 1.0,
                       ),
                     ),
@@ -150,8 +158,12 @@ class _AtelierDropdownState<T> extends State<AtelierDropdown<T>> {
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.inter(
                         fontSize: widget.isBorderless ? 14.5 : 13,
-                        fontWeight: widget.isBorderless ? FontWeight.w400 : FontWeight.w500,
-                        color: widget.isBorderless ? const Color(0xFF38332D) : const Color(0xFF1E1C1A),
+                        fontWeight: widget.isBorderless
+                            ? FontWeight.w400
+                            : FontWeight.w500,
+                        color: widget.isBorderless
+                            ? const Color(0xFF38332D)
+                            : const Color(0xFF1E1C1A),
                       ),
                     ),
                   ),
@@ -161,7 +173,9 @@ class _AtelierDropdownState<T> extends State<AtelierDropdown<T>> {
                         ? Icons.keyboard_arrow_up_rounded
                         : Icons.keyboard_arrow_down_rounded,
                     size: 18,
-                    color: widget.isBorderless ? const Color(0xFF5E574E) : const Color(0xFF1E1C1A),
+                    color: widget.isBorderless
+                        ? const Color(0xFF5E574E)
+                        : const Color(0xFF1E1C1A),
                   ),
                 ],
               ),
@@ -183,7 +197,11 @@ class _AtelierDropdownState<T> extends State<AtelierDropdown<T>> {
               if (widget.footerAction != null) ...[
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 4),
-                  child: Divider(color: Color(0xFFE5DACD), height: 1, thickness: 1),
+                  child: Divider(
+                    color: Color(0xFFE5DACD),
+                    height: 1,
+                    thickness: 1,
+                  ),
                 ),
                 _buildFooterRow(widget.footerAction!),
               ],
@@ -194,7 +212,7 @@ class _AtelierDropdownState<T> extends State<AtelierDropdown<T>> {
     );
   }
 
-  Widget _buildItemRow(AtelierDropdownItem<T> item, bool isSelected) {
+  Widget _buildItemRow(ThreadStockDropdownItem<T> item, bool isSelected) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -239,7 +257,9 @@ class _AtelierDropdownState<T> extends State<AtelierDropdown<T>> {
                       item.title,
                       style: GoogleFonts.inter(
                         fontSize: 13.5,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        fontWeight: isSelected
+                            ? FontWeight.w600
+                            : FontWeight.w500,
                         color: const Color(0xFF1E1C1A),
                       ),
                     ),
@@ -270,7 +290,7 @@ class _AtelierDropdownState<T> extends State<AtelierDropdown<T>> {
     );
   }
 
-  Widget _buildFooterRow(AtelierDropdownAction action) {
+  Widget _buildFooterRow(ThreadStockDropdownAction action) {
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -284,11 +304,7 @@ class _AtelierDropdownState<T> extends State<AtelierDropdown<T>> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           child: Row(
             children: [
-              Icon(
-                action.icon,
-                size: 17,
-                color: const Color(0xFF5E574E),
-              ),
+              Icon(action.icon, size: 17, color: const Color(0xFF5E574E)),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(

@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_theme.dart';
+import '../../../../core/navigation/navigation_guard.dart';
 
 class CheckEmailPage extends StatelessWidget {
   const CheckEmailPage({super.key, this.email});
@@ -111,7 +112,11 @@ class CheckEmailPage extends StatelessWidget {
                     child: ElevatedButton(
                       key: const Key('check_email_login_button'),
                       onPressed: () {
-                        Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+                        NavigationGuard.safePushReplacementNamed(
+                          context,
+                          AppRoutes.login,
+                          source: 'CheckEmailPage.returnToSignIn',
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ThreadStockTheme.champagne,

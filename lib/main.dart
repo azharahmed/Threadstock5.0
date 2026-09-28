@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
-import 'core/auth/auth_service.dart';
 import 'core/business/app_bootstrap_service.dart';
 import 'core/config/app_environment.dart';
-import 'features/onboarding/data/onboarding_repository.dart';
+import 'core/navigation/navigation_guard.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,13 +41,16 @@ class ThreadStockApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveRoute =
-        initialRoute ??
-        (AuthService.instance.isAuthenticated
-            ? (OnboardingRepository.instance.currentProgress.isOnboardingCompleted
-                ? AppRoutes.overview
-                : AppRoutes.onboarding)
-            : AppRoutes.login);
+    // The initialRoute from AppBootstrapService.bootstrap() is always
+    // authoritative — it was determined by a fresh Supabase query scoped
+    // to the resolved current business.
+    //
+    // The fallback (initialRoute == null) should only trigger if bootstrap
+    // failed catastrophically, in which case we route to login so the user
+    // can re-authenticate and get a fresh authoritative state. We never use
+    // the disk-cached onboarding progress as a fallback authority here,
+    // because the cache may belong to a different business.
+    final effectiveRoute = initialRoute ?? AppRoutes.login;
 
     return MaterialApp(
       title: 'ThreadStock',
@@ -58,6 +60,7 @@ class ThreadStockApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       initialRoute: effectiveRoute,
       onGenerateRoute: AppRouter.onGenerateRoute,
+      navigatorObservers: [NavigationGuard.observer],
     );
   }
 }

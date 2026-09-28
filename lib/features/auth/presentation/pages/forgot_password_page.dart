@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../app/router/app_router.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../core/auth/auth_service.dart';
+import '../../../../core/navigation/navigation_guard.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -44,9 +45,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       await AuthService.instance.resetPasswordForEmail(email: email);
 
       if (!mounted) return;
-      Navigator.of(context).pushReplacementNamed(
+      await NavigationGuard.safePushReplacementNamed(
+        context,
         AppRoutes.checkEmail,
         arguments: email,
+        source: 'ForgotPasswordPage._handleResetPassword',
       );
     } on AuthException catch (e) {
       if (mounted) {
@@ -303,7 +306,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         GestureDetector(
                           key: const Key('forgot_password_back_link'),
                           onTap: () {
-                            Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+                            NavigationGuard.safePushReplacementNamed(
+                              context,
+                              AppRoutes.login,
+                              source: 'ForgotPasswordPage.backToSignIn',
+                            );
                           },
                           child: Text(
                             'Back to Sign In',

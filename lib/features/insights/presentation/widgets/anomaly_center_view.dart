@@ -72,8 +72,8 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
       title: 'Shrinkage Spike Detected',
       description:
           'RFID system logged 12 missing physical units without a corresponding checkout sales transaction marker.',
-      productName: 'Silk Scarves (Scarlet / OS)',
-      location: 'Flagship Delhi (Zone B)',
+      productName: 'Apparel Line Item (Standard / OS)',
+      location: 'Flagship Store (Zone B)',
       timeAgo: '2 hours ago',
       severityLabel: 'HIGH',
       severityColor: Color(0xFFDC2626),
@@ -82,9 +82,9 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
       iconColor: Color(0xFFDC2626),
       iconBg: Color(0xFFFEE2E2),
       projectedLoss: '~ ₹84,000',
-      category: 'Accessories',
+      category: 'Apparel',
       detectedDate: 'Sep 15, 2026, 08:12 AM',
-      imageAsset: 'Assets/silk_scarves.jpg',
+      imageAsset: '',
       isNew: true,
     ),
     AnomalyItemData(
@@ -92,8 +92,8 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
       title: 'Out-of-Trend Demand Anomaly',
       description:
           'Unusual velocity burst observed. Sales velocity is currently 3x above forecasted model expectations.',
-      productName: 'Linen Blazers (Sand / L)',
-      location: 'Lucknow Boutique',
+      productName: 'Outerwear Line Item (Sand / L)',
+      location: 'Flagship Boutique',
       timeAgo: '4 hours ago',
       severityLabel: 'MEDIUM',
       severityColor: Color(0xFFB45309),
@@ -104,15 +104,15 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
       projectedLoss: '~ ₹42,500',
       category: 'Outerwear',
       detectedDate: 'Sep 15, 2026, 06:30 AM',
-      imageAsset: 'Assets/merino_wool_blazer.jpg',
+      imageAsset: '',
     ),
     AnomalyItemData(
       id: 'TS-ANM-20935',
       title: 'Receiving Discrepancy',
       description:
           'Carton scan mismatch during intake. Expected 40 physical units but invoice bill of lading counted 36 units.',
-      productName: 'Merino Wool Pullovers (Navy / M)',
-      location: 'Central Warehouse (Zone A)',
+      productName: 'Knitwear Line Item (Navy / M)',
+      location: 'Warehouse Hub A',
       timeAgo: '1 day ago',
       severityLabel: 'LOW',
       severityColor: Color(0xFF2563EB),
@@ -123,15 +123,15 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
       projectedLoss: '~ ₹18,200',
       category: 'Knitwear',
       detectedDate: 'Sep 14, 2026, 02:45 PM',
-      imageAsset: 'Assets/cashmere_sweater.jpg',
+      imageAsset: '',
     ),
     AnomalyItemData(
       id: 'TS-ANM-20929',
       title: 'Price Mismatch Detected',
       description:
           'Supplier invoice price for 15 units is 22% higher than contracted rate.',
-      productName: 'Oxford Linen Shirt (White / M)',
-      location: 'Mumbai Hub',
+      productName: 'Apparel Item (White / M)',
+      location: 'Secondary Hub',
       timeAgo: '1 day ago',
       severityLabel: 'HIGH',
       severityColor: Color(0xFFDC2626),
@@ -142,15 +142,14 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
       projectedLoss: '~ ₹26,400',
       category: 'Shirts',
       detectedDate: 'Sep 14, 2026, 11:15 AM',
-      imageAsset: 'Assets/oxford_linen_shirt.jpg',
+      imageAsset: '',
     ),
     AnomalyItemData(
       id: 'TS-ANM-20914',
       title: 'Duplicate Stock Entry',
-      description:
-          'Same GRN appears to be posted twice for 24 units.',
-      productName: 'Cashmere Cardigan (Grey / S)',
-      location: 'Central Warehouse (Zone A)',
+      description: 'Same GRN appears to be posted twice for 24 units.',
+      productName: 'Knitwear Item (Grey / S)',
+      location: 'Warehouse Hub A',
       timeAgo: '2 days ago',
       severityLabel: 'MEDIUM',
       severityColor: Color(0xFFB45309),
@@ -161,7 +160,7 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
       projectedLoss: '~ ₹34,800',
       category: 'Knitwear',
       detectedDate: 'Sep 13, 2026, 04:20 PM',
-      imageAsset: 'Assets/cashmere_sweater.jpg',
+      imageAsset: '',
     ),
   ];
 
@@ -210,17 +209,11 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Left Column: Active Anomalies List (~68% width)
-              Expanded(
-                flex: 68,
-                child: _buildActiveAnomaliesList(),
-              ),
+              Expanded(flex: 68, child: _buildActiveAnomaliesList()),
               const SizedBox(width: 22),
 
               // Right Column: Quick Inspection Panel (~32% width)
-              SizedBox(
-                width: 370,
-                child: _buildQuickInspectionPanel(),
-              ),
+              SizedBox(width: 370, child: _buildQuickInspectionPanel()),
             ],
           );
         },
@@ -345,13 +338,23 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
           const SizedBox(width: 10),
           _buildFilterDropdown(
             label: 'Type: $_selectedType',
-            options: const ['Discrepancies', 'Price Mismatch', 'Shrinkage', 'Demand Velocity'],
+            options: const [
+              'Discrepancies',
+              'Price Mismatch',
+              'Shrinkage',
+              'Demand Velocity',
+            ],
             onSelected: (val) => setState(() => _selectedType = val),
           ),
           const SizedBox(width: 10),
           _buildFilterDropdown(
             label: 'Location: $_selectedLocation',
-            options: const ['All Locations', 'Central Warehouse (Zone A)', 'Flagship Delhi', 'Mumbai Hub'],
+            options: const [
+              'All Locations',
+              'Warehouse Hub A',
+              'Flagship Store',
+              'Mumbai Hub',
+            ],
             onSelected: (val) => setState(() => _selectedLocation = val),
           ),
           const SizedBox(width: 10),
@@ -385,7 +388,10 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
               height: 36,
               child: Text(
                 opt,
-                style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF181513)),
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF181513),
+                ),
               ),
             ),
           )
@@ -436,7 +442,9 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
           color: isSelected ? const Color(0xFFFFFDFD) : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFFF87171) : const Color(0xFFE2E8F0),
+            color: isSelected
+                ? const Color(0xFFF87171)
+                : const Color(0xFFE2E8F0),
             width: isSelected ? 1.4 : 1.0,
           ),
           boxShadow: [
@@ -483,7 +491,10 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
                       if (item.isNew) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFFEE2E2),
                             borderRadius: BorderRadius.circular(4),
@@ -500,7 +511,10 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
                       ],
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: item.severityBg,
                           borderRadius: BorderRadius.circular(5),
@@ -614,7 +628,11 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildPageNavButton(
-              child: const Icon(Icons.chevron_left_rounded, size: 18, color: Color(0xFF64748B)),
+              child: const Icon(
+                Icons.chevron_left_rounded,
+                size: 18,
+                color: Color(0xFF64748B),
+              ),
               onTap: () {
                 if (_currentPage > 1) setState(() => _currentPage = 1);
               },
@@ -633,7 +651,11 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
             ),
             const SizedBox(width: 6),
             _buildPageNavButton(
-              child: const Icon(Icons.chevron_right_rounded, size: 18, color: Color(0xFF64748B)),
+              child: const Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: Color(0xFF64748B),
+              ),
               onTap: () {
                 if (_currentPage < 2) setState(() => _currentPage = 2);
               },
@@ -658,7 +680,9 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFB45309) : Colors.white,
           borderRadius: BorderRadius.circular(6),
-          border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
+          border: isSelected
+              ? null
+              : Border.all(color: const Color(0xFFE2E8F0)),
         ),
         child: Center(
           child: Text(
@@ -755,7 +779,11 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
                     item.imageAsset,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => const Center(
-                      child: Icon(Icons.checkroom_rounded, size: 28, color: Color(0xFFBA8A55)),
+                      child: Icon(
+                        Icons.checkroom_rounded,
+                        size: 28,
+                        color: Color(0xFFBA8A55),
+                      ),
                     ),
                   ),
                 ),
@@ -790,7 +818,12 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
           const SizedBox(height: 18),
 
           // Metadata Table
-          _buildInspectionMetaRow('Severity', item.severityLabel, isSeverity: true, statusValue: 'Open'),
+          _buildInspectionMetaRow(
+            'Severity',
+            item.severityLabel,
+            isSeverity: true,
+            statusValue: 'Open',
+          ),
           const SizedBox(height: 10),
           _buildInspectionMetaRow('Detected', item.detectedDate),
           const SizedBox(height: 10),
@@ -864,7 +897,9 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
               if (widget.onLaunchDeepInvestigation != null) {
                 widget.onLaunchDeepInvestigation!();
               } else {
-                _showNotification('Deep investigation launched for ${item.id}.');
+                _showNotification(
+                  'Deep investigation launched for ${item.id}.',
+                );
               }
             },
             borderRadius: BorderRadius.circular(8),
@@ -878,7 +913,11 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.search_rounded, size: 16, color: Colors.white),
+                  const Icon(
+                    Icons.search_rounded,
+                    size: 16,
+                    color: Colors.white,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Launch Deep Investigation',
@@ -896,7 +935,8 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
 
           // 2. Mute Anomaly Alert
           InkWell(
-            onTap: () => _showNotification('Anomaly alert muted for ${item.id}.'),
+            onTap: () =>
+                _showNotification('Anomaly alert muted for ${item.id}.'),
             borderRadius: BorderRadius.circular(8),
             child: Container(
               height: 40,
@@ -909,7 +949,11 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.notifications_off_outlined, size: 16, color: Color(0xFF181513)),
+                  const Icon(
+                    Icons.notifications_off_outlined,
+                    size: 16,
+                    color: Color(0xFF181513),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Mute Anomaly Alert',
@@ -927,7 +971,9 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
 
           // 3. View Related Transactions
           InkWell(
-            onTap: () => _showNotification('Opening transactions matching ${item.productName}.'),
+            onTap: () => _showNotification(
+              'Opening transactions matching ${item.productName}.',
+            ),
             borderRadius: BorderRadius.circular(8),
             child: Container(
               height: 40,
@@ -940,7 +986,11 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.description_outlined, size: 16, color: Color(0xFF181513)),
+                  const Icon(
+                    Icons.description_outlined,
+                    size: 16,
+                    color: Color(0xFF181513),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'View Related Transactions',
@@ -998,7 +1048,9 @@ class _AnomalyCenterViewState extends State<AnomalyCenterView> {
                 ),
                 const SizedBox(height: 10),
                 InkWell(
-                  onTap: () => _showNotification('Opening full AI mitigation recommendations.'),
+                  onTap: () => _showNotification(
+                    'Opening full AI mitigation recommendations.',
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

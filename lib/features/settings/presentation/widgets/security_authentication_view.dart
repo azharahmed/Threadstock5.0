@@ -7,10 +7,7 @@ import '../../../../core/responsive/desktop_layout.dart';
 class SecurityAuthenticationView extends StatefulWidget {
   final VoidCallback? onBackToSettings;
 
-  const SecurityAuthenticationView({
-    super.key,
-    this.onBackToSettings,
-  });
+  const SecurityAuthenticationView({super.key, this.onBackToSettings});
 
   @override
   State<SecurityAuthenticationView> createState() =>
@@ -54,8 +51,11 @@ class _SecurityAuthenticationViewState
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -298,9 +298,11 @@ class _SecurityAuthenticationViewState
                   value: _require2FA,
                   onChanged: (val) {
                     setState(() => _require2FA = val);
-                    _showFeedback(_require2FA
-                        ? 'Two-Factor Authentication enabled'
-                        : 'Two-Factor Authentication disabled');
+                    _showFeedback(
+                      _require2FA
+                          ? 'Two-Factor Authentication enabled'
+                          : 'Two-Factor Authentication disabled',
+                    );
                   },
                 ),
               ],
@@ -340,9 +342,11 @@ class _SecurityAuthenticationViewState
                   value: _enforceCustomPasswordPolicy,
                   onChanged: (val) {
                     setState(() => _enforceCustomPasswordPolicy = val);
-                    _showFeedback(_enforceCustomPasswordPolicy
-                        ? 'Custom password policy enforced'
-                        : 'Custom password policy relaxed');
+                    _showFeedback(
+                      _enforceCustomPasswordPolicy
+                          ? 'Custom password policy enforced'
+                          : 'Custom password policy relaxed',
+                    );
                   },
                 ),
               ],
@@ -357,7 +361,10 @@ class _SecurityAuthenticationViewState
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: const Color(0xFFEFE6DA)),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 child: Column(
                   children: [
                     // Sub-item 1: Minimum Character Length
@@ -386,20 +393,39 @@ class _SecurityAuthenticationViewState
                           initialValue: _minCharLength,
                           onSelected: (val) {
                             setState(() => _minCharLength = val);
-                            _showFeedback('Minimum password length set to $val characters');
+                            _showFeedback(
+                              'Minimum password length set to $val characters',
+                            );
                           },
                           itemBuilder: (ctx) => [
-                            const PopupMenuItem(value: 8, child: Text('8 Characters')),
-                            const PopupMenuItem(value: 10, child: Text('10 Characters')),
-                            const PopupMenuItem(value: 12, child: Text('12 Characters')),
-                            const PopupMenuItem(value: 16, child: Text('16 Characters')),
+                            const PopupMenuItem(
+                              value: 8,
+                              child: Text('8 Characters'),
+                            ),
+                            const PopupMenuItem(
+                              value: 10,
+                              child: Text('10 Characters'),
+                            ),
+                            const PopupMenuItem(
+                              value: 12,
+                              child: Text('12 Characters'),
+                            ),
+                            const PopupMenuItem(
+                              value: 16,
+                              child: Text('16 Characters'),
+                            ),
                           ],
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFEDE4D8),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFFE2D8CC)),
+                              border: Border.all(
+                                color: const Color(0xFFE2D8CC),
+                              ),
                             ),
                             child: Text(
                               '$_minCharLength Characters',
@@ -593,14 +619,29 @@ class _SecurityAuthenticationViewState
                     _showFeedback('Session auto-logout set to $val');
                   },
                   itemBuilder: (ctx) => [
-                    const PopupMenuItem(value: '15 Minutes', child: Text('15 Minutes')),
-                    const PopupMenuItem(value: '30 Minutes', child: Text('30 Minutes')),
+                    const PopupMenuItem(
+                      value: '15 Minutes',
+                      child: Text('15 Minutes'),
+                    ),
+                    const PopupMenuItem(
+                      value: '30 Minutes',
+                      child: Text('30 Minutes'),
+                    ),
                     const PopupMenuItem(value: '1 Hour', child: Text('1 Hour')),
-                    const PopupMenuItem(value: '2 Hours', child: Text('2 Hours')),
-                    const PopupMenuItem(value: '4 Hours', child: Text('4 Hours')),
+                    const PopupMenuItem(
+                      value: '2 Hours',
+                      child: Text('2 Hours'),
+                    ),
+                    const PopupMenuItem(
+                      value: '4 Hours',
+                      child: Text('4 Hours'),
+                    ),
                   ],
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
@@ -702,7 +743,9 @@ class _SecurityAuthenticationViewState
           style: GoogleFonts.inter(
             fontSize: 12.5,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? const Color(0xFF181513) : const Color(0xFF6E665B),
+            color: isSelected
+                ? const Color(0xFF181513)
+                : const Color(0xFF6E665B),
           ),
         ),
       ),
@@ -793,9 +836,11 @@ class _SecurityAuthenticationViewState
                   value: _ipAllowlistRestriction,
                   onChanged: (val) {
                     setState(() => _ipAllowlistRestriction = val);
-                    _showFeedback(_ipAllowlistRestriction
-                        ? 'IP Allowlist restriction activated'
-                        : 'IP Allowlist restriction paused');
+                    _showFeedback(
+                      _ipAllowlistRestriction
+                          ? 'IP Allowlist restriction activated'
+                          : 'IP Allowlist restriction paused',
+                    );
                   },
                 ),
               ],
@@ -815,7 +860,10 @@ class _SecurityAuthenticationViewState
                 isDense: true,
                 filled: true,
                 fillColor: const Color(0xFFFAF7F2),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                   borderSide: const BorderSide(color: Color(0xFFE2D8CC)),
@@ -826,7 +874,10 @@ class _SecurityAuthenticationViewState
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFFBA8A55), width: 1.5),
+                  borderSide: const BorderSide(
+                    color: Color(0xFFBA8A55),
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),
@@ -862,9 +913,11 @@ class _SecurityAuthenticationViewState
                   value: _restrictOfficeHours,
                   onChanged: (val) {
                     setState(() => _restrictOfficeHours = val);
-                    _showFeedback(_restrictOfficeHours
-                        ? 'Office hour login restrictions enabled'
-                        : 'Office hour login restrictions disabled');
+                    _showFeedback(
+                      _restrictOfficeHours
+                          ? 'Office hour login restrictions enabled'
+                          : 'Office hour login restrictions disabled',
+                    );
                   },
                 ),
               ],
@@ -956,11 +1009,17 @@ class _SecurityAuthenticationViewState
                 ),
                 const SizedBox(width: 10),
                 OutlinedButton(
-                  onPressed: () => _showFeedback('Viewing comprehensive security logs'),
+                  onPressed: () =>
+                      _showFeedback('Viewing comprehensive security logs'),
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFE2D8CC)),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                   ),
                   child: Text(
                     'View All →',
@@ -977,32 +1036,32 @@ class _SecurityAuthenticationViewState
 
             // 4 Login Activity Rows
             _buildLoginRow(
-              name: 'Alex Mercer',
+              name: 'Admin User',
               device: 'MacBook Pro — Chrome',
               time: '10 mins ago',
               status: 'Success',
               isSuccess: true,
-              imagePath: 'Assets/alex_mercer.jpg',
+              imagePath: '',
             ),
             const Divider(height: 18, color: Color(0xFFF4ECE1)),
 
             _buildLoginRow(
-              name: 'Priya Sharma',
+              name: 'Operations Lead',
               device: 'iPad Central POS',
               time: '1 hour ago',
               status: 'Success',
               isSuccess: true,
-              imagePath: 'Assets/priya_nair.jpg',
+              imagePath: '',
             ),
             const Divider(height: 18, color: Color(0xFFF4ECE1)),
 
             _buildLoginRow(
-              name: 'Sarah Connor',
+              name: 'Procurement Lead',
               device: 'iPhone 15 — Mobile App',
               time: '4 hours ago',
               status: 'Success',
               isSuccess: true,
-              imagePath: 'Assets/emma_carter.jpg',
+              imagePath: '',
             ),
             const Divider(height: 18, color: Color(0xFFF4ECE1)),
 
@@ -1046,7 +1105,7 @@ class _SecurityAuthenticationViewState
                     size: 20,
                   )
                 : Image.asset(
-                    imagePath ?? 'Assets/alex_mercer.jpg',
+                    imagePath ?? '',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Center(
                       child: Text(
@@ -1105,7 +1164,9 @@ class _SecurityAuthenticationViewState
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               decoration: BoxDecoration(
-                color: isSuccess ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE),
+                color: isSuccess
+                    ? const Color(0xFFE8F5E9)
+                    : const Color(0xFFFFEBEE),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
@@ -1113,7 +1174,9 @@ class _SecurityAuthenticationViewState
                 style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                  color: isSuccess ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                  color: isSuccess
+                      ? const Color(0xFF2E7D32)
+                      : const Color(0xFFC62828),
                 ),
               ),
             ),
@@ -1124,12 +1187,22 @@ class _SecurityAuthenticationViewState
         PopupMenuButton<String>(
           onSelected: (val) => _showFeedback('$val for $name'),
           itemBuilder: (ctx) => [
-            const PopupMenuItem(value: 'Inspect Session', child: Text('Inspect Session')),
-            const PopupMenuItem(value: 'Revoke Access', child: Text('Revoke Access')),
+            const PopupMenuItem(
+              value: 'Inspect Session',
+              child: Text('Inspect Session'),
+            ),
+            const PopupMenuItem(
+              value: 'Revoke Access',
+              child: Text('Revoke Access'),
+            ),
           ],
           child: const Padding(
             padding: EdgeInsets.all(4),
-            child: Icon(Icons.more_horiz_rounded, size: 18, color: Color(0xFF7E766B)),
+            child: Icon(
+              Icons.more_horiz_rounded,
+              size: 18,
+              color: Color(0xFF7E766B),
+            ),
           ),
         ),
       ],

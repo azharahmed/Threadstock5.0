@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/responsive/desktop_layout.dart';
 
+import '../../../inventory/data/location_repository.dart';
+
 class LocationNodeData {
   final String id;
   final String name;
@@ -47,10 +49,7 @@ class LocationNodeData {
 }
 
 class LocationsView extends StatefulWidget {
-  const LocationsView({
-    super.key,
-    this.onAddLocation,
-  });
+  const LocationsView({super.key, this.onAddLocation});
 
   final VoidCallback? onAddLocation;
 
@@ -59,86 +58,74 @@ class LocationsView extends StatefulWidget {
 }
 
 class _LocationsViewState extends State<LocationsView> {
-  final List<LocationNodeData> _nodes = const [
-    LocationNodeData(
-      id: 'central_store',
-      name: 'Central Store',
-      isPrimary: true,
-      type: 'Flagship Retail',
-      cityRegion: 'Bengaluru',
-      inventory: '14,200 SKUs',
-      staff: '12 members',
-      status: 'Active',
-      code: 'BLR-CTRL-01',
-      currency: 'INR (₹)',
-      taxClass: 'CGST + SGST (18%)',
-      fullAddress: 'Bengaluru, Karnataka',
-      timezone: 'IST (GMT+5:30)',
-      description: 'Flagship retail location and main customer-facing store.',
-      imagePath: 'Assets/central_store.jpg',
-      totalSkus: 14200,
-      staffMembers: 12,
-      permissions: [
-        'Allow direct point-of-sale checkout',
-        'Allow internal stock replenishment',
-        'Allow receiving from outside suppliers',
-      ],
-    ),
-    LocationNodeData(
-      id: 'mg_road_store',
-      name: 'MG Road Store',
-      isPrimary: false,
-      type: 'Retail Outlet',
-      cityRegion: 'Bengaluru',
-      inventory: '8,450 SKUs',
-      staff: '6 members',
-      status: 'Active',
-      code: 'BLR-MGRD-02',
-      currency: 'INR (₹)',
-      taxClass: 'CGST + SGST (18%)',
-      fullAddress: 'Bengaluru, Karnataka',
-      timezone: 'IST (GMT+5:30)',
-      description: 'Downtown commercial boutique catering to walk-in foot traffic.',
-      imagePath: 'Assets/central_store.jpg',
-      totalSkus: 8450,
-      staffMembers: 6,
-      permissions: [
-        'Allow direct point-of-sale checkout',
-        'Allow internal stock replenishment',
-      ],
-    ),
-    LocationNodeData(
-      id: 'main_warehouse',
-      name: 'Main Warehouse',
-      isPrimary: false,
-      type: 'Storage Node',
-      cityRegion: 'Delhi NCR',
-      inventory: '42,800 SKUs',
-      staff: '18 members',
-      status: 'Active',
-      code: 'DEL-WHSE-01',
-      currency: 'INR (₹)',
-      taxClass: 'IGST (18%)',
-      fullAddress: 'Gurugram, Delhi NCR',
-      timezone: 'IST (GMT+5:30)',
-      description: 'Central distribution center and high-density textile staging depot.',
-      imagePath: 'Assets/central_store.jpg',
-      totalSkus: 42800,
-      staffMembers: 18,
-      permissions: [
-        'Allow internal stock replenishment',
-        'Allow receiving from outside suppliers',
-        'Automated bulk dispatch handling',
-      ],
-    ),
-  ];
-
-  late String _selectedNodeId;
+  List<LocationNodeData> _nodes = const [];
+  String? _selectedNodeId;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _selectedNodeId = _nodes.first.id;
+    _loadLocations();
+  }
+
+  Future<void> _loadLocations() async {
+    try {
+      final repo = LocationRepository();
+      final bizId = await repo.resolveCurrentBusinessId();
+      final locs = await repo.getLocations(businessId: bizId);
+      if (!mounted) return;
+      if (locs.isNotEmpty) {
+        setState(() {
+          _nodes = locs.map((l) {
+            final addr = [
+              l.streetAddress,
+              l.city,
+              l.postalCode,
+            ].where((s) => s != null && s.isNotEmpty).join(', ');
+            return LocationNodeData(
+              id: l.id,
+              name: l.name,
+              isPrimary: false,
+              type: l.locationType.isNotEmpty ? l.locationType : 'Storage Node',
+              cityRegion: (l.city != null && l.city!.isNotEmpty)
+                  ? l.city!
+                  : 'Regional',
+              inventory: '1 SKU',
+              staff: '1 member',
+              status: l.status.isNotEmpty
+                  ? (l.status[0].toUpperCase() + l.status.substring(1))
+                  : 'Active',
+              code: l.id.length > 8
+                  ? l.id.substring(0, 8).toUpperCase()
+                  : l.id.toUpperCase(),
+              currency: 'INR (₹)',
+              taxClass: 'GST (18%)',
+              fullAddress: addr.isNotEmpty ? addr : 'Address not specified',
+              timezone: 'IST (GMT+5:30)',
+              description: 'Operational inventory node.',
+              imagePath: '',
+              totalSkus: 1,
+              staffMembers: 1,
+              permissions: const [
+                'Allow direct point-of-sale checkout',
+                'Allow internal stock replenishment',
+                'Allow receiving from outside suppliers',
+              ],
+            );
+          }).toList();
+          _selectedNodeId = _nodes.first.id;
+          _isLoading = false;
+        });
+        return;
+      }
+    } catch (_) {}
+    if (mounted) {
+      setState(() {
+        _nodes = const [];
+        _selectedNodeId = null;
+        _isLoading = false;
+      });
+    }
   }
 
   void _showFeedback(String message) {
@@ -146,7 +133,11 @@ class _LocationsViewState extends State<LocationsView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -191,37 +182,69 @@ class _LocationsViewState extends State<LocationsView> {
             children: [
               Text(
                 'Location Name',
-                style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500, color: const Color(0xFF474035)),
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF474035),
+                ),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
                   hintText: 'e.g. Bandra Boutique',
-                  hintStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9E958A)),
+                  hintStyle: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF9E958A),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFDFD4C5))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFDFD4C5))),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFFDFD4C5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFFDFD4C5)),
+                  ),
                 ),
               ),
               const SizedBox(height: 14),
               Text(
                 'City / Region',
-                style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500, color: const Color(0xFF474035)),
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF474035),
+                ),
               ),
               const SizedBox(height: 6),
               TextField(
                 controller: cityController,
                 decoration: InputDecoration(
-                  hintText: 'e.g. Mumbai, Maharashtra',
-                  hintStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF9E958A)),
+                  hintText: 'e.g. Downtown Flagship, State',
+                  hintStyle: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF9E958A),
+                  ),
                   filled: true,
                   fillColor: Colors.white,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFDFD4C5))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: Color(0xFFDFD4C5))),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFFDFD4C5)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFFDFD4C5)),
+                  ),
                 ),
               ),
             ],
@@ -232,7 +255,10 @@ class _LocationsViewState extends State<LocationsView> {
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'Cancel',
-              style: GoogleFonts.inter(color: const Color(0xFF6E665B), fontWeight: FontWeight.w500),
+              style: GoogleFonts.inter(
+                color: const Color(0xFF6E665B),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           ElevatedButton(
@@ -242,11 +268,16 @@ class _LocationsViewState extends State<LocationsView> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF382718),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: Text(
               'Create Node',
-              style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.w600),
+              style: GoogleFonts.inter(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -256,6 +287,55 @@ class _LocationsViewState extends State<LocationsView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_nodes.isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: DesktopContentConstraint(
+          verticalPadding: 20,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 48),
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.storefront_outlined,
+                      size: 48,
+                      color: Color(0xFF9E958A),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No operational nodes configured',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF181513),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Add a store, warehouse, or distribution facility to begin tracking inventory allocations.',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: const Color(0xFF7A7268),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     final selectedNode = _nodes.firstWhere(
       (n) => n.id == _selectedNodeId,
       orElse: () => _nodes.first,
@@ -269,7 +349,7 @@ class _LocationsViewState extends State<LocationsView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Row: Operational Nodes + 3 SYSTEM NODES pill + [+ Add Location]
+              // Header Row: Operational Nodes + SYSTEM NODES pill + [+ Add Location]
               _buildHeader(),
               const SizedBox(height: 24),
 
@@ -278,17 +358,11 @@ class _LocationsViewState extends State<LocationsView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Left Table Area
-                  Expanded(
-                    flex: 14,
-                    child: _buildNodesTableCard(),
-                  ),
+                  Expanded(flex: 14, child: _buildNodesTableCard()),
                   const SizedBox(width: 24),
 
                   // Right Detail Card
-                  Expanded(
-                    flex: 9,
-                    child: _buildNodeDetailPanel(selectedNode),
-                  ),
+                  Expanded(flex: 9, child: _buildNodeDetailPanel(selectedNode)),
                 ],
               ),
               const SizedBox(height: 40),
@@ -326,14 +400,17 @@ class _LocationsViewState extends State<LocationsView> {
                   ),
                   const SizedBox(width: 14),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEAF1F9),
                       borderRadius: BorderRadius.circular(6),
                       border: Border.all(color: const Color(0xFFD4E3F3)),
                     ),
                     child: Text(
-                      '3 SYSTEM NODES',
+                      '${_nodes.length} SYSTEM NODE${_nodes.length == 1 ? '' : 'S'}',
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -380,11 +457,7 @@ class _LocationsViewState extends State<LocationsView> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.add,
-                    size: 17,
-                    color: Colors.white,
-                  ),
+                  const Icon(Icons.add, size: 17, color: Colors.white),
                   const SizedBox(width: 6),
                   Text(
                     'Add Location',
@@ -426,7 +499,10 @@ class _LocationsViewState extends State<LocationsView> {
             children: [
               // Table Header
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: const BoxDecoration(
                   border: Border(
                     bottom: BorderSide(color: Color(0xFFEBE2D5), width: 1.0),
@@ -516,15 +592,26 @@ class _LocationsViewState extends State<LocationsView> {
                     setState(() => _selectedNodeId = node.id);
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFFFFF9EE) : Colors.white,
+                      color: isSelected
+                          ? const Color(0xFFFFF9EE)
+                          : Colors.white,
                       border: Border(
                         bottom: isLast
                             ? BorderSide.none
-                            : const BorderSide(color: Color(0xFFF1EAE0), width: 1.0),
+                            : const BorderSide(
+                                color: Color(0xFFF1EAE0),
+                                width: 1.0,
+                              ),
                         left: isSelected
-                            ? const BorderSide(color: Color(0xFFBA8A55), width: 3.0)
+                            ? const BorderSide(
+                                color: Color(0xFFBA8A55),
+                                width: 3.0,
+                              )
                             : BorderSide.none,
                       ),
                     ),
@@ -547,9 +634,11 @@ class _LocationsViewState extends State<LocationsView> {
                                 child: Icon(
                                   node.isPrimary
                                       ? Icons.storefront_outlined
-                                      : (node.type.contains('Warehouse') || node.type.contains('Storage')
-                                          ? Icons.home_work_outlined
-                                          : Icons.store_mall_directory_outlined),
+                                      : (node.type.contains('Warehouse') ||
+                                                node.type.contains('Storage')
+                                            ? Icons.home_work_outlined
+                                            : Icons
+                                                  .store_mall_directory_outlined),
                                   size: 17,
                                   color: isSelected
                                       ? const Color(0xFFBA8A55)
@@ -590,10 +679,15 @@ class _LocationsViewState extends State<LocationsView> {
                                     if (node.isPrimary) ...[
                                       const SizedBox(height: 3),
                                       Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 1.5,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: const Color(0xFFFBF2DC),
-                                          borderRadius: BorderRadius.circular(4),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
                                         ),
                                         child: Text(
                                           'Primary',
@@ -681,7 +775,10 @@ class _LocationsViewState extends State<LocationsView> {
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFE8F5E9),
                                   borderRadius: BorderRadius.circular(12),
@@ -733,10 +830,7 @@ class _LocationsViewState extends State<LocationsView> {
           if (constraints.maxWidth < 620) {
             return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: 620,
-                child: tableWidget,
-              ),
+              child: SizedBox(width: 620, child: tableWidget),
             );
           }
           return tableWidget;
@@ -788,10 +882,14 @@ class _LocationsViewState extends State<LocationsView> {
                 ),
               ),
               InkWell(
-                onTap: () => _showFeedback('Editing location details for ${node.name}.'),
+                onTap: () =>
+                    _showFeedback('Editing location details for ${node.name}.'),
                 borderRadius: BorderRadius.circular(6),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(6),
@@ -854,7 +952,11 @@ class _LocationsViewState extends State<LocationsView> {
                 errorBuilder: (context, error, stackTrace) => Container(
                   color: const Color(0xFFFAF7F2),
                   child: const Center(
-                    child: Icon(Icons.storefront_outlined, size: 36, color: Color(0xFFBA8A55)),
+                    child: Icon(
+                      Icons.storefront_outlined,
+                      size: 36,
+                      color: Color(0xFFBA8A55),
+                    ),
                   ),
                 ),
               ),
@@ -863,15 +965,35 @@ class _LocationsViewState extends State<LocationsView> {
           const SizedBox(height: 16),
 
           // Key-Value Metadata List
-          _buildDetailRow('Location Code', node.code, valueColor: const Color(0xFF181513)),
+          _buildDetailRow(
+            'Location Code',
+            node.code,
+            valueColor: const Color(0xFF181513),
+          ),
           const SizedBox(height: 9),
-          _buildDetailRow('Core Currency', node.currency, valueColor: const Color(0xFF9A6A2F)),
+          _buildDetailRow(
+            'Core Currency',
+            node.currency,
+            valueColor: const Color(0xFF9A6A2F),
+          ),
           const SizedBox(height: 9),
-          _buildDetailRow('Assigned Tax Class', node.taxClass, valueColor: const Color(0xFF181513)),
+          _buildDetailRow(
+            'Assigned Tax Class',
+            node.taxClass,
+            valueColor: const Color(0xFF181513),
+          ),
           const SizedBox(height: 9),
-          _buildDetailRow('City / Region', node.fullAddress, valueColor: const Color(0xFF181513)),
+          _buildDetailRow(
+            'City / Region',
+            node.fullAddress,
+            valueColor: const Color(0xFF181513),
+          ),
           const SizedBox(height: 9),
-          _buildDetailRow('Time Zone', node.timezone, valueColor: const Color(0xFF181513)),
+          _buildDetailRow(
+            'Time Zone',
+            node.timezone,
+            valueColor: const Color(0xFF181513),
+          ),
           const SizedBox(height: 16),
 
           // Explicit Operation Permissions Card
@@ -942,7 +1064,10 @@ class _LocationsViewState extends State<LocationsView> {
               // Total SKUs
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFAF8F5),
                     borderRadius: BorderRadius.circular(8),
@@ -961,7 +1086,10 @@ class _LocationsViewState extends State<LocationsView> {
                           const SizedBox(width: 6),
                           Flexible(
                             child: Text(
-                              node.totalSkus.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'),
+                              node.totalSkus.toString().replaceAllMapped(
+                                RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                                (Match m) => '${m[1]},',
+                              ),
                               overflow: TextOverflow.ellipsis,
                               maxLines: 1,
                               style: GoogleFonts.inter(
@@ -990,7 +1118,10 @@ class _LocationsViewState extends State<LocationsView> {
               // Staff Members
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFAF8F5),
                     borderRadius: BorderRadius.circular(8),
@@ -1038,7 +1169,10 @@ class _LocationsViewState extends State<LocationsView> {
               // Node Status
               Expanded(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFAF8F5),
                     borderRadius: BorderRadius.circular(8),
@@ -1086,7 +1220,9 @@ class _LocationsViewState extends State<LocationsView> {
 
           // [⚙ Edit Location Settings] Full-width Button
           InkWell(
-            onTap: () => _showFeedback('Opening settings configuration for ${node.name}...'),
+            onTap: () => _showFeedback(
+              'Opening settings configuration for ${node.name}...',
+            ),
             borderRadius: BorderRadius.circular(8),
             child: Container(
               width: double.infinity,
@@ -1123,7 +1259,9 @@ class _LocationsViewState extends State<LocationsView> {
           InkWell(
             onTap: () {
               if (node.isPrimary) {
-                _showFeedback('Primary node cannot be deactivated while operational.');
+                _showFeedback(
+                  'Primary node cannot be deactivated while operational.',
+                );
               } else {
                 _showFeedback('${node.name} node decommission queued.');
               }

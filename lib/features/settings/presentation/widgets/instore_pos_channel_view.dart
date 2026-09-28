@@ -21,10 +21,7 @@ class PosLocationAssignment {
 class InStorePosChannelView extends StatefulWidget {
   final VoidCallback? onBackToChannels;
 
-  const InStorePosChannelView({
-    super.key,
-    this.onBackToChannels,
-  });
+  const InStorePosChannelView({super.key, this.onBackToChannels});
 
   @override
   State<InStorePosChannelView> createState() => _InStorePosChannelViewState();
@@ -55,14 +52,14 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
     super.initState();
     _locations = [
       PosLocationAssignment(
-        id: 'central_warehouse',
-        name: 'Central Warehouse (Zone A)',
+        id: 'main_facility',
+        name: 'Main Facility (Zone A)',
         stockCount: 14200,
         isEnabled: true,
       ),
       PosLocationAssignment(
-        id: 'delhi_hub',
-        name: 'Delhi Flagship Hub',
+        id: 'retail_hub',
+        name: 'Regional Retail Hub',
         stockCount: 3450,
         isEnabled: true,
       ),
@@ -80,8 +77,11 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -103,8 +103,9 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           title: Text(
             'Disconnect In-Store POS?',
             style: GoogleFonts.cormorantGaramond(
@@ -141,7 +142,8 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
                 backgroundColor: const Color(0xFFD32F2F),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: Text(
                 'Disconnect',
@@ -161,8 +163,9 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           title: Text(
             'Assign Location to POS',
             style: GoogleFonts.cormorantGaramond(
@@ -189,8 +192,10 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
                 decoration: InputDecoration(
                   hintText: 'e.g. Bengaluru Retail Boutique',
                   isDense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: const BorderSide(color: Color(0xFFE2D8CC)),
@@ -232,7 +237,8 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
                 backgroundColor: const Color(0xFF1E1C1A),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: Text(
                 'Add Location',
@@ -342,8 +348,10 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFFAF2E6),
                   shape: BoxShape.circle,
-                  border:
-                      Border.all(color: const Color(0xFFE8DDD0), width: 1.2),
+                  border: Border.all(
+                    color: const Color(0xFFE8DDD0),
+                    width: 1.2,
+                  ),
                 ),
                 child: const Icon(
                   Icons.storefront_outlined,
@@ -370,7 +378,9 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
                         const SizedBox(width: 12),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: _isConnected
                                 ? const Color(0xFFE8F5E9)
@@ -443,8 +453,9 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
             side: const BorderSide(color: Color(0xFFF3C8C8)),
             backgroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         ),
       ],
@@ -524,8 +535,11 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
                 const SizedBox(width: 10),
                 OutlinedButton.icon(
                   onPressed: _showAddLocationDialog,
-                  icon: const Icon(Icons.add_rounded,
-                      size: 15, color: Color(0xFF181513)),
+                  icon: const Icon(
+                    Icons.add_rounded,
+                    size: 15,
+                    color: Color(0xFF181513),
+                  ),
                   label: Text(
                     'Add Location',
                     style: GoogleFonts.inter(
@@ -537,9 +551,12 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFFE2D8CC)),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6)),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
                   ),
                 ),
               ],
@@ -562,9 +579,11 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
     return InkWell(
       onTap: () {
         setState(() => loc.isEnabled = !loc.isEnabled);
-        _showFeedback(loc.isEnabled
-            ? 'Linked ${loc.name} to POS channel'
-            : 'Unlinked ${loc.name} from POS channel');
+        _showFeedback(
+          loc.isEnabled
+              ? 'Linked ${loc.name} to POS channel'
+              : 'Unlinked ${loc.name} from POS channel',
+        );
       },
       borderRadius: BorderRadius.circular(8),
       child: Padding(
@@ -601,8 +620,7 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
                 loc.name,
                 style: GoogleFonts.inter(
                   fontSize: 13.5,
-                  fontWeight:
-                      loc.isEnabled ? FontWeight.w600 : FontWeight.w500,
+                  fontWeight: loc.isEnabled ? FontWeight.w600 : FontWeight.w500,
                   color: const Color(0xFF181513),
                 ),
               ),
@@ -709,9 +727,11 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
               value: _cashTransactions,
               onChanged: (val) {
                 setState(() => _cashTransactions = val);
-                _showFeedback(_cashTransactions
-                    ? 'Cash transactions enabled'
-                    : 'Cash transactions disabled');
+                _showFeedback(
+                  _cashTransactions
+                      ? 'Cash transactions enabled'
+                      : 'Cash transactions disabled',
+                );
               },
             ),
             const Divider(height: 20, color: Color(0xFFF4ECE1)),
@@ -723,9 +743,11 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
               value: _cardSwipeTap,
               onChanged: (val) {
                 setState(() => _cardSwipeTap = val);
-                _showFeedback(_cardSwipeTap
-                    ? 'Card swipe & tap enabled'
-                    : 'Card swipe & tap disabled');
+                _showFeedback(
+                  _cardSwipeTap
+                      ? 'Card swipe & tap enabled'
+                      : 'Card swipe & tap disabled',
+                );
               },
             ),
             const Divider(height: 20, color: Color(0xFFF4ECE1)),
@@ -738,9 +760,11 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
               value: _upiQrScan,
               onChanged: (val) {
                 setState(() => _upiQrScan = val);
-                _showFeedback(_upiQrScan
-                    ? 'UPI & QR scan enabled'
-                    : 'UPI & QR scan disabled');
+                _showFeedback(
+                  _upiQrScan
+                      ? 'UPI & QR scan enabled'
+                      : 'UPI & QR scan disabled',
+                );
               },
             ),
             const Divider(height: 20, color: Color(0xFFF4ECE1)),
@@ -752,9 +776,11 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
               value: _storeCredit,
               onChanged: (val) {
                 setState(() => _storeCredit = val);
-                _showFeedback(_storeCredit
-                    ? 'Store credit redemption enabled'
-                    : 'Store credit redemption disabled');
+                _showFeedback(
+                  _storeCredit
+                      ? 'Store credit redemption enabled'
+                      : 'Store credit redemption disabled',
+                );
               },
             ),
           ],
@@ -912,9 +938,11 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
                   value: _autoPrintReceipt,
                   onChanged: (val) {
                     setState(() => _autoPrintReceipt = val);
-                    _showFeedback(_autoPrintReceipt
-                        ? 'Auto-print receipts enabled'
-                        : 'Auto-print receipts disabled');
+                    _showFeedback(
+                      _autoPrintReceipt
+                          ? 'Auto-print receipts enabled'
+                          : 'Auto-print receipts disabled',
+                    );
                   },
                 ),
               ],
@@ -954,9 +982,11 @@ class _InStorePosChannelViewState extends State<InStorePosChannelView> {
                   value: _enableDigitalEmailReceipts,
                   onChanged: (val) {
                     setState(() => _enableDigitalEmailReceipts = val);
-                    _showFeedback(_enableDigitalEmailReceipts
-                        ? 'Digital email receipts enabled'
-                        : 'Digital email receipts disabled');
+                    _showFeedback(
+                      _enableDigitalEmailReceipts
+                          ? 'Digital email receipts enabled'
+                          : 'Digital email receipts disabled',
+                    );
                   },
                 ),
               ],

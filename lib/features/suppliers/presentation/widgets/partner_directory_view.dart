@@ -1,6 +1,7 @@
-// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import '../../../inventory/data/supplier_repository.dart';
 
 class SupplierDirectoryItem {
   SupplierDirectoryItem({
@@ -16,12 +17,12 @@ class SupplierDirectoryItem {
     required this.statusColor,
     required this.rating,
     this.isPreferred = false,
-    this.contactName = 'Giovanni Rossi',
-    this.contactRole = 'Sales Representative',
-    this.email = 'contact@supplier.com',
-    this.phone = '+39 02 4859 201',
-    this.address = 'Industrial Zone, Milan, Italy',
-    this.website = 'www.supplier.com',
+    this.contactName = 'Not provided',
+    this.contactRole = 'Not provided',
+    this.email = 'Not provided',
+    this.phone = 'Not provided',
+    this.address = 'Not provided',
+    this.website = 'Not provided',
     this.recentOrders = const [],
     this.isSelected = false,
   });
@@ -86,208 +87,75 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
   String _selectedSort = 'Sort by: Name';
   int _currentPage = 1;
 
-  late final List<SupplierDirectoryItem> _suppliers;
-  late SupplierDirectoryItem _selectedPartner;
+  final SupplierRepository _supplierRepository = SupplierRepository();
+  List<SupplierDirectoryItem> _suppliers = [];
+  SupplierDirectoryItem? _selectedPartner;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _suppliers = [
-      SupplierDirectoryItem(
-        id: 'TS-SUPP-0421',
-        name: 'Milano Tessuti',
-        location: 'Milan, Italy',
-        initials: 'MT',
-        category: 'Fabrics',
-        leadTime: '18 Days',
-        activePos: '3 Active',
-        status: 'Preferred',
-        statusBg: const Color(0xFFDCFCE7),
-        statusColor: const Color(0xFF15803D),
-        rating: 5,
-        isPreferred: true,
-        contactName: 'Giovanni Rossi',
-        contactRole: 'Sales Representative',
-        email: 'giovanni.rossi@milanotessuti.it',
-        phone: '+39 02 4859 201',
-        address: 'Via della Spiga 12, Milan, Italy',
-        website: 'www.milanotessuti.it',
-        isSelected: true,
-        recentOrders: const [
-          SupplierOrderSummary(
-            poNumber: 'PO-4091',
-            status: 'Arrived',
-            statusBg: Color(0xFFDCFCE7),
-            statusColor: Color(0xFF15803D),
-            date: 'Feb 12, 2027',
-          ),
-          SupplierOrderSummary(
-            poNumber: 'PO-3982',
-            status: 'In Transit',
-            statusBg: Color(0xFFEFF6FF),
-            statusColor: Color(0xFF2563EB),
-            date: 'Jan 28, 2027',
-          ),
-          SupplierOrderSummary(
-            poNumber: 'PO-3765',
-            status: 'Completed',
-            statusBg: Color(0xFFDCFCE7),
-            statusColor: Color(0xFF15803D),
-            date: 'Jan 10, 2027',
-          ),
-        ],
-      ),
-      SupplierDirectoryItem(
-        id: 'TS-SUPP-0188',
-        name: 'Surat Denim Ltd',
-        location: 'Gujarat, India',
-        initials: 'SD',
-        category: 'Denim & Twill',
-        leadTime: '14 Days',
-        activePos: '2 Active',
-        status: 'Active',
-        statusBg: const Color(0xFFDCFCE7),
-        statusColor: const Color(0xFF15803D),
-        rating: 4,
-        contactName: 'Rajesh Patel',
-        contactRole: 'Head of Export Sales',
-        email: 'rajesh.patel@suratdenim.in',
-        phone: '+91 261 4892 110',
-        address: 'Plot 42, GIDC Textile Park, Surat, India',
-        website: 'www.suratdenim.in',
-        recentOrders: const [
-          SupplierOrderSummary(
-            poNumber: 'PO-4088',
-            status: 'In Transit',
-            statusBg: Color(0xFFEFF6FF),
-            statusColor: Color(0xFF2563EB),
-            date: 'Feb 10, 2027',
-          ),
-          SupplierOrderSummary(
-            poNumber: 'PO-3950',
-            status: 'Completed',
-            statusBg: Color(0xFFDCFCE7),
-            statusColor: Color(0xFF15803D),
-            date: 'Jan 18, 2027',
-          ),
-        ],
-      ),
-      SupplierDirectoryItem(
-        id: 'TS-SUPP-0312',
-        name: 'Biella Woolen Mills',
-        location: 'Piedmont, Italy',
-        initials: 'BW',
-        category: 'Yarns & Wool',
-        leadTime: '22 Days',
-        activePos: '1 Active',
-        status: 'Active',
-        statusBg: const Color(0xFFDCFCE7),
-        statusColor: const Color(0xFF15803D),
-        rating: 4,
-        contactName: 'Marco Bellini',
-        contactRole: 'Production Director',
-        email: 'm.bellini@biellawool.it',
-        phone: '+39 015 849 203',
-        address: 'Corso Sempione 88, Biella, Italy',
-        website: 'www.biellawool.it',
-      ),
-      SupplierDirectoryItem(
-        id: 'TS-SUPP-0094',
-        name: 'Tokyo Brass & Hardware',
-        location: 'Kanto, Japan',
-        initials: 'TB',
-        category: 'Hardware',
-        leadTime: '10 Days',
-        activePos: '0 Active',
-        status: 'On Hold',
-        statusBg: const Color(0xFFFEF3C7),
-        statusColor: const Color(0xFFD97706),
-        rating: 3,
-        contactName: 'Kenji Sato',
-        contactRole: 'Overseas Operations',
-        email: 'sato@tokyobrass.jp',
-        phone: '+81 3 5842 9110',
-        address: 'Chiyoda-ku, Tokyo, Japan',
-        website: 'www.tokyobrass.jp',
-      ),
-      SupplierDirectoryItem(
-        id: 'TS-SUPP-0255',
-        name: 'Prato Knitwear Co.',
-        location: 'Prato, Italy',
-        initials: 'PL',
-        category: 'Knitwear',
-        leadTime: '16 Days',
-        activePos: '4 Active',
-        status: 'Active',
-        statusBg: const Color(0xFFDCFCE7),
-        statusColor: const Color(0xFF15803D),
-        rating: 4,
-        contactName: 'Lucia Bianchi',
-        contactRole: 'Client Relations',
-        email: 'lucia@pratoknitwear.com',
-        phone: '+39 0574 992 104',
-        address: 'Via Galcianese 45, Prato, Italy',
-        website: 'www.pratoknitwear.com',
-      ),
-      SupplierDirectoryItem(
-        id: 'TS-SUPP-0142',
-        name: 'Shree Textiles',
-        location: 'Surat, India',
-        initials: 'SH',
-        category: 'Fabrics',
-        leadTime: '12 Days',
-        activePos: '1 Active',
-        status: 'Active',
-        statusBg: const Color(0xFFDCFCE7),
-        statusColor: const Color(0xFF15803D),
-        rating: 4,
-        contactName: 'Amit Shah',
-        contactRole: 'Managing Director',
-        email: 'amit@shreetextiles.com',
-        phone: '+91 261 2291 004',
-        address: 'Ring Road Market, Surat, India',
-        website: 'www.shreetextiles.com',
-      ),
-      SupplierDirectoryItem(
-        id: 'TS-SUPP-0401',
-        name: 'CottonLand',
-        location: 'Izmir, Turkey',
-        initials: 'CL',
-        category: 'Cotton & Linen',
-        leadTime: '20 Days',
-        activePos: '0 Active',
-        status: 'Inactive',
-        statusBg: const Color(0xFFFEE2E2),
-        statusColor: const Color(0xFFDC2626),
-        rating: 3,
-        contactName: 'Emre Yilmaz',
-        contactRole: 'Export Specialist',
-        email: 'emre@cottonland.tr',
-        phone: '+90 232 441 8290',
-        address: 'Ataturk Caddesi, Izmir, Turkey',
-        website: 'www.cottonland.tr',
-      ),
-      SupplierDirectoryItem(
-        id: 'TS-SUPP-0339',
-        name: 'Global Packaging Co.',
-        location: 'Barcelona, Spain',
-        initials: 'GP',
-        category: 'Packaging',
-        leadTime: '15 Days',
-        activePos: '2 Active',
-        status: 'Active',
-        statusBg: const Color(0xFFDCFCE7),
-        statusColor: const Color(0xFF15803D),
-        rating: 4,
-        contactName: 'Carlos Vega',
-        contactRole: 'Commercial Director',
-        email: 'carlos.vega@globalpack.es',
-        phone: '+34 93 481 9200',
-        address: 'Poligono Industrial del Prat, Barcelona, Spain',
-        website: 'www.globalpack.es',
-      ),
-    ];
-    _selectedPartner = _suppliers.first;
+    _loadSuppliers();
+  }
+
+  Future<void> _loadSuppliers() async {
+    setState(() => _isLoading = true);
+    try {
+      final remoteSuppliers = await _supplierRepository.getSuppliers();
+      if (!mounted) return;
+      final mapped = remoteSuppliers.map((s) {
+        final initials = s.name.trim().isNotEmpty
+            ? (s.name.trim().length >= 2
+                  ? s.name.trim().substring(0, 2).toUpperCase()
+                  : s.name.trim().toUpperCase())
+            : 'SU';
+        final isActive = s.status.toLowerCase() == 'active';
+        return SupplierDirectoryItem(
+          id: s.id,
+          name: s.name,
+          location: 'Not specified',
+          initials: initials,
+          category: 'General',
+          leadTime: '-',
+          activePos: '0 Active',
+          status: isActive ? 'Active' : 'Inactive',
+          statusBg: isActive
+              ? const Color(0xFFDCFCE7)
+              : const Color(0xFFF1F5F9),
+          statusColor: isActive
+              ? const Color(0xFF15803D)
+              : const Color(0xFF64748B),
+          rating: 5,
+          isPreferred: false,
+          contactName: s.name,
+          contactRole: 'Supplier Partner',
+          email: s.contactEmail ?? 'No email provided',
+          phone: s.contactPhone ?? 'No phone provided',
+          address: 'Not specified',
+          website: '-',
+          recentOrders: const [],
+        );
+      }).toList();
+
+      setState(() {
+        _suppliers = mapped;
+        if (mapped.isNotEmpty) {
+          _selectedPartner = mapped.first;
+          mapped.first.isSelected = true;
+        } else {
+          _selectedPartner = null;
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error loading suppliers in directory: $e');
+      if (!mounted) return;
+      setState(() {
+        _suppliers = [];
+        _selectedPartner = null;
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -299,11 +167,18 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
   List<SupplierDirectoryItem> get _filteredSuppliers {
     final query = _searchController.text.trim().toLowerCase();
     return _suppliers.where((item) {
-      if (_selectedPillTab == 1 && item.status != 'Active' && item.status != 'Preferred') return false;
-      if (_selectedPillTab == 2 && item.status != 'Inactive' && item.status != 'On Hold') return false;
+      if (_selectedPillTab == 1 &&
+          item.status != 'Active' &&
+          item.status != 'Preferred')
+        return false;
+      if (_selectedPillTab == 2 &&
+          item.status != 'Inactive' &&
+          item.status != 'On Hold')
+        return false;
       if (_selectedPillTab == 3 && !item.isPreferred) return false;
 
-      if (_selectedCategory != 'All Categories' && item.category != _selectedCategory) {
+      if (_selectedCategory != 'All Categories' &&
+          item.category != _selectedCategory) {
         return false;
       }
       if (_selectedStatus != 'All Status' && item.status != _selectedStatus) {
@@ -311,7 +186,8 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
       }
 
       if (query.isNotEmpty) {
-        final matches = item.name.toLowerCase().contains(query) ||
+        final matches =
+            item.name.toLowerCase().contains(query) ||
             item.location.toLowerCase().contains(query) ||
             item.category.toLowerCase().contains(query) ||
             item.contactName.toLowerCase().contains(query);
@@ -322,81 +198,162 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
   }
 
   void _showAddSupplierModal() {
+    final nameCtrl = TextEditingController();
+    final emailCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+    bool isSaving = false;
+
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFBF4EB),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: const Icon(Icons.business_outlined, color: Color(0xFF92400E), size: 20),
-            ),
-            const SizedBox(width: 12),
-            Text('Add New Supplier Partner', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
-          ],
-        ),
-        content: SizedBox(
-          width: 460,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          title: Row(
             children: [
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Company / Mill Name',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFBF4EB),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.business_outlined,
+                  color: Color(0xFF92400E),
+                  size: 20,
                 ),
               ),
-              const SizedBox(height: 12),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Location (City, Country)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                decoration: InputDecoration(
-                  labelText: 'Primary Category',
-                  hintText: 'e.g. Luxury Silks, Denim, Packaging',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+              const SizedBox(width: 12),
+              Text(
+                'Add New Supplier Partner',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Supplier partner registered into directory.'),
-                  backgroundColor: Color(0xFF181513),
-                  behavior: SnackBarBehavior.floating,
+          content: SizedBox(
+            width: 460,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Company / Mill Name',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                  ),
                 ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF181513),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: emailCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Contact Email',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'Contact Phone',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            child: const Text('Add Partner'),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: isSaving
+                  ? null
+                  : () async {
+                      final name = nameCtrl.text.trim();
+                      if (name.isEmpty) return;
+                      setModalState(() => isSaving = true);
+                      try {
+                        await _supplierRepository.createSupplier(
+                          name: name,
+                          contactEmail: emailCtrl.text.trim().isEmpty
+                              ? null
+                              : emailCtrl.text.trim(),
+                          contactPhone: phoneCtrl.text.trim().isEmpty
+                              ? null
+                              : phoneCtrl.text.trim(),
+                        );
+                        if (ctx.mounted) Navigator.of(ctx).pop();
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Supplier partner "$name" registered into directory.',
+                            ),
+                            backgroundColor: const Color(0xFF181513),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        _loadSuppliers();
+                      } catch (e) {
+                        setModalState(() => isSaving = false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              e.toString().replaceAll('Exception: ', ''),
+                            ),
+                            backgroundColor: Colors.red[800],
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF181513),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: isSaving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Add Partner'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -416,10 +373,20 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFFDE68A)),
               ),
-              child: const Icon(Icons.auto_awesome, color: Color(0xFFD97706), size: 20),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Color(0xFFD97706),
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
-            Text('AI Supply Chain Risk & Opportunity Radar', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text(
+              'AI Supply Chain Risk & Opportunity Radar',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
         content: SizedBox(
@@ -429,45 +396,26 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'ThreadStock AI continuously monitors port congestions, lead time variance, and quality indices across all 14 active vendors:',
-                style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF4B5563), height: 1.4),
+                'ThreadStock AI will generate risk & opportunity recommendations once purchase order histories and vendor lead time records become available.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF4B5563),
+                  height: 1.5,
+                ),
               ),
-              const SizedBox(height: 16),
-              _buildInsightBullet('Lead Time Volatility Alert', 'Tokyo Brass & Hardware lead time has climbed from 8 to 10 days due to regional customs re-inspections.'),
-              const SizedBox(height: 12),
-              _buildInsightBullet('Preferred Partner Milestone', 'Milano Tessuti delivered 99.1% of fabric rolls on schedule for 3 consecutive months.'),
-              const SizedBox(height: 12),
-              _buildInsightBullet('Single Source Exposure', 'Yarns & Wool is 82% concentrated in Northern Italy. Consider evaluating auxiliary suppliers in Portugal or Turkey.'),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Close', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            child: Text(
+              'Close',
+              style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildInsightBullet(String title, String desc) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF16A34A), size: 18),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF111827))),
-              const SizedBox(height: 2),
-              Text(desc, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280), height: 1.35)),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -513,10 +461,7 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                     const SizedBox(width: 20),
 
                     // Right Selected Partner Card (~30%)
-                    Expanded(
-                      flex: 30,
-                      child: _buildSelectedPartnerSidebar(),
-                    ),
+                    Expanded(flex: 30, child: _buildSelectedPartnerSidebar()),
                   ],
                 );
               }
@@ -582,7 +527,9 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
               onPressed: () {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Downloading Partners & Manufacturers Directory (CSV)...'),
+                    content: Text(
+                      'Downloading Partners & Manufacturers Directory (CSV)...',
+                    ),
                     backgroundColor: Color(0xFF181513),
                     behavior: SnackBarBehavior.floating,
                   ),
@@ -593,9 +540,17 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF374151),
                 side: const BorderSide(color: Color(0xFFD1D5DB)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
             const SizedBox(width: 10),
@@ -609,9 +564,17 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                 backgroundColor: const Color(0xFF181513),
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                textStyle: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -622,15 +585,24 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
 
   // 2. Filter Pills Row
   Widget _buildFilterPillsRow() {
+    final allCount = _suppliers.length;
+    final activeCount = _suppliers
+        .where((s) => s.status == 'Active' || s.status == 'Preferred')
+        .length;
+    final inactiveCount = _suppliers
+        .where((s) => s.status == 'Inactive' || s.status == 'On Hold')
+        .length;
+    final preferredCount = _suppliers.where((s) => s.isPreferred).length;
+
     return Row(
       children: [
-        _buildPillTab('All Suppliers', 14, 0),
+        _buildPillTab('All Suppliers', allCount, 0),
         const SizedBox(width: 10),
-        _buildPillTab('Active', 10, 1),
+        _buildPillTab('Active', activeCount, 1),
         const SizedBox(width: 10),
-        _buildPillTab('Inactive', 2, 2),
+        _buildPillTab('Inactive', inactiveCount, 2),
         const SizedBox(width: 10),
-        _buildPillTab('Preferred Network', 3, 3),
+        _buildPillTab('Preferred Network', preferredCount, 3),
       ],
     );
   }
@@ -645,7 +617,11 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF6B584B) : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: isSelected ? const Color(0xFF6B584B) : const Color(0xFFE2E8F0)),
+          border: Border.all(
+            color: isSelected
+                ? const Color(0xFF6B584B)
+                : const Color(0xFFE2E8F0),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -662,7 +638,9 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF866E5E) : const Color(0xFFF1F5F9),
+                color: isSelected
+                    ? const Color(0xFF866E5E)
+                    : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -697,7 +675,11 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
-                const Icon(Icons.search_rounded, size: 18, color: Color(0xFF9CA3AF)),
+                const Icon(
+                  Icons.search_rounded,
+                  size: 18,
+                  color: Color(0xFF9CA3AF),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
@@ -705,7 +687,10 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                     style: GoogleFonts.inter(fontSize: 13),
                     decoration: const InputDecoration(
                       hintText: 'Search supplier name, contact, or category...',
-                      hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+                      hintStyle: TextStyle(
+                        color: Color(0xFF9CA3AF),
+                        fontSize: 13,
+                      ),
                       border: InputBorder.none,
                       isDense: true,
                     ),
@@ -721,24 +706,46 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
         // All Categories dropdown
         _buildDropdownButton(
           value: _selectedCategory,
-          items: const ['All Categories', 'Fabrics', 'Denim & Twill', 'Yarns & Wool', 'Hardware', 'Knitwear', 'Packaging'],
-          onChanged: (val) => setState(() => _selectedCategory = val ?? 'All Categories'),
+          items: const [
+            'All Categories',
+            'Fabrics',
+            'Denim & Twill',
+            'Yarns & Wool',
+            'Hardware',
+            'Knitwear',
+            'Packaging',
+          ],
+          onChanged: (val) =>
+              setState(() => _selectedCategory = val ?? 'All Categories'),
         ),
         const SizedBox(width: 10),
 
         // All Status dropdown
         _buildDropdownButton(
           value: _selectedStatus,
-          items: const ['All Status', 'Preferred', 'Active', 'On Hold', 'Inactive'],
-          onChanged: (val) => setState(() => _selectedStatus = val ?? 'All Status'),
+          items: const [
+            'All Status',
+            'Preferred',
+            'Active',
+            'On Hold',
+            'Inactive',
+          ],
+          onChanged: (val) =>
+              setState(() => _selectedStatus = val ?? 'All Status'),
         ),
         const SizedBox(width: 10),
 
         // Sort by dropdown
         _buildDropdownButton(
           value: _selectedSort,
-          items: const ['Sort by: Name', 'Sort by: Lead Time', 'Sort by: Rating', 'Sort by: Active POs'],
-          onChanged: (val) => setState(() => _selectedSort = val ?? 'Sort by: Name'),
+          items: const [
+            'Sort by: Name',
+            'Sort by: Lead Time',
+            'Sort by: Rating',
+            'Sort by: Active POs',
+          ],
+          onChanged: (val) =>
+              setState(() => _selectedSort = val ?? 'Sort by: Name'),
         ),
       ],
     );
@@ -760,9 +767,19 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF6B7280)),
-          style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500, color: const Color(0xFF374151)),
-          items: items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList(),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 16,
+            color: Color(0xFF6B7280),
+          ),
+          style: GoogleFonts.inter(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF374151),
+          ),
+          items: items
+              .map((item) => DropdownMenuItem(value: item, child: Text(item)))
+              .toList(),
           onChanged: onChanged,
         ),
       ),
@@ -771,6 +788,62 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
 
   // 4. Suppliers Table
   Widget _buildSuppliersTable() {
+    if (_isLoading) {
+      return Container(
+        height: 220,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        alignment: Alignment.center,
+        child: const CircularProgressIndicator(
+          strokeWidth: 2,
+          color: Color(0xFF181513),
+        ),
+      );
+    }
+
+    if (_suppliers.isEmpty) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.business_outlined,
+              size: 44,
+              color: Color(0xFF9CA3AF),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No suppliers registered yet',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF181513),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Add your first supplier partner to begin tracking purchase orders and lead times.',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: const Color(0xFF6B7280),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -787,7 +860,9 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                 SizedBox(
                   width: 24,
                   child: Checkbox(
-                    value: _suppliers.every((s) => s.isSelected),
+                    value:
+                        _suppliers.isNotEmpty &&
+                        _suppliers.every((s) => s.isSelected),
                     onChanged: (val) {
                       setState(() {
                         final v = val ?? false;
@@ -797,37 +872,89 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                       });
                     },
                     activeColor: const Color(0xFFD97706),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   flex: 30,
-                  child: Text('Supplier', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))),
+                  child: Text(
+                    'Supplier',
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
                 ),
                 Expanded(
                   flex: 16,
-                  child: Text('Category', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))),
+                  child: Text(
+                    'Category',
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
                 ),
                 Expanded(
                   flex: 13,
-                  child: Text('Lead Time', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))),
+                  child: Text(
+                    'Lead Time',
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
                 ),
                 Expanded(
                   flex: 13,
-                  child: Text('Active POs', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))),
+                  child: Text(
+                    'Active POs',
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
                 ),
                 Expanded(
                   flex: 12,
-                  child: Text('Status', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))),
+                  child: Text(
+                    'Status',
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
                 ),
                 Expanded(
                   flex: 12,
-                  child: Text('Rating', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))),
+                  child: Text(
+                    'Rating',
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
                 ),
                 const SizedBox(
                   width: 32,
-                  child: Text('Actions', textAlign: TextAlign.end, style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: Color(0xFF6B7280))),
+                  child: Text(
+                    'Actions',
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -835,17 +962,31 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
 
           // Table Rows
-          for (final item in _filteredSuppliers) ...[
-            _buildSupplierRow(item),
-            const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          ],
+          if (_filteredSuppliers.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 36),
+              child: Center(
+                child: Text(
+                  'No suppliers match the current filters.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF9CA3AF),
+                  ),
+                ),
+              ),
+            )
+          else
+            for (final item in _filteredSuppliers) ...[
+              _buildSupplierRow(item),
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            ],
         ],
       ),
     );
   }
 
   Widget _buildSupplierRow(SupplierDirectoryItem item) {
-    final isSelectedRow = _selectedPartner.id == item.id;
+    final isSelectedRow = _selectedPartner?.id == item.id;
 
     return InkWell(
       onTap: () {
@@ -858,7 +999,9 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
       },
       hoverColor: const Color(0xFFF8FAFC),
       child: Container(
-        color: isSelectedRow ? const Color(0xFFFFFBEB).withOpacity(0.35) : Colors.transparent,
+        color: isSelectedRow
+            ? const Color(0xFFFFFBEB).withValues(alpha: 0.35)
+            : Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
@@ -876,7 +1019,9 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                   });
                 },
                 activeColor: const Color(0xFFD97706),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -896,7 +1041,11 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                     alignment: Alignment.center,
                     child: Text(
                       item.initials,
-                      style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w700, color: const Color(0xFF92400E)),
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF92400E),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -913,7 +1062,11 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                             Flexible(
                               child: Text(
                                 item.name,
-                                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF111827),
+                                ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
@@ -922,7 +1075,10 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                         const SizedBox(height: 1),
                         Text(
                           item.location,
-                          style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280)),
+                          style: GoogleFonts.inter(
+                            fontSize: 11.5,
+                            color: const Color(0xFF6B7280),
+                          ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
@@ -937,7 +1093,10 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
               flex: 16,
               child: Text(
                 item.category,
-                style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF4B5563)),
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: const Color(0xFF4B5563),
+                ),
               ),
             ),
 
@@ -949,7 +1108,9 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                 style: GoogleFonts.inter(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
-                  color: item.leadTime == '18 Days' ? const Color(0xFFB45309) : const Color(0xFF374151),
+                  color: item.leadTime == '18 Days'
+                      ? const Color(0xFFB45309)
+                      : const Color(0xFF374151),
                 ),
               ),
             ),
@@ -959,7 +1120,11 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
               flex: 13,
               child: Text(
                 item.activePos,
-                style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF111827),
+                ),
               ),
             ),
 
@@ -969,14 +1134,21 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: item.statusBg,
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     item.status,
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: item.statusColor),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: item.statusColor,
+                    ),
                   ),
                 ),
               ),
@@ -990,7 +1162,9 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                   return Icon(
                     Icons.star_rounded,
                     size: 14,
-                    color: starIdx < item.rating ? const Color(0xFFF59E0B) : const Color(0xFFD1D5DB),
+                    color: starIdx < item.rating
+                        ? const Color(0xFFF59E0B)
+                        : const Color(0xFFD1D5DB),
                   );
                 }),
               ),
@@ -1002,8 +1176,14 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
               child: Align(
                 alignment: Alignment.centerRight,
                 child: PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_horiz_rounded, color: Color(0xFF6B7280), size: 18),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  icon: const Icon(
+                    Icons.more_horiz_rounded,
+                    color: Color(0xFF6B7280),
+                    size: 18,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                   color: Colors.white,
                   onSelected: (val) {
                     if (val == 'view_profile') {
@@ -1011,7 +1191,9 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                     } else if (val == 'new_po') {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('Opening purchase order draft for ${item.name}...'),
+                          content: Text(
+                            'Opening purchase order draft for ${item.name}...',
+                          ),
                           backgroundColor: const Color(0xFF181513),
                           behavior: SnackBarBehavior.floating,
                         ),
@@ -1019,9 +1201,27 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                     }
                   },
                   itemBuilder: (ctx) => [
-                    PopupMenuItem(value: 'view_profile', child: Text('View Full Profile', style: GoogleFonts.inter(fontSize: 13))),
-                    PopupMenuItem(value: 'new_po', child: Text('Create Purchase Order', style: GoogleFonts.inter(fontSize: 13))),
-                    PopupMenuItem(value: 'email', child: Text('Send Email', style: GoogleFonts.inter(fontSize: 13))),
+                    PopupMenuItem(
+                      value: 'view_profile',
+                      child: Text(
+                        'View Full Profile',
+                        style: GoogleFonts.inter(fontSize: 13),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'new_po',
+                      child: Text(
+                        'Create Purchase Order',
+                        style: GoogleFonts.inter(fontSize: 13),
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'email',
+                      child: Text(
+                        'Send Email',
+                        style: GoogleFonts.inter(fontSize: 13),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -1038,18 +1238,29 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Showing 1–8 of 14 suppliers',
-          style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280)),
+          _suppliers.isEmpty
+              ? 'No suppliers'
+              : 'Showing ${_filteredSuppliers.length} of ${_suppliers.length} suppliers',
+          style: GoogleFonts.inter(
+            fontSize: 12.5,
+            color: const Color(0xFF6B7280),
+          ),
         ),
         Row(
           children: [
-            _buildPageNavButton(icon: Icons.chevron_left_rounded, isEnabled: false),
+            _buildPageNavButton(
+              icon: Icons.chevron_left_rounded,
+              isEnabled: false,
+            ),
             const SizedBox(width: 6),
             _buildPageNumberButton(1, isActive: _currentPage == 1),
             const SizedBox(width: 6),
             _buildPageNumberButton(2, isActive: _currentPage == 2),
             const SizedBox(width: 6),
-            _buildPageNavButton(icon: Icons.chevron_right_rounded, isEnabled: true),
+            _buildPageNavButton(
+              icon: Icons.chevron_right_rounded,
+              isEnabled: true,
+            ),
           ],
         ),
       ],
@@ -1067,7 +1278,9 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
         decoration: BoxDecoration(
           color: isActive ? const Color(0xFFFBF4EB) : Colors.white,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: isActive ? const Color(0xFFD5C9BC) : const Color(0xFFE2E8F0)),
+          border: Border.all(
+            color: isActive ? const Color(0xFFD5C9BC) : const Color(0xFFE2E8F0),
+          ),
         ),
         child: Text(
           '$page',
@@ -1081,7 +1294,10 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
     );
   }
 
-  Widget _buildPageNavButton({required IconData icon, required bool isEnabled}) {
+  Widget _buildPageNavButton({
+    required IconData icon,
+    required bool isEnabled,
+  }) {
     return Container(
       width: 32,
       height: 32,
@@ -1091,13 +1307,47 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Icon(icon, size: 18, color: isEnabled ? const Color(0xFF374151) : const Color(0xFFD1D5DB)),
+      child: Icon(
+        icon,
+        size: 18,
+        color: isEnabled ? const Color(0xFF374151) : const Color(0xFFD1D5DB),
+      ),
     );
   }
 
   // 5. Right Sidebar: Selected Partner
   Widget _buildSelectedPartnerSidebar() {
     final p = _selectedPartner;
+    if (p == null) {
+      return Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 20),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.business_outlined,
+              size: 36,
+              color: Color(0xFF9CA3AF),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'No supplier selected',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       decoration: BoxDecoration(
@@ -1116,26 +1366,34 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
               children: [
                 Text(
                   'Selected Partner',
-                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111827),
+                  ),
                 ),
-                const Icon(Icons.more_vert_rounded, size: 18, color: Color(0xFF6B7280)),
+                const Icon(
+                  Icons.more_vert_rounded,
+                  size: 18,
+                  color: Color(0xFF6B7280),
+                ),
               ],
             ),
           ),
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
 
-          // Banner Image (Fabric Rolls)
+          // Banner Header
           ClipRRect(
             borderRadius: BorderRadius.zero,
             child: Container(
               height: 120,
               width: double.infinity,
-              decoration: const BoxDecoration(
-                color: Color(0xFFD7CCC8),
-                image: DecorationImage(
-                  image: AssetImage('assets/mulberry_silk_fabric.jpg'),
-                  fit: BoxFit.cover,
-                  alignment: Alignment.center,
+              decoration: const BoxDecoration(color: Color(0xFFF8FAFC)),
+              child: const Center(
+                child: Icon(
+                  Icons.business_outlined,
+                  size: 36,
+                  color: Color(0xFFCBD5E1),
                 ),
               ),
             ),
@@ -1159,7 +1417,11 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                       alignment: Alignment.center,
                       child: Text(
                         p.initials,
-                        style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF92400E)),
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF92400E),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -1172,32 +1434,59 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                               Flexible(
                                 child: Text(
                                   p.name,
-                                  style: GoogleFonts.inter(fontSize: 14.5, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF111827),
+                                  ),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               const SizedBox(width: 6),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFDCFCE7),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   'Preferred',
-                                  style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w600, color: const Color(0xFF15803D)),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF15803D),
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 2),
-                          Text('ID: ${p.id}', style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280))),
+                          Text(
+                            'ID: ${p.id}',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: const Color(0xFF6B7280),
+                            ),
+                          ),
                           const SizedBox(height: 2),
                           Row(
                             children: [
-                              const Icon(Icons.location_on, size: 12, color: Color(0xFF9CA3AF)),
+                              const Icon(
+                                Icons.location_on,
+                                size: 12,
+                                color: Color(0xFF9CA3AF),
+                              ),
                               const SizedBox(width: 3),
-                              Text(p.location, style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280))),
+                              Text(
+                                p.location,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11.5,
+                                  color: const Color(0xFF6B7280),
+                                ),
+                              ),
                             ],
                           ),
                         ],
@@ -1212,7 +1501,12 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                 // CONTACT INFORMATION
                 Text(
                   'CONTACT INFORMATION',
-                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF6B7280), letterSpacing: 0.3),
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF6B7280),
+                    letterSpacing: 0.3,
+                  ),
                 ),
                 const SizedBox(height: 12),
 
@@ -1220,14 +1514,31 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.person_outline_rounded, size: 16, color: Color(0xFF9CA3AF)),
+                    const Icon(
+                      Icons.person_outline_rounded,
+                      size: 16,
+                      color: Color(0xFF9CA3AF),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(p.contactName, style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF111827))),
-                          Text(p.contactRole, style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280))),
+                          Text(
+                            p.contactName,
+                            style: GoogleFonts.inter(
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF111827),
+                            ),
+                          ),
+                          Text(
+                            p.contactRole,
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: const Color(0xFF6B7280),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1238,12 +1549,19 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                 // Email
                 Row(
                   children: [
-                    const Icon(Icons.mail_outline_rounded, size: 16, color: Color(0xFF9CA3AF)),
+                    const Icon(
+                      Icons.mail_outline_rounded,
+                      size: 16,
+                      color: Color(0xFF9CA3AF),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         p.email,
-                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF374151)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF374151),
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -1254,9 +1572,19 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                 // Phone
                 Row(
                   children: [
-                    const Icon(Icons.phone_outlined, size: 16, color: Color(0xFF9CA3AF)),
+                    const Icon(
+                      Icons.phone_outlined,
+                      size: 16,
+                      color: Color(0xFF9CA3AF),
+                    ),
                     const SizedBox(width: 10),
-                    Text(p.phone, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF374151))),
+                    Text(
+                      p.phone,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: const Color(0xFF374151),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
@@ -1265,12 +1593,19 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.location_on_outlined, size: 16, color: Color(0xFF9CA3AF)),
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 16,
+                      color: Color(0xFF9CA3AF),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         p.address,
-                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF374151)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF374151),
+                        ),
                       ),
                     ),
                   ],
@@ -1280,7 +1615,11 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                 // Website
                 Row(
                   children: [
-                    const Icon(Icons.language_rounded, size: 16, color: Color(0xFF9CA3AF)),
+                    const Icon(
+                      Icons.language_rounded,
+                      size: 16,
+                      color: Color(0xFF9CA3AF),
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Row(
@@ -1288,12 +1627,19 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                           Flexible(
                             child: Text(
                               p.website,
-                              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF374151)),
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: const Color(0xFF374151),
+                              ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           const SizedBox(width: 4),
-                          const Icon(Icons.open_in_new_rounded, size: 12, color: Color(0xFF6B7280)),
+                          const Icon(
+                            Icons.open_in_new_rounded,
+                            size: 12,
+                            color: Color(0xFF6B7280),
+                          ),
                         ],
                       ),
                     ),
@@ -1309,15 +1655,31 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                   children: [
                     Text(
                       'RECENT ORDER HISTORY',
-                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFF6B7280), letterSpacing: 0.3),
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF6B7280),
+                        letterSpacing: 0.3,
+                      ),
                     ),
                     InkWell(
                       onTap: () => widget.onViewFullProfile?.call(p),
                       child: Row(
                         children: [
-                          Text('View All', style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFFB45309))),
+                          Text(
+                            'View All',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFFB45309),
+                            ),
+                          ),
                           const SizedBox(width: 2),
-                          const Icon(Icons.arrow_forward_rounded, size: 12, color: Color(0xFFB45309)),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 12,
+                            color: Color(0xFFB45309),
+                          ),
                         ],
                       ),
                     ),
@@ -1334,22 +1696,42 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                         children: [
                           Row(
                             children: [
-                              Text(order.poNumber, style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF111827))),
+                              Text(
+                                order.poNumber,
+                                style: GoogleFonts.inter(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF111827),
+                                ),
+                              ),
                               const SizedBox(width: 8),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: order.statusBg,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   order.status,
-                                  style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w600, color: order.statusColor),
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: order.statusColor,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                          Text(order.date, style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280))),
+                          Text(
+                            order.date,
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: const Color(0xFF6B7280),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1357,7 +1739,13 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                 ] else ...[
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text('No active orders logged.', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF9CA3AF))),
+                    child: Text(
+                      'No active orders logged.',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: const Color(0xFF9CA3AF),
+                      ),
+                    ),
                   ),
                 ],
                 const SizedBox(height: 16),
@@ -1371,9 +1759,14 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
                       backgroundColor: const Color(0xFF181513),
                       foregroundColor: Colors.white,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      textStyle: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600),
+                      textStyle: GoogleFonts.inter(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     child: const Text('View Full Profile'),
                   ),
@@ -1391,7 +1784,7 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB).withOpacity(0.55),
+        color: const Color(0xFFFFFBEB).withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFFDE68A)),
       ),
@@ -1406,12 +1799,19 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
               children: [
                 Text(
                   'Stronger Supply Chains with AI',
-                  style: GoogleFonts.inter(fontSize: 14.5, fontWeight: FontWeight.w700, color: const Color(0xFF92400E)),
+                  style: GoogleFonts.inter(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF92400E),
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Get insights on supplier performance, lead time trends, and risk alerts.',
-                  style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280)),
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    color: const Color(0xFF6B7280),
+                  ),
                 ),
               ],
             ),
@@ -1422,9 +1822,14 @@ class _PartnerDirectoryViewState extends State<PartnerDirectoryView> {
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFB45309),
               side: const BorderSide(color: Color(0xFFF59E0B)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              textStyle: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600),
+              textStyle: GoogleFonts.inter(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

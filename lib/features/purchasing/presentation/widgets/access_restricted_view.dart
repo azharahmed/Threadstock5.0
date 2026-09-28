@@ -40,7 +40,7 @@ class _AccessRestrictedViewState extends State<AccessRestrictedView> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Access request submitted to Central Admin (Alex Mercer). You will receive an alert upon approval.',
+                'Access request submitted to Central Admin. You will receive an alert upon approval.',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
@@ -201,9 +201,7 @@ class _AccessRestrictedViewState extends State<AccessRestrictedView> {
                                   color: const Color(0xFF181513),
                                 ),
                               ),
-                              const TextSpan(
-                                text: '\nYour current role (',
-                              ),
+                              const TextSpan(text: '\nYour current role ('),
                               TextSpan(
                                 text: widget.roleName,
                                 style: GoogleFonts.inter(
@@ -246,8 +244,7 @@ class _AccessRestrictedViewState extends State<AccessRestrictedView> {
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF231F1C),
-                              disabledBackgroundColor:
-                                  const Color(0xFF5E574E),
+                              disabledBackgroundColor: const Color(0xFF5E574E),
                               elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
@@ -278,9 +275,7 @@ class _AccessRestrictedViewState extends State<AccessRestrictedView> {
                             ),
                             style: OutlinedButton.styleFrom(
                               backgroundColor: Colors.white,
-                              side: const BorderSide(
-                                color: Color(0xFFDFD5C6),
-                              ),
+                              side: const BorderSide(color: Color(0xFFDFD5C6)),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -290,10 +285,7 @@ class _AccessRestrictedViewState extends State<AccessRestrictedView> {
                         const SizedBox(height: 24),
 
                         // Divider line
-                        const Divider(
-                          height: 1,
-                          color: Color(0xFFF0EAE1),
-                        ),
+                        const Divider(height: 1, color: Color(0xFFF0EAE1)),
                         const SizedBox(height: 16),
 
                         // Bottom Help Row: (i) Contact administrator

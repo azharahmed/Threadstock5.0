@@ -31,12 +31,12 @@ class TransferOrderDetailView extends StatefulWidget {
     super.key,
     this.transferId = 'TR-1042',
     this.status = 'In Transit',
-    this.sourceName = 'Central Warehouse',
-    this.sourceDetails = 'Zone A • Main Facility',
-    this.destName = 'MG Road Store',
-    this.destDetails = 'Bengaluru • Retail Outlet',
+    this.sourceName = 'Primary Facility',
+    this.sourceDetails = 'Zone A • Main Warehouse',
+    this.destName = 'Destination Store',
+    this.destDetails = 'Retail Outlet',
     this.approvalTime = '14 Jan, 10:15 AM',
-    this.approvedBy = 'By Alex Morgan',
+    this.approvedBy = 'By Store Manager',
     this.dispatchTime = '16 Jan, 02:30 PM',
     this.dispatchedVia = 'Via ThreadStock Logistics',
     this.eta = '19 Jan, EOD',
@@ -81,7 +81,8 @@ class TransferOrderDetailView extends StatefulWidget {
   final VoidCallback? onCancelTransfer;
 
   @override
-  State<TransferOrderDetailView> createState() => _TransferOrderDetailViewState();
+  State<TransferOrderDetailView> createState() =>
+      _TransferOrderDetailViewState();
 }
 
 class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
@@ -93,28 +94,7 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
   @override
   void initState() {
     super.initState();
-    _items = [
-      TransferOrderItemData(
-        name: 'Merino Wool Blazer',
-        sku: 'MWB-20188-L',
-        variant: 'Navy / L',
-        requestedQty: 20,
-        sentQty: 20,
-        receivedQty: null,
-        status: 'In Transit',
-        imageAsset: 'Assets/merino_wool_blazer.jpg',
-      ),
-      TransferOrderItemData(
-        name: 'Oxford Linen Shirt',
-        sku: 'TS-10432-M',
-        variant: 'Black / M',
-        requestedQty: 28,
-        sentQty: 28,
-        receivedQty: null,
-        status: 'In Transit',
-        imageAsset: 'Assets/oxford_linen_shirt.jpg',
-      ),
-    ];
+    _items = [];
   }
 
   void _toggleSelectAll(bool? val) {
@@ -134,11 +114,19 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Row(
           children: [
-            const Icon(Icons.local_shipping_outlined, color: Color(0xFF2563EB), size: 22),
+            const Icon(
+              Icons.local_shipping_outlined,
+              color: Color(0xFF2563EB),
+              size: 22,
+            ),
             const SizedBox(width: 10),
             Text(
               'Track Shipment',
-              style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF181513)),
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF181513),
+              ),
             ),
           ],
         ),
@@ -148,12 +136,19 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
           children: [
             Text(
               'Tracking ID: ${widget.trackingId}',
-              style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600, color: const Color(0xFF181513)),
+              style: GoogleFonts.inter(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF181513),
+              ),
             ),
             const SizedBox(height: 6),
             Text(
               'Carrier: ${widget.carrier} • Status: ${widget.status}',
-              style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF64748B)),
+              style: GoogleFonts.inter(
+                fontSize: 12.5,
+                color: const Color(0xFF64748B),
+              ),
             ),
             const SizedBox(height: 16),
             Container(
@@ -167,19 +162,37 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.circle, size: 10, color: Color(0xFF16A34A)),
+                      const Icon(
+                        Icons.circle,
+                        size: 10,
+                        color: Color(0xFF16A34A),
+                      ),
                       const SizedBox(width: 8),
-                      Text('Jan 16, 02:30 PM: Dispatched from Central Warehouse',
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500)),
+                      Text(
+                        'Jan 16, 02:30 PM: Dispatched from Main Warehouse',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(Icons.circle, size: 10, color: Color(0xFF2563EB)),
+                      const Icon(
+                        Icons.circle,
+                        size: 10,
+                        color: Color(0xFF2563EB),
+                      ),
                       const SizedBox(width: 8),
-                      Text('Jan 17, 11:00 AM: In Transit near Bengaluru hub',
-                          style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500)),
+                      Text(
+                        'Jan 17, 11:00 AM: In Transit to destination hub',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -190,7 +203,13 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Close', style: GoogleFonts.inter(fontWeight: FontWeight.w600, color: const Color(0xFF64748B))),
+            child: Text(
+              'Close',
+              style: GoogleFonts.inter(
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF64748B),
+              ),
+            ),
           ),
         ],
       ),
@@ -205,23 +224,35 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Text(
           'Receive Transfer ${widget.transferId}',
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF181513)),
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF181513),
+          ),
         ),
         content: Text(
           'Are you sure you want to mark this transfer as received at ${widget.destName}? This will update destination inventory levels.',
-          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B)),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: const Color(0xFF64748B),
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(ctx).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Transfer ${widget.transferId} marked as received.'),
+                  content: Text(
+                    'Transfer ${widget.transferId} marked as received.',
+                  ),
                   backgroundColor: const Color(0xFF181513),
                   behavior: SnackBarBehavior.floating,
                 ),
@@ -230,7 +261,9 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF181513),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
             ),
             child: const Text('Confirm Receipt'),
           ),
@@ -247,16 +280,26 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Text(
           'Cancel Transfer ${widget.transferId}',
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFFDC2626)),
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFFDC2626),
+          ),
         ),
         content: Text(
           'Are you sure you want to cancel this transfer order? The items will be returned to available stock at ${widget.sourceName}.',
-          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B)),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: const Color(0xFF64748B),
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Keep Active', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            child: Text(
+              'Keep Active',
+              style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -272,7 +315,9 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFDC2626),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
             ),
             child: const Text('Cancel Transfer'),
           ),
@@ -395,7 +440,10 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                   ),
                   const SizedBox(width: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(16),
@@ -452,7 +500,11 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.local_shipping_outlined, size: 16, color: Color(0xFF181513)),
+                const Icon(
+                  Icons.local_shipping_outlined,
+                  size: 16,
+                  color: Color(0xFF181513),
+                ),
                 const SizedBox(width: 7),
                 Text(
                   'Track Shipment',
@@ -499,7 +551,11 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                     color: const Color(0xFFFEF3C7),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.warehouse_outlined, size: 20, color: Color(0xFFB45309)),
+                  child: const Icon(
+                    Icons.warehouse_outlined,
+                    size: 20,
+                    color: Color(0xFFB45309),
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -561,7 +617,11 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                     color: const Color(0xFFFEF3C7),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.storefront_outlined, size: 20, color: Color(0xFFB45309)),
+                  child: const Icon(
+                    Icons.storefront_outlined,
+                    size: 20,
+                    color: Color(0xFFB45309),
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -712,10 +772,7 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(
-              color: iconBg,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
             child: Icon(icon, size: 18, color: iconColor),
           ),
           const SizedBox(width: 12),
@@ -798,7 +855,11 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.add_rounded, size: 16, color: Color(0xFFB45309)),
+                const Icon(
+                  Icons.add_rounded,
+                  size: 16,
+                  color: Color(0xFFB45309),
+                ),
                 const SizedBox(width: 5),
                 Text(
                   'Add Items',
@@ -875,8 +936,13 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                     value: _selectAll,
                     onChanged: _toggleSelectAll,
                     activeColor: const Color(0xFF181513),
-                    side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    side: const BorderSide(
+                      color: Color(0xFFCBD5E1),
+                      width: 1.5,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -884,14 +950,22 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                   flex: 5,
                   child: Text(
                     'Product',
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 3,
                   child: Text(
                     'Variant / SKU',
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                 ),
                 Expanded(
@@ -899,7 +973,11 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                   child: Text(
                     'Requested',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                 ),
                 Expanded(
@@ -907,7 +985,11 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                   child: Text(
                     'Sent',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                 ),
                 Expanded(
@@ -915,7 +997,11 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                   child: Text(
                     'Received',
                     textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                 ),
                 Expanded(
@@ -923,7 +1009,11 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                   child: Text(
                     'Status',
                     textAlign: TextAlign.right,
-                    style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF64748B)),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF64748B),
+                    ),
                   ),
                 ),
               ],
@@ -931,171 +1021,219 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
           ),
 
           // Rows
-          ...List.generate(_items.length, (index) {
-            final item = _items[index];
-            final isLast = index == _items.length - 1;
-
-            return Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                border: isLast ? null : const Border(bottom: BorderSide(color: Color(0xFFF1F5F9))),
-              ),
-              child: Row(
+          if (_items.isEmpty)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              alignment: Alignment.center,
+              child: Column(
                 children: [
-                  SizedBox(
-                    width: 28,
-                    height: 28,
-                    child: Checkbox(
-                      value: item.isSelected,
-                      onChanged: (val) {
-                        setState(() {
-                          item.isSelected = val ?? false;
-                          _selectAll = _items.every((i) => i.isSelected);
-                        });
-                      },
-                      activeColor: const Color(0xFF181513),
-                      side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  const Icon(
+                    Icons.swap_horiz_rounded,
+                    size: 36,
+                    color: Color(0xFFCBD5E1),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'No items on this transfer order',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF475569),
                     ),
                   ),
-                  const SizedBox(width: 8),
-
-                  // Product thumbnail + Name + SKU
-                  Expanded(
-                    flex: 5,
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Container(
-                            width: 42,
-                            height: 42,
-                            color: const Color(0xFFF1F5F9),
-                            child: Image.asset(
-                              item.imageAsset,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => const Icon(
-                                Icons.image_not_supported_outlined,
-                                size: 20,
-                                color: Color(0xFF94A3B8),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF181513),
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                item.sku,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w400,
-                                  color: const Color(0xFF64748B),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Variant / SKU
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      item.variant,
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1E293B),
-                      ),
-                    ),
-                  ),
-
-                  // Requested
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '${item.requestedQty}',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF181513),
-                      ),
-                    ),
-                  ),
-
-                  // Sent
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      '${item.sentQty}',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF181513),
-                      ),
-                    ),
-                  ),
-
-                  // Received
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      item.receivedQty != null ? '${item.receivedQty}' : '—',
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF64748B),
-                      ),
-                    ),
-                  ),
-
-                  // Status
-                  Expanded(
-                    flex: 2,
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          item.status,
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF2563EB),
-                          ),
-                        ),
-                      ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Items scheduled for relocation between locations will appear here.',
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: const Color(0xFF94A3B8),
                     ),
                   ),
                 ],
               ),
-            );
-          }),
+            )
+          else
+            ...List.generate(_items.length, (index) {
+              final item = _items[index];
+              final isLast = index == _items.length - 1;
+
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  border: isLast
+                      ? null
+                      : const Border(
+                          bottom: BorderSide(color: Color(0xFFF1F5F9)),
+                        ),
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: Checkbox(
+                        value: item.isSelected,
+                        onChanged: (val) {
+                          setState(() {
+                            item.isSelected = val ?? false;
+                            _selectAll = _items.every((i) => i.isSelected);
+                          });
+                        },
+                        activeColor: const Color(0xFF181513),
+                        side: const BorderSide(
+                          color: Color(0xFFCBD5E1),
+                          width: 1.5,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Product thumbnail + Name + SKU
+                    Expanded(
+                      flex: 5,
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Container(
+                              width: 42,
+                              height: 42,
+                              color: const Color(0xFFF1F5F9),
+                              child: Image.asset(
+                                item.imageAsset,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(
+                                      Icons.image_not_supported_outlined,
+                                      size: 20,
+                                      color: Color(0xFF94A3B8),
+                                    ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 13.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF181513),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  item.sku,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w400,
+                                    color: const Color(0xFF64748B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Variant / SKU
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        item.variant,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF1E293B),
+                        ),
+                      ),
+                    ),
+
+                    // Requested
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        '${item.requestedQty}',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF181513),
+                        ),
+                      ),
+                    ),
+
+                    // Sent
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        '${item.sentQty}',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF181513),
+                        ),
+                      ),
+                    ),
+
+                    // Received
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        item.receivedQty != null ? '${item.receivedQty}' : '—',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
+                      ),
+                    ),
+
+                    // Status
+                    Expanded(
+                      flex: 2,
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            item.status,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: const Color(0xFF2563EB),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );
@@ -1136,7 +1274,11 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                 borderRadius: BorderRadius.circular(4),
                 child: const Padding(
                   padding: EdgeInsets.all(4),
-                  child: Icon(Icons.more_vert_rounded, size: 18, color: Color(0xFF64748B)),
+                  child: Icon(
+                    Icons.more_vert_rounded,
+                    size: 18,
+                    color: Color(0xFF64748B),
+                  ),
                 ),
               ),
             ],
@@ -1264,7 +1406,10 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
               onTap: widget.onTrackShipment ?? _showTrackShipmentModal,
               borderRadius: BorderRadius.circular(6),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
@@ -1282,7 +1427,11 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
                       ),
                     ),
                     const SizedBox(width: 5),
-                    const Icon(Icons.open_in_new_rounded, size: 13, color: Color(0xFF64748B)),
+                    const Icon(
+                      Icons.open_in_new_rounded,
+                      size: 13,
+                      color: Color(0xFF64748B),
+                    ),
                   ],
                 ),
               ),
@@ -1302,17 +1451,24 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
           width: double.infinity,
           height: 42,
           child: ElevatedButton(
-            onPressed: widget.onReceiveTransfer ?? _showReceiveConfirmationDialog,
+            onPressed:
+                widget.onReceiveTransfer ?? _showReceiveConfirmationDialog,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF181513),
               foregroundColor: Colors.white,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.check_circle_outline_rounded, size: 16, color: Colors.white),
+                const Icon(
+                  Icons.check_circle_outline_rounded,
+                  size: 16,
+                  color: Colors.white,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Receive Transfer',
@@ -1333,25 +1489,33 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
           width: double.infinity,
           height: 42,
           child: OutlinedButton(
-            onPressed: widget.onPrintDocket ?? () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Generating printable transfer docket...'),
-                  duration: Duration(seconds: 1),
-                ),
-              );
-            },
+            onPressed:
+                widget.onPrintDocket ??
+                () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Generating printable transfer docket...'),
+                      duration: Duration(seconds: 1),
+                    ),
+                  );
+                },
             style: OutlinedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: const Color(0xFF181513),
               side: const BorderSide(color: Color(0xFFE2E8F0)),
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.article_outlined, size: 16, color: Color(0xFF181513)),
+                const Icon(
+                  Icons.article_outlined,
+                  size: 16,
+                  color: Color(0xFF181513),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Print Transfer Docket',
@@ -1378,12 +1542,18 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
               foregroundColor: const Color(0xFFDC2626),
               side: const BorderSide(color: Color(0xFFFECACA)),
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.close_rounded, size: 16, color: Color(0xFFDC2626)),
+                const Icon(
+                  Icons.close_rounded,
+                  size: 16,
+                  color: Color(0xFFDC2626),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Cancel Transfer',
@@ -1415,7 +1585,11 @@ class _TransferOrderDetailViewState extends State<TransferOrderDetailView> {
         children: [
           const Padding(
             padding: EdgeInsets.only(top: 1),
-            child: Icon(Icons.info_outline_rounded, size: 18, color: Color(0xFFB45309)),
+            child: Icon(
+              Icons.info_outline_rounded,
+              size: 18,
+              color: Color(0xFFB45309),
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(

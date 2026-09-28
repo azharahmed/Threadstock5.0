@@ -260,8 +260,11 @@ class _IntegrationsMarketplaceViewState
     return Stack(
       alignment: Alignment.center,
       children: [
-        const Icon(Icons.shopping_bag_rounded,
-            color: Color(0xFF5E8E3E), size: 22),
+        const Icon(
+          Icons.shopping_bag_rounded,
+          color: Color(0xFF5E8E3E),
+          size: 22,
+        ),
         Positioned(
           top: 13,
           child: Text(
@@ -288,8 +291,9 @@ class _IntegrationsMarketplaceViewState
             child: Container(
               decoration: const BoxDecoration(
                 color: Color(0xFF00599C),
-                borderRadius:
-                    BorderRadius.horizontal(left: Radius.circular(2.5)),
+                borderRadius: BorderRadius.horizontal(
+                  left: Radius.circular(2.5),
+                ),
               ),
             ),
           ),
@@ -298,8 +302,9 @@ class _IntegrationsMarketplaceViewState
             child: Container(
               decoration: const BoxDecoration(
                 color: Color(0xFFFFB703),
-                borderRadius:
-                    BorderRadius.horizontal(right: Radius.circular(2.5)),
+                borderRadius: BorderRadius.horizontal(
+                  right: Radius.circular(2.5),
+                ),
               ),
             ),
           ),
@@ -330,7 +335,11 @@ class _IntegrationsMarketplaceViewState
         color: const Color(0xFF572A99),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 16),
+      child: const Icon(
+        Icons.play_arrow_rounded,
+        color: Colors.white,
+        size: 16,
+      ),
     );
   }
 
@@ -367,23 +376,11 @@ class _IntegrationsMarketplaceViewState
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 14,
-            height: 2,
-            color: Colors.white,
-          ),
+          Container(width: 14, height: 2, color: Colors.white),
           const SizedBox(height: 2),
-          Container(
-            width: 14,
-            height: 2,
-            color: Colors.white,
-          ),
+          Container(width: 14, height: 2, color: Colors.white),
           const SizedBox(height: 2),
-          Container(
-            width: 14,
-            height: 2,
-            color: Colors.white,
-          ),
+          Container(width: 14, height: 2, color: Colors.white),
         ],
       ),
     );
@@ -431,11 +428,7 @@ class _IntegrationsMarketplaceViewState
 
   // Custom Webhook
   Widget _buildWebhookLogo() {
-    return const Icon(
-      Icons.hub_outlined,
-      color: Color(0xFFE11D48),
-      size: 20,
-    );
+    return const Icon(Icons.hub_outlined, color: Color(0xFFE11D48), size: 20);
   }
 
   // ========================================================
@@ -446,8 +439,11 @@ class _IntegrationsMarketplaceViewState
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -475,7 +471,8 @@ class _IntegrationsMarketplaceViewState
             return Dialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Container(
                 width: 480,
                 padding: const EdgeInsets.all(24),
@@ -514,8 +511,11 @@ class _IntegrationsMarketplaceViewState
                           ],
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded,
-                              size: 20, color: Color(0xFF7A7268)),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            size: 20,
+                            color: Color(0xFF7A7268),
+                          ),
                           onPressed: () => Navigator.pop(ctx),
                         ),
                       ],
@@ -546,16 +546,22 @@ class _IntegrationsMarketplaceViewState
                       controller: apiKeyController,
                       style: GoogleFonts.inter(fontSize: 13),
                       decoration: InputDecoration(
-                        hintText: 'Enter secret token or click OAuth Connect below',
+                        hintText:
+                            'Enter secret token or click OAuth Connect below',
                         hintStyle: GoogleFonts.inter(
-                            fontSize: 12, color: const Color(0xFF9E958A)),
+                          fontSize: 12,
+                          color: const Color(0xFF9E958A),
+                        ),
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 11),
+                          horizontal: 14,
+                          vertical: 11,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Color(0xFFE2D8CC)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2D8CC),
+                          ),
                         ),
                       ),
                     ),
@@ -571,8 +577,11 @@ class _IntegrationsMarketplaceViewState
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.shield_outlined,
-                              size: 18, color: Color(0xFFBA8A55)),
+                          const Icon(
+                            Icons.shield_outlined,
+                            size: 18,
+                            color: Color(0xFFBA8A55),
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -597,9 +606,12 @@ class _IntegrationsMarketplaceViewState
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Color(0xFFD8CEC1)),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 10),
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           child: Text(
                             'Cancel',
@@ -616,20 +628,27 @@ class _IntegrationsMarketplaceViewState
                               item.status = IntegrationStatus.connected;
                             });
                             Navigator.pop(ctx);
-                            _showFeedback('Connected ${item.title} successfully!');
+                            _showFeedback(
+                              'Connected ${item.title} successfully!',
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF1E1C1A),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 10),
+                              horizontal: 18,
+                              vertical: 10,
+                            ),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
                           child: Text(
                             'Connect Integration',
                             style: GoogleFonts.inter(
-                                fontSize: 13, fontWeight: FontWeight.w600),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ],
@@ -665,7 +684,8 @@ class _IntegrationsMarketplaceViewState
             return Dialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Container(
                 width: 490,
                 padding: const EdgeInsets.all(24),
@@ -704,8 +724,11 @@ class _IntegrationsMarketplaceViewState
                           ],
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded,
-                              size: 20, color: Color(0xFF7A7268)),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            size: 20,
+                            color: Color(0xFF7A7268),
+                          ),
                           onPressed: () => Navigator.pop(ctx),
                         ),
                       ],
@@ -716,7 +739,9 @@ class _IntegrationsMarketplaceViewState
                     Text(
                       'Sync Preferences',
                       style: GoogleFonts.inter(
-                          fontSize: 13, fontWeight: FontWeight.w700),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 10),
                     Container(
@@ -734,20 +759,27 @@ class _IntegrationsMarketplaceViewState
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Real-time Bidirectional Sync',
-                                      style: GoogleFonts.inter(
-                                          fontSize: 12.5,
-                                          fontWeight: FontWeight.w600)),
+                                  Text(
+                                    'Real-time Bidirectional Sync',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                   Text(
                                     'Update catalog quantities and incoming orders instantaneously.',
                                     style: GoogleFonts.inter(
-                                        fontSize: 11.5,
-                                        color: const Color(0xFF7E766B)),
+                                      fontSize: 11.5,
+                                      color: const Color(0xFF7E766B),
+                                    ),
                                   ),
                                 ],
                               ),
-                              const Icon(Icons.toggle_on_rounded,
-                                  color: Color(0xFF5C3E21), size: 36),
+                              const Icon(
+                                Icons.toggle_on_rounded,
+                                color: Color(0xFF5C3E21),
+                                size: 36,
+                              ),
                             ],
                           ),
                           const Divider(height: 18, color: Color(0xFFEBE2D5)),
@@ -757,20 +789,27 @@ class _IntegrationsMarketplaceViewState
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Automated Error Reconciliation',
-                                      style: GoogleFonts.inter(
-                                          fontSize: 12.5,
-                                          fontWeight: FontWeight.w600)),
+                                  Text(
+                                    'Automated Error Reconciliation',
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                   Text(
                                     'Retry failed payload dispatches up to 5 times.',
                                     style: GoogleFonts.inter(
-                                        fontSize: 11.5,
-                                        color: const Color(0xFF7E766B)),
+                                      fontSize: 11.5,
+                                      color: const Color(0xFF7E766B),
+                                    ),
                                   ),
                                 ],
                               ),
-                              const Icon(Icons.toggle_on_rounded,
-                                  color: Color(0xFF5C3E21), size: 36),
+                              const Icon(
+                                Icons.toggle_on_rounded,
+                                color: Color(0xFF5C3E21),
+                                size: 36,
+                              ),
                             ],
                           ),
                         ],
@@ -804,11 +843,16 @@ class _IntegrationsMarketplaceViewState
                             OutlinedButton(
                               onPressed: () => Navigator.pop(ctx),
                               style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: Color(0xFFD8CEC1)),
+                                side: const BorderSide(
+                                  color: Color(0xFFD8CEC1),
+                                ),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 10),
+                                  horizontal: 16,
+                                  vertical: 10,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8)),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                               child: Text(
                                 'Cancel',
@@ -823,20 +867,26 @@ class _IntegrationsMarketplaceViewState
                               onPressed: () {
                                 Navigator.pop(ctx);
                                 _showFeedback(
-                                    '${item.title} configuration updated and synced.');
+                                  '${item.title} configuration updated and synced.',
+                                );
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF1E1C1A),
                                 foregroundColor: Colors.white,
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 18, vertical: 10),
+                                  horizontal: 18,
+                                  vertical: 10,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8)),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                               child: Text(
                                 'Save Settings',
                                 style: GoogleFonts.inter(
-                                    fontSize: 13, fontWeight: FontWeight.w600),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
@@ -859,8 +909,9 @@ class _IntegrationsMarketplaceViewState
       builder: (ctx) {
         return Dialog(
           backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Container(
             width: 520,
             padding: const EdgeInsets.all(24),
@@ -880,8 +931,11 @@ class _IntegrationsMarketplaceViewState
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded,
-                          size: 20, color: Color(0xFF7A7268)),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: Color(0xFF7A7268),
+                      ),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
@@ -901,22 +955,25 @@ class _IntegrationsMarketplaceViewState
                   {
                     'name': 'WooCommerce',
                     'cat': 'E-Commerce',
-                    'desc': 'WordPress store sync with automated stock management.'
+                    'desc':
+                        'WordPress store sync with automated stock management.',
                   },
                   {
                     'name': 'Zoho Books',
                     'cat': 'Accounting',
-                    'desc': 'GST compliant cloud ledger and invoice generation.'
+                    'desc':
+                        'GST compliant cloud ledger and invoice generation.',
                   },
                   {
                     'name': 'Delhivery Direct',
                     'cat': 'Logistics',
-                    'desc': 'Express nationwide courier dispatch & AWB label generation.'
+                    'desc':
+                        'Express nationwide courier dispatch & AWB label generation.',
                   },
                   {
                     'name': 'Salesforce CRM',
                     'cat': 'Enterprise',
-                    'desc': 'B2B client order books and client accounts sync.'
+                    'desc': 'B2B client order books and client accounts sync.',
                   },
                 ]) ...[
                   Container(
@@ -937,8 +994,11 @@ class _IntegrationsMarketplaceViewState
                             borderRadius: BorderRadius.circular(6),
                             border: Border.all(color: const Color(0xFFE2D8CC)),
                           ),
-                          child: const Icon(Icons.extension_outlined,
-                              size: 18, color: Color(0xFF7A481B)),
+                          child: const Icon(
+                            Icons.extension_outlined,
+                            size: 18,
+                            color: Color(0xFF7A481B),
+                          ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -958,7 +1018,9 @@ class _IntegrationsMarketplaceViewState
                                   const SizedBox(width: 8),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                        horizontal: 6, vertical: 2),
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF0EBE1),
                                       borderRadius: BorderRadius.circular(4),
@@ -966,9 +1028,10 @@ class _IntegrationsMarketplaceViewState
                                     child: Text(
                                       upcoming['cat']!,
                                       style: GoogleFonts.inter(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF7E766B)),
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFF7E766B),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -989,14 +1052,18 @@ class _IntegrationsMarketplaceViewState
                           onPressed: () {
                             Navigator.pop(ctx);
                             _showFeedback(
-                                'Requested early access to ${upcoming['name']} integration');
+                              'Requested early access to ${upcoming['name']} integration',
+                            );
                           },
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Color(0xFFBA8A55)),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(6)),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
                           ),
                           child: Text(
                             'Request',
@@ -1026,8 +1093,9 @@ class _IntegrationsMarketplaceViewState
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           title: Text(
             'Request Custom Integration',
             style: GoogleFonts.cormorantGaramond(
@@ -1054,9 +1122,11 @@ class _IntegrationsMarketplaceViewState
                 style: GoogleFonts.inter(fontSize: 13),
                 decoration: InputDecoration(
                   hintText:
-                      'e.g. SAP Business One connector for Delhi central store with direct SQL or webhook dispatch...',
+                      'e.g. SAP Business One connector for facility node with direct SQL or webhook dispatch...',
                   hintStyle: GoogleFonts.inter(
-                      fontSize: 12, color: const Color(0xFF9E958A)),
+                    fontSize: 12,
+                    color: const Color(0xFF9E958A),
+                  ),
                   isDense: true,
                   contentPadding: const EdgeInsets.all(12),
                   border: OutlineInputBorder(
@@ -1082,13 +1152,15 @@ class _IntegrationsMarketplaceViewState
               onPressed: () {
                 Navigator.pop(ctx);
                 _showFeedback(
-                    'Support ticket created. Our integration engineer will reach out shortly.');
+                  'Support ticket created. Our integration engineer will reach out shortly.',
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1E1C1A),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
               child: Text(
                 'Submit Request',
@@ -1121,12 +1193,14 @@ class _IntegrationsMarketplaceViewState
 
     // Filter integrations
     final filtered = _integrations.where((item) {
-      final matchesSearch = _searchQuery.isEmpty ||
+      final matchesSearch =
+          _searchQuery.isEmpty ||
           item.title.toLowerCase().contains(_searchQuery) ||
           item.description.toLowerCase().contains(_searchQuery) ||
           item.category.toLowerCase().contains(_searchQuery);
 
-      final matchesCategory = _selectedCategory == 'All Categories' ||
+      final matchesCategory =
+          _selectedCategory == 'All Categories' ||
           item.category == _selectedCategory;
 
       return matchesSearch && matchesCategory;
@@ -1167,8 +1241,11 @@ class _IntegrationsMarketplaceViewState
                         ),
                         child: Column(
                           children: [
-                            const Icon(Icons.search_off_rounded,
-                                size: 40, color: Color(0xFFBA8A55)),
+                            const Icon(
+                              Icons.search_off_rounded,
+                              size: 40,
+                              color: Color(0xFFBA8A55),
+                            ),
                             const SizedBox(height: 12),
                             Text(
                               'No integrations found',
@@ -1290,14 +1367,19 @@ class _IntegrationsMarketplaceViewState
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: Row(
                 children: [
-                  const Icon(Icons.search_rounded,
-                      size: 17, color: Color(0xFF8C8478)),
+                  const Icon(
+                    Icons.search_rounded,
+                    size: 17,
+                    color: Color(0xFF8C8478),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       controller: _searchController,
                       style: GoogleFonts.inter(
-                          fontSize: 12.5, fontWeight: FontWeight.w400),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w400,
+                      ),
                       decoration: InputDecoration(
                         hintText: 'Search integrations...',
                         hintStyle: GoogleFonts.inter(
@@ -1314,8 +1396,11 @@ class _IntegrationsMarketplaceViewState
                   if (_searchQuery.isNotEmpty)
                     InkWell(
                       onTap: () => _searchController.clear(),
-                      child: const Icon(Icons.close_rounded,
-                          size: 15, color: Color(0xFF8C8478)),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 15,
+                        color: Color(0xFF8C8478),
+                      ),
                     ),
                 ],
               ),
@@ -1334,18 +1419,18 @@ class _IntegrationsMarketplaceViewState
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: _selectedCategory,
-                  icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                      size: 18, color: Color(0xFF181513)),
+                  icon: const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                    color: Color(0xFF181513),
+                  ),
                   style: GoogleFonts.inter(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w500,
                     color: const Color(0xFF181513),
                   ),
                   items: _categories.map((cat) {
-                    return DropdownMenuItem(
-                      value: cat,
-                      child: Text(cat),
-                    );
+                    return DropdownMenuItem(value: cat, child: Text(cat));
                   }).toList(),
                   onChanged: (val) {
                     if (val != null) {
@@ -1462,22 +1547,34 @@ class _IntegrationsMarketplaceViewState
                 itemBuilder: (ctx) => [
                   if (item.status == IntegrationStatus.connected) ...[
                     const PopupMenuItem(
-                        value: 'configure', child: Text('Configure Settings')),
+                      value: 'configure',
+                      child: Text('Configure Settings'),
+                    ),
                     const PopupMenuItem(
-                        value: 'sync', child: Text('Force Sync Now')),
+                      value: 'sync',
+                      child: Text('Force Sync Now'),
+                    ),
                     const PopupMenuItem(
-                        value: 'disconnect',
-                        child: Text('Disconnect',
-                            style: TextStyle(color: Colors.red))),
+                      value: 'disconnect',
+                      child: Text(
+                        'Disconnect',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
                   ] else ...[
                     const PopupMenuItem(
-                        value: 'connect', child: Text('Connect Integration')),
+                      value: 'connect',
+                      child: Text('Connect Integration'),
+                    ),
                   ],
                 ],
                 child: const Padding(
                   padding: EdgeInsets.all(4),
-                  child: Icon(Icons.more_horiz_rounded,
-                      size: 18, color: Color(0xFF7E766B)),
+                  child: Icon(
+                    Icons.more_horiz_rounded,
+                    size: 18,
+                    color: Color(0xFF7E766B),
+                  ),
                 ),
               ),
             ],
@@ -1561,8 +1658,9 @@ class _IntegrationsMarketplaceViewState
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Color(0xFFE2D8CC)),
             backgroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1596,8 +1694,9 @@ class _IntegrationsMarketplaceViewState
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: Color(0xFFE2D8CC)),
             backgroundColor: Colors.white,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1632,8 +1731,7 @@ class _IntegrationsMarketplaceViewState
           backgroundColor: const Color(0xFF1E1C1A),
           foregroundColor: Colors.white,
           elevation: 0,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(
           'Connect',
@@ -1686,7 +1784,8 @@ class _IntegrationsMarketplaceViewState
               backgroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: Text(
               'Contact Support',

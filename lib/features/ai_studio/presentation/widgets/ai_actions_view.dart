@@ -55,127 +55,15 @@ class AiActionsView extends StatefulWidget {
 }
 
 class _AiActionsViewState extends State<AiActionsView> {
-  int _selectedTabIndex = 1; // 0: All, 1: Awaiting Review, 2: Approved, 3: Rejected, 4: Completed
+  int _selectedTabIndex =
+      1; // 0: All, 1: Awaiting Review, 2: Approved, 3: Rejected, 4: Completed
   final Set<String> _checkedActionIds = {};
 
   String _selectedLocation = 'Location';
   String _selectedActionType = 'Action Type';
   String _selectedRiskLevel = 'Risk Level';
   String _selectedPreparedDate = 'Prepared Date';
-
-  final List<AiActionCardData> _actions = const [
-    AiActionCardData(
-      id: 'ACT-01',
-      title: 'Replenish Silk Scarves (Scarlet / OS)',
-      description:
-          'Current stock will fall below 14 days. Suggested transit via Vrindavan Express cargo.',
-      proposalType: 'REPLENISHMENT PROPOSAL',
-      proposalTypeBg: Color(0xFFFEF3C7),
-      proposalTypeColor: Color(0xFFB45309),
-      confidenceBadge: 'High Confidence',
-      confidenceBadgeBg: Color(0xFFECFDF5),
-      confidenceBadgeColor: Color(0xFF059669),
-      confidenceScore: '94.2% (High)',
-      confidenceScoreColor: Color(0xFF059669),
-      potentialImpact: '₹84,000',
-      imageAsset: 'Assets/silk_scarves.jpg',
-      dataCapsules: [
-        'Current: 12 units',
-        'Recommended: 120 units',
-        'ETA: 5 days',
-        'Fill Rate: 98%',
-      ],
-      isHighlighted: true,
-      isPrimaryApprove: true,
-    ),
-    AiActionCardData(
-      id: 'ACT-02',
-      title: 'Transfer Classic White Oxford (M)',
-      description:
-          'Surplus 220 units at Delhi Hub. Suggested transfer to Mumbai Hub.',
-      proposalType: 'TRANSFER SUGGESTION',
-      proposalTypeBg: Color(0xFFEFF6FF),
-      proposalTypeColor: Color(0xFF2563EB),
-      confidenceBadge: 'High Confidence',
-      confidenceBadgeBg: Color(0xFFFEF3C7),
-      confidenceBadgeColor: Color(0xFFB45309),
-      confidenceScore: '91.6% (High)',
-      confidenceScoreColor: Color(0xFF059669),
-      potentialImpact: '₹52,000',
-      imageAsset: 'Assets/oxford_linen_shirt.jpg',
-      dataCapsules: [
-        'Transfer: 100 units',
-        'From: Delhi (Zone B)',
-        'To: Mumbai (Zone C)',
-        'ETA: 3 days',
-      ],
-    ),
-    AiActionCardData(
-      id: 'ACT-03',
-      title: 'Adjust Purchase Plan – Merino Wool Blazer (Navy / L)',
-      description:
-          'Forecast indicates 30% lower demand next month. Consider reducing PO quantity.',
-      proposalType: 'DEMAND OPTIMIZATION',
-      proposalTypeBg: Color(0xFFFEE2E2),
-      proposalTypeColor: Color(0xFFDC2626),
-      confidenceBadge: 'Medium Confidence',
-      confidenceBadgeBg: Color(0xFFFEF3C7),
-      confidenceBadgeColor: Color(0xFFB45309),
-      confidenceScore: '78.4% (Medium)',
-      confidenceScoreColor: Color(0xFFD97706),
-      potentialImpact: '₹36,000',
-      imageAsset: 'Assets/merino_wool_blazer.jpg',
-      dataCapsules: [
-        'Current PO: 200 units',
-        'Suggested: 140 units',
-        'Reduction: 60 units',
-        'Savings: ₹36,000',
-      ],
-    ),
-    AiActionCardData(
-      id: 'ACT-04',
-      title: 'Switch Supplier – Linen Trousers (Sand / 32)',
-      description:
-          'Alternative supplier offers 12% lower price with same quality.',
-      proposalType: 'PRICE OPPORTUNITY',
-      proposalTypeBg: Color(0xFFF3E8FF),
-      proposalTypeColor: Color(0xFF9333EA),
-      confidenceBadge: 'High Confidence',
-      confidenceBadgeBg: Color(0xFFECFDF5),
-      confidenceBadgeColor: Color(0xFF059669),
-      confidenceScore: '89.1% (High)',
-      confidenceScoreColor: Color(0xFF059669),
-      potentialImpact: '₹48,000',
-      imageAsset: 'Assets/raw_denim_jeans.jpg',
-      dataCapsules: [
-        'Current: ₹1,200',
-        'Suggested: ₹1,056',
-        'Savings: 12%',
-        'Annual Impact: ₹48,000',
-      ],
-    ),
-    AiActionCardData(
-      id: 'ACT-05',
-      title: 'Run Markdown – Winter Collection',
-      description:
-          '12 SKUs with < 15 days projected coverage. Recommend 20% markdown.',
-      proposalType: 'SLOW MOVING ALERT',
-      proposalTypeBg: Color(0xFFFEE2E2),
-      proposalTypeColor: Color(0xFFDC2626),
-      confidenceBadge: 'Medium Confidence',
-      confidenceBadgeBg: Color(0xFFFEF3C7),
-      confidenceBadgeColor: Color(0xFFB45309),
-      confidenceScore: '76.3% (Medium)',
-      confidenceScoreColor: Color(0xFFD97706),
-      potentialImpact: '₹72,000',
-      imageAsset: 'Assets/cashmere_sweater.jpg',
-      dataCapsules: [
-        'Affected SKUs: 12',
-        'Est. Clearance: 45 days',
-        'Revenue Recovery: ₹72,000',
-      ],
-    ),
-  ];
+  final List<AiActionCardData> _actions = const [];
 
   void _showNotification(String message, {bool isSuccess = true}) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -183,8 +71,12 @@ class _AiActionsViewState extends State<AiActionsView> {
         content: Row(
           children: [
             Icon(
-              isSuccess ? Icons.check_circle_outline_rounded : Icons.info_outline_rounded,
-              color: isSuccess ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+              isSuccess
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.info_outline_rounded,
+              color: isSuccess
+                  ? const Color(0xFF16A34A)
+                  : const Color(0xFFD97706),
               size: 18,
             ),
             const SizedBox(width: 10),
@@ -224,7 +116,47 @@ class _AiActionsViewState extends State<AiActionsView> {
           const SizedBox(height: 18),
 
           // 4. Action Cards List
-          ..._actions.map(_buildActionCard),
+          if (_actions.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.auto_awesome_outlined,
+                    size: 36,
+                    color: Color(0xFFCBD5E1),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No AI actions pending',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF181513),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'ThreadStock AI will prepare replenishment, transfer, and optimization proposals once operational demand history is available.',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF64748B),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
+          else
+            ..._actions.map(_buildActionCard),
         ],
       ),
     );
@@ -268,7 +200,9 @@ class _AiActionsViewState extends State<AiActionsView> {
             if (widget.onAskThreadStockAi != null) {
               widget.onAskThreadStockAi!();
             } else {
-              _showNotification('ThreadStock AI assistant ready to optimize inventory.');
+              _showNotification(
+                'ThreadStock AI assistant ready to optimize inventory.',
+              );
             }
           },
           borderRadius: BorderRadius.circular(8),
@@ -321,12 +255,14 @@ class _AiActionsViewState extends State<AiActionsView> {
         Expanded(
           child: _buildKpiCard(
             icon: Icons.assignment_outlined,
-            iconBg: const Color(0xFFFEF3C7),
-            iconColor: const Color(0xFFB45309),
+            iconBg: const Color(0xFFF1F5F9),
+            iconColor: const Color(0xFF94A3B8),
             label: 'Awaiting Review',
-            value: '5 actions',
-            subLabel: 'Requires sign-off',
-            subColor: const Color(0xFFB45309),
+            value: _actions.isNotEmpty ? '${_actions.length} actions' : '0',
+            subLabel: _actions.isNotEmpty
+                ? 'Requires sign-off'
+                : 'No actions pending',
+            subColor: const Color(0xFF64748B),
           ),
         ),
         const SizedBox(width: 14),
@@ -335,12 +271,12 @@ class _AiActionsViewState extends State<AiActionsView> {
         Expanded(
           child: _buildKpiCard(
             icon: Icons.check_circle_outline_rounded,
-            iconBg: const Color(0xFFECFDF5),
-            iconColor: const Color(0xFF059669),
+            iconBg: const Color(0xFFF1F5F9),
+            iconColor: const Color(0xFF94A3B8),
             label: 'Approved Today',
-            value: '3 Approved',
-            subLabel: '↑ 100% execution',
-            subColor: const Color(0xFF16A34A),
+            value: '0',
+            subLabel: 'No recent approvals',
+            subColor: const Color(0xFF64748B),
           ),
         ),
         const SizedBox(width: 14),
@@ -349,12 +285,12 @@ class _AiActionsViewState extends State<AiActionsView> {
         Expanded(
           child: _buildKpiCard(
             icon: Icons.bar_chart_rounded,
-            iconBg: const Color(0xFFFEF3C7),
-            iconColor: const Color(0xFFB45309),
+            iconBg: const Color(0xFFF1F5F9),
+            iconColor: const Color(0xFF94A3B8),
             label: 'Potential Revenue Impact',
-            value: '₹1,84,000',
-            subLabel: 'Sales protected',
-            subColor: const Color(0xFF2563EB),
+            value: '—',
+            subLabel: 'Awaiting AI proposals',
+            subColor: const Color(0xFF64748B),
             showInfoIcon: true,
           ),
         ),
@@ -395,9 +331,7 @@ class _AiActionsViewState extends State<AiActionsView> {
               color: iconBg,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Center(
-              child: Icon(icon, size: 20, color: iconColor),
-            ),
+            child: Center(child: Icon(icon, size: 20, color: iconColor)),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -479,18 +413,29 @@ class _AiActionsViewState extends State<AiActionsView> {
                 onTap: () => setState(() => _selectedTabIndex = idx),
                 borderRadius: BorderRadius.circular(6),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
-                    color: isSelected ? const Color(0xFF181513) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFF181513)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(6),
-                    border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
+                    border: isSelected
+                        ? null
+                        : Border.all(color: const Color(0xFFE2E8F0)),
                   ),
                   child: Text(
                     tabs[idx],
                     style: GoogleFonts.inter(
                       fontSize: 12.5,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                      color: isSelected ? Colors.white : const Color(0xFF64748B),
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF64748B),
                     ),
                   ),
                 ),
@@ -505,25 +450,50 @@ class _AiActionsViewState extends State<AiActionsView> {
           children: [
             _buildSmallDropdown(
               label: _selectedLocation,
-              options: const ['Location', 'All Locations', 'Central Warehouse (Zone A)', 'Flagship Delhi (Zone B)', 'Mumbai Hub'],
+              options: const [
+                'Location',
+                'All Locations',
+                'Primary Facility (Zone A)',
+                'Regional Store (Zone B)',
+                'Distribution Center',
+              ],
               onSelected: (val) => setState(() => _selectedLocation = val),
             ),
             const SizedBox(width: 8),
             _buildSmallDropdown(
               label: _selectedActionType,
-              options: const ['Action Type', 'All Types', 'Replenishment', 'Transfer', 'Demand Optimization', 'Price Opportunity', 'Markdown'],
+              options: const [
+                'Action Type',
+                'All Types',
+                'Replenishment',
+                'Transfer',
+                'Demand Optimization',
+                'Price Opportunity',
+                'Markdown',
+              ],
               onSelected: (val) => setState(() => _selectedActionType = val),
             ),
             const SizedBox(width: 8),
             _buildSmallDropdown(
               label: _selectedRiskLevel,
-              options: const ['Risk Level', 'All Risk', 'High Confidence', 'Medium Confidence', 'Low Risk'],
+              options: const [
+                'Risk Level',
+                'All Risk',
+                'High Confidence',
+                'Medium Confidence',
+                'Low Risk',
+              ],
               onSelected: (val) => setState(() => _selectedRiskLevel = val),
             ),
             const SizedBox(width: 8),
             _buildSmallDropdown(
               label: _selectedPreparedDate,
-              options: const ['Prepared Date', 'Today', 'Last 7 Days', 'Last 30 Days'],
+              options: const [
+                'Prepared Date',
+                'Today',
+                'Last 7 Days',
+                'Last 30 Days',
+              ],
               onSelected: (val) => setState(() => _selectedPreparedDate = val),
             ),
           ],
@@ -597,7 +567,9 @@ class _AiActionsViewState extends State<AiActionsView> {
         color: item.isHighlighted ? const Color(0xFFFFFDF9) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: item.isHighlighted ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0),
+          color: item.isHighlighted
+              ? const Color(0xFFFDE68A)
+              : const Color(0xFFE2E8F0),
           width: item.isHighlighted ? 1.4 : 1.0,
         ),
         boxShadow: [
@@ -629,7 +601,9 @@ class _AiActionsViewState extends State<AiActionsView> {
                   });
                 },
                 activeColor: const Color(0xFFB45309),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
                 side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
               ),
             ),
@@ -669,7 +643,10 @@ class _AiActionsViewState extends State<AiActionsView> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: item.proposalTypeBg,
                         borderRadius: BorderRadius.circular(4),
@@ -686,7 +663,10 @@ class _AiActionsViewState extends State<AiActionsView> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: item.confidenceBadgeBg,
                         borderRadius: BorderRadius.circular(4),
@@ -734,7 +714,10 @@ class _AiActionsViewState extends State<AiActionsView> {
                   children: item.dataCapsules
                       .map(
                         (cap) => Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 3.5,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(6),
@@ -826,12 +809,17 @@ class _AiActionsViewState extends State<AiActionsView> {
                         if (widget.onReviewAction != null) {
                           widget.onReviewAction!(item.id);
                         } else {
-                          _showNotification('Action ${item.id} approved & dispatched.');
+                          _showNotification(
+                            'Action ${item.id} approved & dispatched.',
+                          );
                         }
                       },
                       borderRadius: BorderRadius.circular(6),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFF181513),
                           borderRadius: BorderRadius.circular(6),
@@ -852,12 +840,17 @@ class _AiActionsViewState extends State<AiActionsView> {
                         if (widget.onReviewAction != null) {
                           widget.onReviewAction!(item.id);
                         } else {
-                          _showNotification('Opening review modal for ${item.title}.');
+                          _showNotification(
+                            'Opening review modal for ${item.title}.',
+                          );
                         }
                       },
                       borderRadius: BorderRadius.circular(6),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 7),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 7,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(6),
@@ -882,23 +875,34 @@ class _AiActionsViewState extends State<AiActionsView> {
                     ),
                     color: Colors.white,
                     onSelected: (action) {
-                      _showNotification('Action "$action" executed on ${item.id}.');
+                      _showNotification(
+                        'Action "$action" executed on ${item.id}.',
+                      );
                     },
                     itemBuilder: (context) => [
                       PopupMenuItem(
                         value: 'dismiss',
                         height: 34,
-                        child: Text('Dismiss Recommendation', style: GoogleFonts.inter(fontSize: 12.5)),
+                        child: Text(
+                          'Dismiss Recommendation',
+                          style: GoogleFonts.inter(fontSize: 12.5),
+                        ),
                       ),
                       PopupMenuItem(
                         value: 'snooze',
                         height: 34,
-                        child: Text('Snooze (24h)', style: GoogleFonts.inter(fontSize: 12.5)),
+                        child: Text(
+                          'Snooze (24h)',
+                          style: GoogleFonts.inter(fontSize: 12.5),
+                        ),
                       ),
                       PopupMenuItem(
                         value: 'view_details',
                         height: 34,
-                        child: Text('View Full Context', style: GoogleFonts.inter(fontSize: 12.5)),
+                        child: Text(
+                          'View Full Context',
+                          style: GoogleFonts.inter(fontSize: 12.5),
+                        ),
                       ),
                     ],
                     child: const Padding(

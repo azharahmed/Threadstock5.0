@@ -21,7 +21,8 @@ class KeyboardShortcutsDialog extends StatefulWidget {
   }
 
   @override
-  State<KeyboardShortcutsDialog> createState() => _KeyboardShortcutsDialogState();
+  State<KeyboardShortcutsDialog> createState() =>
+      _KeyboardShortcutsDialogState();
 }
 
 class _KeyboardShortcutsDialogState extends State<KeyboardShortcutsDialog> {
@@ -98,7 +99,10 @@ class _KeyboardShortcutsDialogState extends State<KeyboardShortcutsDialog> {
               // 2. Body List
               Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -113,10 +117,7 @@ class _KeyboardShortcutsDialogState extends State<KeyboardShortcutsDialog> {
                         label: 'Switch Workspace Sections',
                         keys: ['⌘', '1-9'],
                       ),
-                      _buildShortcutRow(
-                        label: 'Search',
-                        keys: ['⌘', '/'],
-                      ),
+                      _buildShortcutRow(label: 'Search', keys: ['⌘', '/']),
                       const SizedBox(height: 18),
 
                       // Section 2: ACTIONS
@@ -156,7 +157,10 @@ class _KeyboardShortcutsDialogState extends State<KeyboardShortcutsDialog> {
 
               // 3. Footer Toggle
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -252,7 +256,10 @@ class _KeyboardShortcutsDialogState extends State<KeyboardShortcutsDialog> {
             children: keys.map((k) {
               return Container(
                 margin: const EdgeInsets.only(left: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 3.5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF6F2EB),
                   borderRadius: BorderRadius.circular(5),

@@ -30,7 +30,9 @@ class _ShrinkageInvestigationViewState
               isSuccess
                   ? Icons.check_circle_outline_rounded
                   : Icons.info_outline_rounded,
-              color: isSuccess ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+              color: isSuccess
+                  ? const Color(0xFF16A34A)
+                  : const Color(0xFFD97706),
               size: 18,
             ),
             const SizedBox(width: 10),
@@ -105,7 +107,7 @@ class _ShrinkageInvestigationViewState
             onPressed: () {
               Navigator.of(ctx).pop();
               _showNotification(
-                'Database synchronized. 10 RFID tags reconciled at Flagship Delhi Hub.',
+                'Database synchronized. 10 RFID tags reconciled at Flagship Store Hub.',
               );
             },
             style: ElevatedButton.styleFrom(
@@ -257,7 +259,7 @@ class _ShrinkageInvestigationViewState
           ],
         ),
         content: Text(
-          'Issue an urgent investigation ticket to the Loss Prevention & Security desk at Flagship Delhi Hub?',
+          'Issue an urgent investigation ticket to the Loss Prevention & Security desk at Flagship Store Hub?',
           style: GoogleFonts.inter(
             fontSize: 13.5,
             color: const Color(0xFF475569),
@@ -335,15 +337,9 @@ class _ShrinkageInvestigationViewState
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    flex: 66,
-                    child: _buildLeftColumn(),
-                  ),
+                  Expanded(flex: 66, child: _buildLeftColumn()),
                   const SizedBox(width: 20),
-                  SizedBox(
-                    width: 340,
-                    child: _buildRightColumn(),
-                  ),
+                  SizedBox(width: 340, child: _buildRightColumn()),
                 ],
               );
             },
@@ -372,7 +368,7 @@ class _ShrinkageInvestigationViewState
             height: 92,
             color: const Color(0xFFF8FAFC),
             child: Image.asset(
-              'Assets/silk_scarves.jpg',
+              '',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => Container(
                 color: const Color(0xFFFAF3E8),
@@ -394,7 +390,7 @@ class _ShrinkageInvestigationViewState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Shrinkage Investigation — Silk Scarves',
+                'Shrinkage Investigation — Apparel Line',
                 style: GoogleFonts.inter(
                   fontSize: 23,
                   fontWeight: FontWeight.w700,
@@ -404,7 +400,7 @@ class _ShrinkageInvestigationViewState
               ),
               const SizedBox(height: 5),
               Text(
-                'ID: TS-INV-2024   |   Flagship Delhi Hub',
+                'ID: TS-INV-001   |   Flagship Store Hub',
                 style: GoogleFonts.inter(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w400,
@@ -416,9 +412,9 @@ class _ShrinkageInvestigationViewState
                 spacing: 8,
                 runSpacing: 6,
                 children: [
-                  _buildTagPill('Accessories'),
-                  _buildTagPill('Silk Scarves'),
-                  _buildTagPill('Scarlet / OS'),
+                  _buildTagPill('Apparel'),
+                  _buildTagPill('Garments'),
+                  _buildTagPill('Standard / OS'),
                   _buildTagPill('High Value', isHighValue: true),
                 ],
               ),
@@ -647,7 +643,9 @@ class _ShrinkageInvestigationViewState
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.inter(
                     fontSize: 11,
-                    fontWeight: isVarianceRed ? FontWeight.w600 : FontWeight.w400,
+                    fontWeight: isVarianceRed
+                        ? FontWeight.w600
+                        : FontWeight.w400,
                     color: isVarianceRed
                         ? const Color(0xFFDC2626)
                         : const Color(0xFF64748B),
@@ -701,7 +699,9 @@ class _ShrinkageInvestigationViewState
                     ],
                   ),
                   InkWell(
-                    onTap: () => _showNotification('Opening deep correlation analysis breakdown.'),
+                    onTap: () => _showNotification(
+                      'Opening deep correlation analysis breakdown.',
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -770,7 +770,9 @@ class _ShrinkageInvestigationViewState
                     ),
                   ),
                   InkWell(
-                    onTap: () => _showNotification('Opening system log terminal for #TS-INV-2024.'),
+                    onTap: () => _showNotification(
+                      'Opening system log terminal for #TS-INV-001.',
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -810,7 +812,10 @@ class _ShrinkageInvestigationViewState
                   TableRow(
                     decoration: const BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+                        bottom: BorderSide(
+                          color: Color(0xFFE2E8F0),
+                          width: 1.0,
+                        ),
                       ),
                     ),
                     children: [
@@ -828,7 +833,7 @@ class _ShrinkageInvestigationViewState
                     movementType: 'RFID Intake',
                     changeQty: '+50 units',
                     qtyColor: const Color(0xFF16A34A),
-                    loggedStaff: 'Delhi Receiving B',
+                    loggedStaff: 'Store Receiving B',
                     reference: 'LOG-45873',
                   ),
 
@@ -1019,7 +1024,9 @@ class _ShrinkageInvestigationViewState
                     ],
                   ),
                   InkWell(
-                    onTap: () => _showNotification('Showing all 5 correlated facility signals.'),
+                    onTap: () => _showNotification(
+                      'Showing all 5 correlated facility signals.',
+                    ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1048,7 +1055,7 @@ class _ShrinkageInvestigationViewState
               _buildSignalItem(
                 icon: Icons.wifi_rounded,
                 text:
-                    'Intake network sync skip at Central Warehouse logged 42 mins before incident.',
+                    'Intake network sync skip at Primary Logistics Hub logged 42 mins before incident.',
               ),
               const SizedBox(height: 10),
 
@@ -1056,7 +1063,7 @@ class _ShrinkageInvestigationViewState
               _buildSignalItem(
                 icon: Icons.person_outline_rounded,
                 text:
-                    'Staff shift roster handoff overlap at Delhi Gate B during incident window.',
+                    'Staff shift roster handoff overlap at Store Gate B during incident window.',
               ),
             ],
           ),
@@ -1128,7 +1135,7 @@ class _ShrinkageInvestigationViewState
               // Action 2: Create Floor Audit Task
               InkWell(
                 onTap: () => _showNotification(
-                  'Floor audit task assigned to Flagship Delhi shift supervisor.',
+                  'Floor audit task assigned to Flagship Store shift supervisor.',
                 ),
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
@@ -1237,10 +1244,7 @@ class _ShrinkageInvestigationViewState
     );
   }
 
-  Widget _buildSignalItem({
-    required IconData icon,
-    required String text,
-  }) {
+  Widget _buildSignalItem({required IconData icon, required String text}) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1316,7 +1320,7 @@ class _ShrinkageInvestigationViewState
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Run a focused floor audit for Accessories (Silk Scarves) at Delhi Hub and verify RFID gate calibration. No immediate evidence of theft. Monitor for similar packet drop events across other high-value items.',
+                  'Run a focused floor audit for high-value apparel at store facility and verify RFID gate calibration. No immediate evidence of theft. Monitor for similar packet drop events across other high-value items.',
                   style: GoogleFonts.inter(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w400,
@@ -1331,7 +1335,9 @@ class _ShrinkageInvestigationViewState
 
           // Action Button
           InkWell(
-            onTap: () => _showNotification('Audit plan generated for Silk Scarves at Delhi Hub.'),
+            onTap: () => _showNotification(
+              'Audit plan generated for inventory investigation.',
+            ),
             borderRadius: BorderRadius.circular(20),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

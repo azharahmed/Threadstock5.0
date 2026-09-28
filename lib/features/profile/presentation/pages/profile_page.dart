@@ -14,17 +14,20 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  final _firstNameController = TextEditingController(text: 'Alex');
-  final _lastNameController = TextEditingController(text: 'Mercer');
-  final _emailController = TextEditingController(text: 'alex@threadstock.ai');
+  final _firstNameController = TextEditingController(text: 'Admin');
+  final _lastNameController = TextEditingController(text: 'User');
+  final _emailController = TextEditingController(text: 'admin@threadstock.app');
   final _phoneController = TextEditingController(text: '+91 98765 43210');
 
-  final _currentPasswordController =
-      TextEditingController(text: 'CurrentPassword123!');
-  final _newPasswordController =
-      TextEditingController(text: 'NewStrongPassword2026#');
-  final _confirmPasswordController =
-      TextEditingController(text: 'NewStrongPassword2026#');
+  final _currentPasswordController = TextEditingController(
+    text: 'CurrentPassword123!',
+  );
+  final _newPasswordController = TextEditingController(
+    text: 'NewStrongPassword2026#',
+  );
+  final _confirmPasswordController = TextEditingController(
+    text: 'NewStrongPassword2026#',
+  );
 
   bool _obscureCurrentPassword = true;
   bool _obscureNewPassword = true;
@@ -47,8 +50,11 @@ class _ProfilePageState extends State<ProfilePage> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -173,11 +179,11 @@ class _ProfilePageState extends State<ProfilePage> {
                   height: 68,
                   color: const Color(0xFF1E1C1A),
                   child: Image.asset(
-                    'Assets/alex_mercer.jpg',
+                    '',
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Center(
                       child: Text(
-                        'AM',
+                        'AD',
                         style: GoogleFonts.inter(
                           fontSize: 20,
                           fontWeight: FontWeight.w600,
@@ -207,7 +213,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             color: Colors.transparent,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(8),
-                              onTap: () => _showSavedSnackbar('Upload dialog opened'),
+                              onTap: () =>
+                                  _showSavedSnackbar('Upload dialog opened'),
                               child: const Padding(
                                 padding: EdgeInsets.symmetric(
                                   horizontal: 16,
@@ -249,7 +256,8 @@ class _ProfilePageState extends State<ProfilePage> {
                             color: Colors.transparent,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(8),
-                              onTap: () => _showSavedSnackbar('Profile photo removed'),
+                              onTap: () =>
+                                  _showSavedSnackbar('Profile photo removed'),
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
@@ -341,10 +349,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 18),
 
           // Phone Number
-          _buildFormField(
-            label: 'Phone Number',
-            controller: _phoneController,
-          ),
+          _buildFormField(label: 'Phone Number', controller: _phoneController),
           const SizedBox(height: 24),
 
           // Save Details Button
@@ -359,7 +364,9 @@ class _ProfilePageState extends State<ProfilePage> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
-                  onTap: () => _showSavedSnackbar('Profile details updated successfully.'),
+                  onTap: () => _showSavedSnackbar(
+                    'Profile details updated successfully.',
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 22,
@@ -417,10 +424,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
               ),
               InkWell(
-                onTap: () => _showSavedSnackbar('Signed out of all other sessions.'),
+                onTap: () =>
+                    _showSavedSnackbar('Signed out of all other sessions.'),
                 borderRadius: BorderRadius.circular(4),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   child: Text(
                     'Sign out of all other sessions',
                     style: GoogleFonts.inter(
@@ -489,7 +500,9 @@ class _ProfilePageState extends State<ProfilePage> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFFAF3E6),
                               borderRadius: BorderRadius.circular(4),
-                              border: Border.all(color: const Color(0xFFDCCFBD)),
+                              border: Border.all(
+                                color: const Color(0xFFDCCFBD),
+                              ),
                             ),
                             child: Text(
                               'This device',
@@ -587,10 +600,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 ),
                 const SizedBox(width: 12),
                 InkWell(
-                  onTap: () => _showSavedSnackbar('Signed out of iPhone 15 Pro.'),
+                  onTap: () =>
+                      _showSavedSnackbar('Signed out of iPhone 15 Pro.'),
                   borderRadius: BorderRadius.circular(4),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     child: Text(
                       'Sign out',
                       style: GoogleFonts.inter(
@@ -646,7 +663,9 @@ class _ProfilePageState extends State<ProfilePage> {
             controller: _currentPasswordController,
             obscure: _obscureCurrentPassword,
             onToggleObscure: () {
-              setState(() => _obscureCurrentPassword = !_obscureCurrentPassword);
+              setState(
+                () => _obscureCurrentPassword = !_obscureCurrentPassword,
+              );
             },
           ),
           const SizedBox(height: 18),
@@ -707,8 +726,9 @@ class _ProfilePageState extends State<ProfilePage> {
             controller: _confirmPasswordController,
             obscure: _obscureConfirmPassword,
             onToggleObscure: () {
-              setState(() =>
-                  _obscureConfirmPassword = !_obscureConfirmPassword);
+              setState(
+                () => _obscureConfirmPassword = !_obscureConfirmPassword,
+              );
             },
           ),
           const SizedBox(height: 24),
@@ -725,7 +745,8 @@ class _ProfilePageState extends State<ProfilePage> {
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
-                  onTap: () => _showSavedSnackbar('Password updated successfully.'),
+                  onTap: () =>
+                      _showSavedSnackbar('Password updated successfully.'),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20,
@@ -808,8 +829,10 @@ class _ProfilePageState extends State<ProfilePage> {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(10),
-                onTap: widget.onConfigureNotifications ??
-                    () => _showSavedSnackbar('Opening notification preferences.'),
+                onTap:
+                    widget.onConfigureNotifications ??
+                    () =>
+                        _showSavedSnackbar('Opening notification preferences.'),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Row(

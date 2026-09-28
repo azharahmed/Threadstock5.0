@@ -6,10 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 class ScheduleAutomatedReportDialog extends StatefulWidget {
   final VoidCallback? onScheduled;
 
-  const ScheduleAutomatedReportDialog({
-    super.key,
-    this.onScheduled,
-  });
+  const ScheduleAutomatedReportDialog({super.key, this.onScheduled});
 
   static Future<void> show(BuildContext context, {VoidCallback? onScheduled}) {
     return showDialog(
@@ -20,10 +17,12 @@ class ScheduleAutomatedReportDialog extends StatefulWidget {
   }
 
   @override
-  State<ScheduleAutomatedReportDialog> createState() => _ScheduleAutomatedReportDialogState();
+  State<ScheduleAutomatedReportDialog> createState() =>
+      _ScheduleAutomatedReportDialogState();
 }
 
-class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportDialog> {
+class _ScheduleAutomatedReportDialogState
+    extends State<ScheduleAutomatedReportDialog> {
   String _selectedTemplate = 'Weekly Sales Summary';
   String _selectedFrequency = 'Weekly';
   String _dayAndTime = 'Monday at 8:00 AM';
@@ -32,7 +31,7 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
     'alex@threadstock.com',
     'sarah.admin@threadstock.com',
   ];
-  String _selectedLocation = 'Delhi Flagship Store, Central Warehouse Hub';
+  String _selectedLocation = 'Primary Flagship, Distribution Hub A';
 
   void _addRecipientDialog() {
     final controller = TextEditingController();
@@ -56,8 +55,14 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
           controller: controller,
           decoration: InputDecoration(
             hintText: 'e.g. director@threadstock.com',
-            hintStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF8C8377)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            hintStyle: GoogleFonts.inter(
+              fontSize: 13,
+              color: const Color(0xFF8C8377),
+            ),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 10,
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: Color(0xFFDFD5C6)),
@@ -67,13 +72,18 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF6B6357))),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: const Color(0xFF6B6357)),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF7A481B),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () {
               final text = controller.text.trim();
@@ -82,7 +92,10 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
               }
               Navigator.of(ctx).pop();
             },
-            child: Text('Add', style: GoogleFonts.inter(fontWeight: FontWeight.w500)),
+            child: Text(
+              'Add',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w500),
+            ),
           ),
         ],
       ),
@@ -258,11 +271,13 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
                 ),
                 onSelected: (val) => setState(() => _selectedTemplate = val),
                 itemBuilder: (ctx) => templates
-                    .map((t) => PopupMenuItem(
-                          value: t,
-                          height: 38,
-                          child: Text(t, style: GoogleFonts.inter(fontSize: 13)),
-                        ))
+                    .map(
+                      (t) => PopupMenuItem(
+                        value: t,
+                        height: 38,
+                        child: Text(t, style: GoogleFonts.inter(fontSize: 13)),
+                      ),
+                    )
                     .toList(),
                 child: Container(
                   height: 42,
@@ -270,7 +285,10 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFDFD5C6), width: 1.0),
+                    border: Border.all(
+                      color: const Color(0xFFDFD5C6),
+                      width: 1.0,
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -333,7 +351,10 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
                       decoration: BoxDecoration(
                         color: const Color(0xFFFAF8F5),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFDFD5C6), width: 1.0),
+                        border: Border.all(
+                          color: const Color(0xFFDFD5C6),
+                          width: 1.0,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -381,25 +402,34 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
                         side: const BorderSide(color: Color(0xFFDFD5C6)),
                       ),
                       onSelected: (val) => setState(() => _dayAndTime = val),
-                      itemBuilder: (ctx) => [
-                        'Monday at 8:00 AM',
-                        'Monday at 9:30 AM',
-                        'Friday at 6:00 PM',
-                        'Sunday at 11:00 PM',
-                      ]
-                          .map((t) => PopupMenuItem(
-                                value: t,
-                                height: 38,
-                                child: Text(t, style: GoogleFonts.inter(fontSize: 13)),
-                              ))
-                          .toList(),
+                      itemBuilder: (ctx) =>
+                          [
+                                'Monday at 8:00 AM',
+                                'Monday at 9:30 AM',
+                                'Friday at 6:00 PM',
+                                'Sunday at 11:00 PM',
+                              ]
+                              .map(
+                                (t) => PopupMenuItem(
+                                  value: t,
+                                  height: 38,
+                                  child: Text(
+                                    t,
+                                    style: GoogleFonts.inter(fontSize: 13),
+                                  ),
+                                ),
+                              )
+                              .toList(),
                       child: Container(
                         height: 40,
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFAF8F5),
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: const Color(0xFFDFD5C6), width: 1.0),
+                          border: Border.all(
+                            color: const Color(0xFFDFD5C6),
+                            width: 1.0,
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -448,7 +478,9 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
             style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? const Color(0xFF543210) : const Color(0xFF6B6357),
+              color: isSelected
+                  ? const Color(0xFF543210)
+                  : const Color(0xFF6B6357),
             ),
           ),
         ),
@@ -596,7 +628,10 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
                 decoration: BoxDecoration(
                   color: const Color(0xFFFAF8F5),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFDFD5C6), width: 1.0),
+                  border: Border.all(
+                    color: const Color(0xFFDFD5C6),
+                    width: 1.0,
+                  ),
                 ),
                 child: Wrap(
                   spacing: 8,
@@ -605,7 +640,10 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
                   children: [
                     ..._recipients.map((email) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(6),
@@ -642,7 +680,10 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
                     InkWell(
                       onTap: _addRecipientDialog,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 4,
+                        ),
                         child: Text(
                           '+ Add Email',
                           style: GoogleFonts.inter(
@@ -668,9 +709,9 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
   // ==========================================
   Widget _buildLocationsField() {
     final locations = [
-      'Delhi Flagship Store, Central Warehouse Hub',
-      'Central Warehouse (Zone A)',
-      'Delhi Flagship Store',
+      'Primary Flagship, Distribution Hub A',
+      'Distribution Hub A (Zone 1)',
+      'Primary Flagship Store',
       'Mumbai Boutique (All Locations)',
     ];
 
@@ -702,11 +743,13 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
                 ),
                 onSelected: (val) => setState(() => _selectedLocation = val),
                 itemBuilder: (ctx) => locations
-                    .map((l) => PopupMenuItem(
-                          value: l,
-                          height: 38,
-                          child: Text(l, style: GoogleFonts.inter(fontSize: 13)),
-                        ))
+                    .map(
+                      (l) => PopupMenuItem(
+                        value: l,
+                        height: 38,
+                        child: Text(l, style: GoogleFonts.inter(fontSize: 13)),
+                      ),
+                    )
                     .toList(),
                 child: Container(
                   height: 42,
@@ -714,7 +757,10 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
                   decoration: BoxDecoration(
                     color: const Color(0xFFFAF8F5),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFDFD5C6), width: 1.0),
+                    border: Border.all(
+                      color: const Color(0xFFDFD5C6),
+                      width: 1.0,
+                    ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -789,7 +835,10 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: const Color(0xFFDFD5C6), width: 1.0),
+                  border: Border.all(
+                    color: const Color(0xFFDFD5C6),
+                    width: 1.0,
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -813,19 +862,28 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
                   SnackBar(
                     content: Row(
                       children: [
-                        const Icon(Icons.check_circle_rounded, color: Color(0xFFBA8A55), size: 18),
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: Color(0xFFBA8A55),
+                          size: 18,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             'Pipeline scheduled! $_selectedTemplate will deliver $_selectedFrequency on $_dayAndTime.',
-                            style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
                     ),
                     backgroundColor: const Color(0xFF1E1C1A),
                     behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     duration: const Duration(seconds: 3),
                   ),
                 );
@@ -882,11 +940,7 @@ class _ScheduleAutomatedReportDialogState extends State<ScheduleAutomatedReportD
         border: Border.all(color: const Color(0xFFF0E5D4), width: 1.0),
       ),
       child: Center(
-        child: Icon(
-          icon,
-          size: 19,
-          color: const Color(0xFF8D6433),
-        ),
+        child: Icon(icon, size: 19, color: const Color(0xFF8D6433)),
       ),
     );
   }

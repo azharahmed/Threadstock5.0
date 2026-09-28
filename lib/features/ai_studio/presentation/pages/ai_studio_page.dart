@@ -21,12 +21,14 @@ enum AiStudioViewMode {
 class AiStudioPage extends StatefulWidget {
   const AiStudioPage({
     super.key,
-    this.initialMode = AiStudioViewMode.forecastDetail,
+    this.initialMode = AiStudioViewMode.demandForecast,
+    this.locationId,
     this.onTitleChanged,
     this.onNavigateToIndex,
   });
 
   final AiStudioViewMode initialMode;
+  final String? locationId;
   final ValueChanged<String>? onTitleChanged;
   final ValueChanged<int>? onNavigateToIndex;
 
@@ -42,19 +44,6 @@ class _AiStudioPageState extends State<AiStudioPage> {
   void initState() {
     super.initState();
     _viewMode = widget.initialMode;
-    if (_viewMode == AiStudioViewMode.forecastDetail) {
-      widget.onTitleChanged?.call('Forecasts > Classic White Oxford — M');
-    } else if (_viewMode == AiStudioViewMode.aiActions) {
-      widget.onTitleChanged?.call('AI Studio');
-    } else if (_viewMode == AiStudioViewMode.proposalDetail) {
-      widget.onTitleChanged?.call('Proposal Detail');
-    } else if (_viewMode == AiStudioViewMode.aiHistory) {
-      widget.onTitleChanged?.call('AI Studio');
-    } else if (_viewMode == AiStudioViewMode.demandForecast) {
-      widget.onTitleChanged?.call('AI Studio');
-    } else {
-      widget.onTitleChanged?.call('AI Studio');
-    }
   }
 
   void _showFeedback(String message) {
@@ -62,8 +51,11 @@ class _AiStudioPageState extends State<AiStudioPage> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -89,8 +81,9 @@ class _AiStudioPageState extends State<AiStudioPage> {
   Widget build(BuildContext context) {
     if (_viewMode == AiStudioViewMode.demandForecast) {
       return DemandForecastView(
+        locationId: widget.locationId,
         onPreparePo: (sku) {
-          _showFeedback('PO drafted for $sku (80 units).');
+          _showFeedback('PO drafted for $sku.');
         },
         onViewFullForecast: () {
           _showFeedback('Full forecast detail opened.');
@@ -130,7 +123,9 @@ class _AiStudioPageState extends State<AiStudioPage> {
           });
         },
         onApprovePo: () {
-          _showFeedback('Replenishment Proposal approved. PO generated for Vrindavan Express route.');
+          _showFeedback(
+            'Replenishment Proposal approved. PO generated for Vrindavan Express route.',
+          );
         },
         onRejectPlan: () {
           _showFeedback('Replenishment plan rejected.');
@@ -201,10 +196,7 @@ class _AiStudioPageState extends State<AiStudioPage> {
                         const SizedBox(width: 22),
 
                         // Right Column: AI Prepared Plan (approx 380px width)
-                        SizedBox(
-                          width: 380,
-                          child: _buildAiPreparedPlanCard(),
-                        ),
+                        SizedBox(width: 380, child: _buildAiPreparedPlanCard()),
                       ],
                     );
                   }
@@ -251,7 +243,6 @@ class _AiStudioPageState extends State<AiStudioPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: ACTIVE SESSION: STORE REPLENISHMENT + Status Badges
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -264,7 +255,7 @@ class _AiStudioPageState extends State<AiStudioPage> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'ACTIVE SESSION: STORE REPLENISHMENT',
+                    'AI ASSISTANT WORKSPACE',
                     style: GoogleFonts.inter(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
@@ -274,58 +265,35 @@ class _AiStudioPageState extends State<AiStudioPage> {
                   ),
                 ],
               ),
-              Row(
-                children: [
-                  // Model Version Pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFAF3E8),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFFEADBCA)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFAF3E8),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFEADBCA)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFBA8A55),
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                    child: Text(
-                      'Eid Season Model v2.4',
+                    const SizedBox(width: 6),
+                    Text(
+                      'Awaiting Sufficient History',
                       style: GoogleFonts.inter(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w600,
                         color: const Color(0xFF9E6516),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-
-                  // Model Ready Pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE9F6EE),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF1F7A46),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Model Ready',
-                          style: GoogleFonts.inter(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF1F7A46),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -333,7 +301,6 @@ class _AiStudioPageState extends State<AiStudioPage> {
           const Divider(color: Color(0xFFEDE5DA), height: 1),
           const SizedBox(height: 18),
 
-          // User Prompt Bubble
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -344,7 +311,6 @@ class _AiStudioPageState extends State<AiStudioPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar Circle AM
                 Container(
                   width: 38,
                   height: 38,
@@ -353,14 +319,11 @@ class _AiStudioPageState extends State<AiStudioPage> {
                     shape: BoxShape.circle,
                     border: Border.all(color: const Color(0xFFDFD4C5)),
                   ),
-                  child: Center(
-                    child: Text(
-                      'AM',
-                      style: GoogleFonts.inter(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF1E1C1A),
-                      ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.insights_rounded,
+                      size: 20,
+                      color: Color(0xFF946A36),
                     ),
                   ),
                 ),
@@ -370,16 +333,16 @@ class _AiStudioPageState extends State<AiStudioPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Alex Mercer • Delhi Hub',
+                        'Autonomous Replenishment Engine',
                         style: GoogleFonts.inter(
                           fontSize: 12,
-                          fontWeight: FontWeight.w400,
+                          fontWeight: FontWeight.w600,
                           color: const Color(0xFF7E766B),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Prepare replenishment for stores likely to run out of high-velocity linen and cotton shirts during Eid. Focus on regional transit clusters and use fastest route logic.',
+                        'ThreadStock AI will build replenishment proposals and demand models once sufficient sales history and inventory activity are recorded.',
                         style: GoogleFonts.inter(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w500,
@@ -395,164 +358,69 @@ class _AiStudioPageState extends State<AiStudioPage> {
           ),
           const SizedBox(height: 20),
 
-          // AI Response Lead Section
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFAF4EA),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFFEADBCA)),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.auto_awesome_rounded,
-                    size: 18,
-                    color: Color(0xFFBA8A55),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'I have prepared a predictive replenishment model based on Delhi Warehouse (Zone A) supply vectors.',
-                      style: GoogleFonts.inter(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF181513),
-                        height: 1.35,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Analyzing Delhi flagship, Lucknow boutique, and Mumbai central hubs. Regional transit shows potential stockouts in 3 core SKUs due to the upcoming holiday demand surge.',
-                      style: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF6B6358),
-                        height: 1.45,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Three Metric Stat Cards
           Row(
             children: [
-              // 1. Stockout Risk
               Expanded(
                 child: _buildStatMetricCard(
                   label: 'STOCKOUT RISK',
-                  value: '18 SKUs',
-                  trendBadge: '+12%',
-                  isNegativeTrend: true,
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // 2. Optimized Volume
-              Expanded(
-                child: _buildStatMetricCard(
-                  label: 'OPTIMIZED VOLUME',
-                  value: '1,420 units',
-                  trendBadge: '+8%',
+                  value: '—',
+                  trendBadge: 'Awaiting history',
                   isNegativeTrend: false,
                 ),
               ),
               const SizedBox(width: 12),
-
-              // 3. Confidence Level
               Expanded(
-                child: _buildConfidenceMetricCard(),
+                child: _buildStatMetricCard(
+                  label: 'OPTIMIZED VOLUME',
+                  value: '—',
+                  trendBadge: 'Awaiting history',
+                  isNegativeTrend: false,
+                ),
               ),
+              const SizedBox(width: 12),
+              Expanded(child: _buildConfidenceMetricCard()),
             ],
           ),
           const SizedBox(height: 22),
 
-          // Recommendations Container
           Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFFEDE5DA)),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section Title
-                Padding(
-                  padding: const EdgeInsets.only(left: 16, right: 16, top: 14, bottom: 10),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.track_changes_rounded,
-                        size: 16,
-                        color: Color(0xFFBA8A55),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'AI Recommendations',
-                        style: GoogleFonts.inter(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF1E1C1A),
-                        ),
-                      ),
-                    ],
+                const Icon(
+                  Icons.track_changes_rounded,
+                  size: 28,
+                  color: Color(0xFFBA8A55),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'No AI recommendations yet',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF1E1C1A),
                   ),
                 ),
-                const Divider(color: Color(0xFFF1EAE0), height: 1),
-
-                // Item 1: Dispatch
-                _buildRecommendationRow(
-                  icon: Icons.inventory_2_outlined,
-                  title: 'Dispatch 840 units to Delhi Flagship Hub',
-                  subtitle: 'Based on predicted demand and current on-hand levels.',
-                  badgeText: 'High Priority',
-                  badgeBg: const Color(0xFFFAF3E8),
-                  badgeColor: const Color(0xFF9E6516),
-                  onTap: () => _showFeedback('Dispatching to Delhi Flagship Hub recommendation opened.'),
-                ),
-                const Divider(color: Color(0xFFF6F1EA), height: 1),
-
-                // Item 2: Route
-                _buildRecommendationRow(
-                  icon: Icons.local_shipping_outlined,
-                  title: 'Route via Vrindavan Express',
-                  subtitle: 'Estimated delivery: 42 hours. Saves ₹12,000 in transit costs.',
-                  badgeText: 'Optimized Route',
-                  badgeBg: const Color(0xFFE9F6EE),
-                  badgeColor: const Color(0xFF1F7A46),
-                  onTap: () => _showFeedback('Vrindavan Express routing applied.'),
-                ),
-                const Divider(color: Color(0xFFF6F1EA), height: 1),
-
-                // Item 3: Varieties
-                _buildRecommendationRow(
-                  icon: Icons.sell_outlined,
-                  title: 'Include linen blend varieties',
-                  subtitle: 'Higher demand expected during Eid season.',
-                  badgeText: 'AI Suggestion',
-                  badgeBg: const Color(0xFFEAF1FB),
-                  badgeColor: const Color(0xFF2662BA),
-                  onTap: () => _showFeedback('Linen blend varieties included in draft order.'),
+                const SizedBox(height: 4),
+                Text(
+                  'Recommendations will appear here as store inventory levels and transaction velocity develop.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    color: const Color(0xFF7E766B),
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 18),
 
-          // Interactive Input Bar
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
@@ -577,7 +445,8 @@ class _AiStudioPageState extends State<AiStudioPage> {
                       color: const Color(0xFF1E1C1A),
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Ask ThreadStock AI to tweak quantities or route priorities...',
+                      hintText:
+                          'Ask ThreadStock AI for replenishment intelligence...',
                       hintStyle: GoogleFonts.inter(
                         fontSize: 12.5,
                         color: const Color(0xFF9E958A),
@@ -588,7 +457,9 @@ class _AiStudioPageState extends State<AiStudioPage> {
                     ),
                     onSubmitted: (val) {
                       if (val.trim().isNotEmpty) {
-                        _showFeedback('Simulating adjustment: "$val"');
+                        _showFeedback(
+                          'AI models will become active once operational data requirements are satisfied.',
+                        );
                         _promptController.clear();
                       }
                     },
@@ -598,7 +469,9 @@ class _AiStudioPageState extends State<AiStudioPage> {
                   onTap: () {
                     final text = _promptController.text.trim();
                     if (text.isNotEmpty) {
-                      _showFeedback('Simulating adjustment: "$text"');
+                      _showFeedback(
+                        'AI models will become active once operational data requirements are satisfied.',
+                      );
                       _promptController.clear();
                     }
                   },
@@ -666,27 +539,13 @@ class _AiStudioPageState extends State<AiStudioPage> {
                       : const Color(0xFF1E1C1A),
                 ),
               ),
-              Row(
-                children: [
-                  Icon(
-                    Icons.trending_up_rounded,
-                    size: 15,
-                    color: isNegativeTrend
-                        ? const Color(0xFFB83A28)
-                        : const Color(0xFF1F7A46),
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    trendBadge,
-                    style: GoogleFonts.inter(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      color: isNegativeTrend
-                          ? const Color(0xFFB83A28)
-                          : const Color(0xFF1F7A46),
-                    ),
-                  ),
-                ],
+              Text(
+                trendBadge,
+                style: GoogleFonts.inter(
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF7E766B),
+                ),
               ),
             ],
           ),
@@ -720,103 +579,21 @@ class _AiStudioPageState extends State<AiStudioPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '94.2% Accurate',
+                '—',
                 style: GoogleFonts.inter(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF0F766E),
+                  color: const Color(0xFF7E766B),
                 ),
               ),
               const Icon(
                 Icons.track_changes_rounded,
                 size: 18,
-                color: Color(0xFF0F766E),
+                color: Color(0xFF7E766B),
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildRecommendationRow({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required String badgeText,
-    required Color badgeBg,
-    required Color badgeColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFAF4EA),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFEADBCA)),
-              ),
-              child: Icon(
-                icon,
-                size: 18,
-                color: const Color(0xFF946A36),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF1E1C1A),
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF6B6358),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: badgeBg,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                badgeText,
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: badgeColor,
-                ),
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 18,
-              color: Color(0xFF8A8275),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -829,7 +606,7 @@ class _AiStudioPageState extends State<AiStudioPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Suggested Prompts & Refinements',
+          'Suggested Inquiries',
           style: GoogleFonts.inter(
             fontSize: 13.5,
             fontWeight: FontWeight.w600,
@@ -841,37 +618,9 @@ class _AiStudioPageState extends State<AiStudioPage> {
           spacing: 10,
           runSpacing: 10,
           children: [
-            _buildPromptChip('“Limit total cost to ₹5,00,000 max”'),
-            _buildPromptChip('“Prioritize cargo air transit”'),
-            _buildPromptChip('“Include linen blend varieties”'),
-            // Dropdown more button
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFEADBCA)),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'More',
-                    style: GoogleFonts.inter(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF1E1C1A),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: 15,
-                    color: Color(0xFF7E766B),
-                  ),
-                ],
-              ),
-            ),
+            _buildPromptChip('“Check catalog coverage”'),
+            _buildPromptChip('“Assess inventory balance”'),
+            _buildPromptChip('“View forecast readiness criteria”'),
           ],
         ),
       ],
@@ -882,9 +631,11 @@ class _AiStudioPageState extends State<AiStudioPage> {
     return InkWell(
       onTap: () {
         setState(() {
-          _promptController.text = label.replaceAll('“', '').replaceAll('”', '');
+          _promptController.text = label
+              .replaceAll('“', '')
+              .replaceAll('”', '');
         });
-        _showFeedback('Selected prompt: $label');
+        _showFeedback('Selected inquiry: $label');
       },
       borderRadius: BorderRadius.circular(8),
       child: Container(
@@ -927,31 +678,18 @@ class _AiStudioPageState extends State<AiStudioPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: AI PREPARED PLAN + Title + More options
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'AI PREPARED PLAN',
-                style: GoogleFonts.inter(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: const Color(0xFF946A36),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.more_horiz_rounded, size: 18),
-                color: const Color(0xFF7E766B),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: () => _showFeedback('Prepared plan options'),
-              ),
-            ],
+          Text(
+            'AI PREPARED PLAN',
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+              color: const Color(0xFF946A36),
+            ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Eid Replenishment Order',
+            'No Active Plan',
             style: GoogleFonts.cormorantGaramond(
               fontSize: 24,
               fontWeight: FontWeight.w600,
@@ -960,7 +698,6 @@ class _AiStudioPageState extends State<AiStudioPage> {
           ),
           const SizedBox(height: 18),
 
-          // 2x2 KPI Grid
           Column(
             children: [
               Row(
@@ -969,8 +706,8 @@ class _AiStudioPageState extends State<AiStudioPage> {
                     child: _buildPlanKpiBox(
                       icon: Icons.storefront_outlined,
                       label: 'AFFECTED STORES',
-                      value: '3 nodes',
-                      valueColor: const Color(0xFF181513),
+                      value: '—',
+                      valueColor: const Color(0xFF7E766B),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -978,8 +715,8 @@ class _AiStudioPageState extends State<AiStudioPage> {
                     child: _buildPlanKpiBox(
                       icon: Icons.local_offer_outlined,
                       label: 'AFFECTED SKUs',
-                      value: '18 variants',
-                      valueColor: const Color(0xFF181513),
+                      value: '—',
+                      valueColor: const Color(0xFF7E766B),
                     ),
                   ),
                 ],
@@ -991,8 +728,8 @@ class _AiStudioPageState extends State<AiStudioPage> {
                     child: _buildPlanKpiBox(
                       icon: Icons.bar_chart_rounded,
                       label: 'PROJECTED COST',
-                      value: '₹6,42,000',
-                      valueColor: const Color(0xFF181513),
+                      value: '—',
+                      valueColor: const Color(0xFF7E766B),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -1000,8 +737,8 @@ class _AiStudioPageState extends State<AiStudioPage> {
                     child: _buildPlanKpiBox(
                       icon: Icons.trending_up_rounded,
                       label: 'LOST SALES AVOIDED',
-                      value: '₹2,18,000',
-                      valueColor: const Color(0xFF1F7A46),
+                      value: '—',
+                      valueColor: const Color(0xFF7E766B),
                     ),
                   ),
                 ],
@@ -1010,7 +747,6 @@ class _AiStudioPageState extends State<AiStudioPage> {
           ),
           const SizedBox(height: 22),
 
-          // PRESCRIBED TRANSFERS Header
           Text(
             'PRESCRIBED TRANSFERS',
             style: GoogleFonts.inter(
@@ -1021,16 +757,26 @@ class _AiStudioPageState extends State<AiStudioPage> {
             ),
           ),
           const SizedBox(height: 12),
-
-          // Prescribed transfers list
-          _buildPrescribedTransferRow('Delhi Flagship Hub', '840 units'),
-          const SizedBox(height: 8),
-          _buildPrescribedTransferRow('Lucknow Regent St', '380 units'),
-          const SizedBox(height: 8),
-          _buildPrescribedTransferRow('Mumbai Phoenix', '200 units'),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF7F2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFEDE5DA)),
+            ),
+            child: Center(
+              child: Text(
+                'No prescribed transfers available yet.',
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: const Color(0xFF7E766B),
+                ),
+              ),
+            ),
+          ),
           const SizedBox(height: 18),
 
-          // LOGISTICS ACTION PATH Inset Box
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -1061,30 +807,13 @@ class _AiStudioPageState extends State<AiStudioPage> {
                   ],
                 ),
                 const SizedBox(height: 6),
-                RichText(
-                  text: TextSpan(
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFF423B33),
-                      height: 1.45,
-                    ),
-                    children: const [
-                      TextSpan(
-                        text: 'Recommend dispatcher routing via ',
-                      ),
-                      TextSpan(
-                        text: 'Vrindavan Express',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF1E1C1A),
-                        ),
-                      ),
-                      TextSpan(
-                        text:
-                            ' to secure a ₹12,000 transit discount. Expected delivery window: 42 hours.',
-                      ),
-                    ],
+                Text(
+                  'Logistics optimizations will appear once demand patterns and store transfers are established.',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
+                    color: const Color(0xFF423B33),
+                    height: 1.45,
                   ),
                 ),
               ],
@@ -1092,138 +821,34 @@ class _AiStudioPageState extends State<AiStudioPage> {
           ),
           const SizedBox(height: 20),
 
-          // Primary CTA: Approve & Send Plan
           Container(
             width: double.infinity,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF322316), Color(0xFF1C1814)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              color: const Color(0xFFEADBCA),
               borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF2E2014).withOpacity(0.18),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
-              ],
             ),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(8),
-                onTap: () => _showFeedback(
-                    'Eid Replenishment Order approved and dispatched to warehouses!'),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.near_me_outlined,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Approve & Send Plan',
-                        style: GoogleFonts.inter(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.near_me_outlined,
+                    size: 16,
+                    color: Color(0xFF9E958A),
                   ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // Secondary CTAs: Edit Plan & Review Details
-          Row(
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFEADBCA)),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () => _showFeedback('Opening Plan Editor...'),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 9),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.edit_outlined,
-                              size: 15,
-                              color: Color(0xFF1E1C1A),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Edit Plan',
-                              style: GoogleFonts.inter(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1E1C1A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Approve & Send Plan',
+                    style: GoogleFonts.inter(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF9E958A),
                     ),
                   ),
-                ),
+                ],
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFEADBCA)),
-                  ),
-                  child: Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(8),
-                      onTap: () => _showFeedback('Opening Full Details Breakdown...'),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 9),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(
-                              Icons.description_outlined,
-                              size: 15,
-                              color: Color(0xFF1E1C1A),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Review Details',
-                              style: GoogleFonts.inter(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF1E1C1A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -1255,11 +880,7 @@ class _AiStudioPageState extends State<AiStudioPage> {
                   color: const Color(0xFFFAF3E7),
                   borderRadius: BorderRadius.circular(5),
                 ),
-                child: Icon(
-                  icon,
-                  size: 14,
-                  color: const Color(0xFF9E6516),
-                ),
+                child: Icon(icon, size: 14, color: const Color(0xFF9E6516)),
               ),
               const SizedBox(width: 6),
               Expanded(
@@ -1288,30 +909,6 @@ class _AiStudioPageState extends State<AiStudioPage> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPrescribedTransferRow(String destination, String quantity) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          destination,
-          style: GoogleFonts.inter(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF2A2520),
-          ),
-        ),
-        Text(
-          quantity,
-          style: GoogleFonts.inter(
-            fontSize: 13.5,
-            fontWeight: FontWeight.w700,
-            color: const Color(0xFF1E1C1A),
-          ),
-        ),
-      ],
     );
   }
 }

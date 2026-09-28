@@ -25,8 +25,11 @@ class _SupplierPerformanceViewState extends State<SupplierPerformanceView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -67,15 +70,9 @@ class _SupplierPerformanceViewState extends State<SupplierPerformanceView> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    flex: 58,
-                    child: _buildDefectRateCard(),
-                  ),
+                  Expanded(flex: 58, child: _buildDefectRateCard()),
                   const SizedBox(width: 20),
-                  Expanded(
-                    flex: 42,
-                    child: _buildSupplierAlertsCard(),
-                  ),
+                  Expanded(flex: 42, child: _buildSupplierAlertsCard()),
                 ],
               );
             }
@@ -140,31 +137,32 @@ class _SupplierPerformanceViewState extends State<SupplierPerformanceView> {
             setState(() => _selectedPeriod = val);
             _showFeedback('Period updated: $val');
           },
-          itemBuilder: (context) => [
-            'Past 90 Days: Aug 1 - Oct 31',
-            'Past 30 Days: Oct 1 - Oct 31',
-            'Past 6 Months',
-            'Year to Date (2024)',
-          ]
-              .map(
-                (p) => PopupMenuItem(
-                  value: p,
-                  height: 38,
-                  child: Text(
-                    p,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: p == _selectedPeriod
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                      color: p == _selectedPeriod
-                          ? const Color(0xFF8D6433)
-                          : const Color(0xFF1E1C1A),
+          itemBuilder: (context) =>
+              [
+                    'Past 90 Days: Aug 1 - Oct 31',
+                    'Past 30 Days: Oct 1 - Oct 31',
+                    'Past 6 Months',
+                    'Year to Date (2024)',
+                  ]
+                  .map(
+                    (p) => PopupMenuItem(
+                      value: p,
+                      height: 38,
+                      child: Text(
+                        p,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: p == _selectedPeriod
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: p == _selectedPeriod
+                              ? const Color(0xFF8D6433)
+                              : const Color(0xFF1E1C1A),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              )
-              .toList(),
+                  )
+                  .toList(),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -210,11 +208,7 @@ class _SupplierPerformanceViewState extends State<SupplierPerformanceView> {
         if (isCompact) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              leftContent,
-              const SizedBox(height: 12),
-              rightContent,
-            ],
+            children: [leftContent, const SizedBox(height: 12), rightContent],
           );
         }
 
@@ -235,363 +229,48 @@ class _SupplierPerformanceViewState extends State<SupplierPerformanceView> {
   // 2. 4 SUPPLIER PERFORMANCE CARDS
   // ===========================================================================
   Widget _buildSupplierCardsRow() {
-    final suppliers = const [
-      _SupplierCardData(
-        name: 'Biella Fabric Mills',
-        scoreBadge: '94 pts',
-        scoreColor: Color(0xFF1E7E34),
-        scoreBg: Color(0xFFE7F7ED),
-        statusBadge: 'Top Performer',
-        statusColor: Color(0xFF1E7E34),
-        statusBg: Color(0xFFE7F7ED),
-        icon: Icons.eco_outlined,
-        onTimePct: '98%',
-        onTimeGrowth: '↑ 2%',
-        isOnTimePositive: true,
-        qualityScore: '99.2%',
-        qualityGrowth: '↑ 1%',
-        isQualityPositive: true,
-        avgLeadTime: '12d',
-        activePos: '4',
-      ),
-      _SupplierCardData(
-        name: 'Milano Silk Co.',
-        scoreBadge: '88 pts',
-        scoreColor: Color(0xFF92400E),
-        scoreBg: Color(0xFFFEF3C7),
-        statusBadge: 'Reliable',
-        statusColor: Color(0xFF92400E),
-        statusBg: Color(0xFFFEF3C7),
-        icon: Icons.grid_4x4_rounded,
-        onTimePct: '92%',
-        onTimeGrowth: '↑ 4%',
-        isOnTimePositive: true,
-        qualityScore: '97.5%',
-        qualityGrowth: '↑ 2%',
-        isQualityPositive: true,
-        avgLeadTime: '14d',
-        activePos: '2',
-      ),
-      _SupplierCardData(
-        name: 'Indo Weaver',
-        scoreBadge: '82 pts',
-        scoreColor: Color(0xFF92400E),
-        scoreBg: Color(0xFFFEF3C7),
-        statusBadge: 'Watch',
-        statusColor: Color(0xFF92400E),
-        statusBg: Color(0xFFFEF3C7),
-        icon: Icons.texture_rounded,
-        onTimePct: '85%',
-        onTimeGrowth: '↓ 3%',
-        isOnTimePositive: false,
-        qualityScore: '96.0%',
-        qualityGrowth: '↑ 1%',
-        isQualityPositive: true,
-        avgLeadTime: '18d',
-        activePos: '5',
-      ),
-      _SupplierCardData(
-        name: 'Delta Trim & Co.',
-        scoreBadge: '71 pts',
-        scoreColor: Color(0xFFDC2626),
-        scoreBg: Color(0xFFFEE2E2),
-        statusBadge: 'Needs Attention',
-        statusColor: Color(0xFFDC2626),
-        statusBg: Color(0xFFFEE2E2),
-        icon: Icons.change_history_rounded,
-        onTimePct: '78%',
-        onTimeGrowth: '↓ 6%',
-        isOnTimePositive: false,
-        qualityScore: '94.2%',
-        qualityGrowth: '↓ 2%',
-        isQualityPositive: false,
-        avgLeadTime: '10d',
-        activePos: '1',
-      ),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 950;
-        final cardSpacing = 14.0;
-
-        if (isCompact) {
-          return Wrap(
-            spacing: cardSpacing,
-            runSpacing: cardSpacing,
-            children: suppliers
-                .map((s) => SizedBox(
-                      width: (constraints.maxWidth - cardSpacing) / 2,
-                      child: _buildSupplierCard(s),
-                    ))
-                .toList(),
-          );
-        }
-
-        return Row(
-          children: suppliers
-              .asMap()
-              .entries
-              .map(
-                (entry) => Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      left: entry.key == 0 ? 0 : cardSpacing / 2,
-                      right: entry.key == suppliers.length - 1
-                          ? 0
-                          : cardSpacing / 2,
-                    ),
-                    child: _buildSupplierCard(entry.value),
-                  ),
-                ),
-              )
-              .toList(),
-        );
-      },
-    );
-  }
-
-  Widget _buildSupplierCard(_SupplierCardData data) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFEADBCA), width: 1.0),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2A231A).withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header Row: Icon Badge + Supplier Name + Score Pill
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final suppliers = const <_SupplierCardData>[];
+    if (suppliers.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFEADBCA), width: 1.0),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFAF4EB),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFFEADBCA)),
-                ),
-                child: Icon(data.icon, size: 16, color: const Color(0xFF9B6E39)),
+              const Icon(
+                Icons.analytics_outlined,
+                size: 36,
+                color: Color(0xFFBA8A55),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            data.name,
-                            style: GoogleFonts.inter(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF181512),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: data.scoreBg,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            data.scoreBadge,
-                            style: GoogleFonts.inter(
-                              fontSize: 10.5,
-                              fontWeight: FontWeight.w600,
-                              color: data.scoreColor,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 3),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 5, vertical: 1.5),
-                      decoration: BoxDecoration(
-                        color: data.statusBg,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        data.statusBadge,
-                        style: GoogleFonts.inter(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
-                          color: data.statusColor,
-                        ),
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 10),
+              Text(
+                'No supplier performance history yet',
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF181512),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Performance analytics will appear after purchase orders and receipts are recorded.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF7E7569),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
-
-          // 2x2 Metrics Grid
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left: On-Time % & Avg Lead Time
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'On-Time %',
-                      style: GoogleFonts.inter(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF7E7569),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Text(
-                          data.onTimePct,
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF181512),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: data.isOnTimePositive
-                                ? const Color(0xFFE7F7ED)
-                                : const Color(0xFFFDECEB),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: Text(
-                            data.onTimeGrowth,
-                            style: GoogleFonts.inter(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w600,
-                              color: data.isOnTimePositive
-                                  ? const Color(0xFF1E7E34)
-                                  : const Color(0xFFD9534F),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Avg Lead Time',
-                      style: GoogleFonts.inter(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF7E7569),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      data.avgLeadTime,
-                      style: GoogleFonts.inter(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF181512),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 10),
-
-              // Right: Quality Score & Active POs
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Quality Score',
-                      style: GoogleFonts.inter(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF7E7569),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Text(
-                          data.qualityScore,
-                          style: GoogleFonts.inter(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF181512),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: data.isQualityPositive
-                                ? const Color(0xFFE7F7ED)
-                                : const Color(0xFFFDECEB),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: Text(
-                            data.qualityGrowth,
-                            style: GoogleFonts.inter(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w600,
-                              color: data.isQualityPositive
-                                  ? const Color(0xFF1E7E34)
-                                  : const Color(0xFFD9534F),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Active POs',
-                      style: GoogleFonts.inter(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w400,
-                        color: const Color(0xFF7E7569),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      data.activePos,
-                      style: GoogleFonts.inter(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF181512),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+        ),
+      );
+    }
+    return const SizedBox.shrink();
   }
 
   // ===========================================================================
@@ -653,125 +332,21 @@ class _SupplierPerformanceViewState extends State<SupplierPerformanceView> {
           ),
           const SizedBox(height: 20),
 
-          // Timeline Rows + Legend Column
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // PO Progress Bars (flex 75)
-              Expanded(
-                flex: 75,
-                child: Column(
-                  children: [
-                    // Row 1: PO #10492 — Biella (Blue transit + Red delayed segment)
-                    _buildPoTimelineRow(
-                      poTitle: 'PO #10492 — Biella',
-                      segments: const [
-                        _TimelineSegment(factor: 0.62, color: Color(0xFF3B82F6)),
-                        _TimelineSegment(factor: 0.08, color: Color(0xFFEF4444)),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Row 2: PO #10493 — Milano Silk (Green On Time)
-                    _buildPoTimelineRow(
-                      poTitle: 'PO #10493 — Milano Silk',
-                      segments: const [
-                        _TimelineSegment(factor: 0.70, color: Color(0xFF10B981)),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Row 3: PO #10494 — Indo Weaver (Blue In Transit)
-                    _buildPoTimelineRow(
-                      poTitle: 'PO #10494 — Indo Weaver',
-                      segments: const [
-                        _TimelineSegment(factor: 0.45, color: Color(0xFF3B82F6)),
-                      ],
-                    ),
-                  ],
+          // Timeline Empty State
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                'No active purchase order shipments to display.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF7E7569),
                 ),
               ),
-              const SizedBox(width: 24),
-
-              // Legend (flex 25)
-              Expanded(
-                flex: 25,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    _TimelineLegendItem(
-                      label: 'Delayed > 3 Days',
-                      color: Color(0xFFEF4444),
-                    ),
-                    SizedBox(height: 8),
-                    _TimelineLegendItem(
-                      label: 'On Time',
-                      color: Color(0xFF10B981),
-                    ),
-                    SizedBox(height: 8),
-                    _TimelineLegendItem(
-                      label: 'In Transit',
-                      color: Color(0xFF3B82F6),
-                    ),
-                    SizedBox(height: 8),
-                    _TimelineLegendItem(
-                      label: 'Not Started',
-                      color: Color(0xFFCBD5E1),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPoTimelineRow({
-    required String poTitle,
-    required List<_TimelineSegment> segments,
-  }) {
-    return Row(
-      children: [
-        SizedBox(
-          width: 170,
-          child: Text(
-            poTitle,
-            style: GoogleFonts.inter(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xFF2E2A24),
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: Container(
-              height: 12,
-              color: const Color(0xFFF3ECE4),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final totalWidth = constraints.maxWidth;
-                  return Row(
-                    children: segments
-                        .map((seg) => Container(
-                              width: totalWidth * seg.factor,
-                              height: 12,
-                              color: seg.color,
-                            ))
-                        .toList(),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -807,10 +382,7 @@ class _SupplierPerformanceViewState extends State<SupplierPerformanceView> {
           const SizedBox(height: 16),
 
           // Bar Chart with Y Axis, Gridlines, and Top Value Labels
-          SizedBox(
-            height: 200,
-            child: _DefectRateBarChart(),
-          ),
+          SizedBox(height: 200, child: _DefectRateBarChart()),
         ],
       ),
     );
@@ -850,7 +422,8 @@ class _SupplierPerformanceViewState extends State<SupplierPerformanceView> {
                 ),
               ),
               InkWell(
-                onTap: () => _showFeedback('Viewing all active supplier alerts...'),
+                onTap: () =>
+                    _showFeedback('Viewing all active supplier alerts...'),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -875,112 +448,17 @@ class _SupplierPerformanceViewState extends State<SupplierPerformanceView> {
           ),
           const SizedBox(height: 14),
 
-          // Alert 1: Delay Alert
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFFDF5),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFDE68A)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  color: Color(0xFFD97706),
-                  size: 20,
+          // Alerts Empty State
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 36),
+            child: Center(
+              child: Text(
+                'No supplier alerts at this time.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF7E7569),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Delay Alert',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF181512),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Biella Fabric Mills PO #10492 delayed by 3 days.',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFF5A5348),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '2 hours ago',
-                        style: GoogleFonts.inter(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFF9E958A),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // Alert 2: Quality Risk
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF5F5),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFECACA)),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.warning_amber_rounded,
-                  color: Color(0xFFDC2626),
-                  size: 20,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Quality Risk',
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF181512),
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Milano Silk batch #SFD-16 has 4.2% defect rate.',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFF5A5348),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        '5 hours ago',
-                        style: GoogleFonts.inter(
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFF9E958A),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
@@ -1050,7 +528,8 @@ class _SupplierPerformanceViewState extends State<SupplierPerformanceView> {
           const SizedBox(width: 14),
           InkWell(
             onTap: () => _showFeedback(
-                'Viewing supplier consolidation & quality recommendations...'),
+              'Viewing supplier consolidation & quality recommendations...',
+            ),
             borderRadius: BorderRadius.circular(6),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
@@ -1125,58 +604,24 @@ class _SupplierCardData {
   });
 }
 
-class _TimelineSegment {
-  final double factor;
-  final Color color;
-
-  const _TimelineSegment({required this.factor, required this.color});
-}
-
-class _TimelineLegendItem extends StatelessWidget {
-  final String label;
-  final Color color;
-
-  const _TimelineLegendItem({required this.label, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: GoogleFonts.inter(
-            fontSize: 11.5,
-            fontWeight: FontWeight.w500,
-            color: const Color(0xFF5A5348),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 // =============================================================================
 // DEFECT RATE BAR CHART
 // =============================================================================
 class _DefectRateBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final bars = const [
-      _DefectBarItem(label: 'Biella Fabric Mills', rate: 1.2, isOk: true),
-      _DefectBarItem(label: 'Milano Silk Co.', rate: 2.8, isOk: true),
-      _DefectBarItem(label: 'Indo Weaver', rate: 6.4, isOk: false),
-      _DefectBarItem(label: 'Delta Trim & Co.', rate: 8.9, isOk: false),
-    ];
+    final bars = const <_DefectBarItem>[];
+    if (bars.isEmpty) {
+      return Center(
+        child: Text(
+          'No defect rate data recorded.',
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: const Color(0xFF7E7569),
+          ),
+        ),
+      );
+    }
 
     const yTicks = ['10%', '8%', '5%', '3%', '0%'];
     const leftGutter = 32.0;
@@ -1202,14 +647,16 @@ class _DefectRateBarChart extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: yTicks
-                    .map((t) => Text(
-                          t,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF9E958A),
-                          ),
-                        ))
+                    .map(
+                      (t) => Text(
+                        t,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF9E958A),
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -1224,10 +671,7 @@ class _DefectRateBarChart extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: List.generate(
                   5,
-                  (_) => Container(
-                    height: 1,
-                    color: const Color(0xFFF1EAE0),
-                  ),
+                  (_) => Container(height: 1, color: const Color(0xFFF1EAE0)),
                 ),
               ),
             ),
@@ -1244,8 +688,9 @@ class _DefectRateBarChart extends StatelessWidget {
                 children: bars.map((b) {
                   // Max rate is 10.0%
                   final barHeight = (b.rate / 10.0) * (plotHeight - 24);
-                  final barColor =
-                      b.isOk ? const Color(0xFF10B981) : const Color(0xFFEF4444);
+                  final barColor = b.isOk
+                      ? const Color(0xFF10B981)
+                      : const Color(0xFFEF4444);
 
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -1284,20 +729,22 @@ class _DefectRateBarChart extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: bars
-                    .map((b) => SizedBox(
-                          width: 90,
-                          child: Text(
-                            b.label,
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF5A5348),
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                    .map(
+                      (b) => SizedBox(
+                        width: 90,
+                        child: Text(
+                          b.label,
+                          style: GoogleFonts.inter(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF5A5348),
                           ),
-                        ))
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),

@@ -1,8 +1,20 @@
 // ignore_for_file: deprecated_member_use
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/responsive/desktop_layout.dart';
+import '../../data/brand_repository.dart';
+import '../../data/category_repository.dart';
+import '../../data/inventory_repository.dart';
+import '../../data/location_repository.dart';
+import '../../data/product_media_repository.dart';
+import '../../data/product_repository.dart';
+import '../../data/supplier_repository.dart';
+import '../../domain/models/inventory_import_draft.dart';
+import '../../domain/models/product_inventory_summary.dart';
+import '../providers/brand_provider.dart';
 import '../widgets/active_stock_count_view.dart';
 import '../widgets/barcode_labels_view.dart';
 import '../widgets/create_new_product_view.dart';
@@ -17,6 +29,8 @@ import '../widgets/review_import_view.dart';
 import '../widgets/stock_adjustment_view.dart';
 import '../widgets/stock_ageing_report_view.dart';
 import '../widgets/stock_count_reconciliation_view.dart';
+import '../widgets/damaged_stock_view.dart';
+import '../widgets/stock_history_view.dart';
 import '../widgets/upload_file_view.dart';
 import '../widgets/validate_rows_view.dart';
 import '../widgets/variant_matrix_configurator_view.dart';
@@ -35,6 +49,8 @@ enum InventoryPageMode {
   labels,
   activeStockCount,
   reconciliation,
+  stockHistory,
+  damagedStock,
   createProduct,
   variantMatrix,
   productDetails,
@@ -60,20 +76,36 @@ class StockProductItem {
   });
 }
 
-enum StockStatusType {
-  healthy,
-  lowStock,
-  stockout,
-}
+enum StockStatusType { healthy, lowStock, stockout }
 
 class InventoryPage extends StatefulWidget {
   final InventoryPageMode initialMode;
   final ValueChanged<String>? onTitleChanged;
+  final VoidCallback? onBackFromUpload;
+  final String? businessId;
+  final FutureOr<void> Function()? onCatalogSetupCompleted;
+  final BrandRepository? brandRepository;
+  final BrandProvider? brandProvider;
+  final CategoryRepository? categoryRepository;
+  final ProductMediaRepository? mediaRepository;
+  final ProductRepository? productRepository;
+  final SupplierRepository? supplierRepository;
+  final LocationRepository? locationRepository;
 
   const InventoryPage({
     super.key,
     this.initialMode = InventoryPageMode.ageingReport,
     this.onTitleChanged,
+    this.onBackFromUpload,
+    this.businessId,
+    this.onCatalogSetupCompleted,
+    this.brandRepository,
+    this.brandProvider,
+    this.categoryRepository,
+    this.mediaRepository,
+    this.productRepository,
+    this.supplierRepository,
+    this.locationRepository,
   });
 
   @override
@@ -82,7 +114,12 @@ class InventoryPage extends StatefulWidget {
 
 class _InventoryPageState extends State<InventoryPage> {
   late InventoryPageMode _mode;
-  late List<StockProductItem> _products;
+  List<StockProductItem> _products = [];
+  String? _selectedProductId;
+  StockAdjustmentType? _selectedAdjustmentType;
+  InventoryImportDraft? _importDraft;
+  Map<String, InventoryImportTargetField> _columnMappings = {};
+  int _inventoryRefreshKey = 0;
 
   void _notifyTitle() {
     if (_mode == InventoryPageMode.ageingReport) {
@@ -102,15 +139,19 @@ class _InventoryPageState extends State<InventoryPage> {
     } else if (_mode == InventoryPageMode.locations) {
       widget.onTitleChanged?.call('Locations');
     } else if (_mode == InventoryPageMode.locationDetails) {
-      widget.onTitleChanged?.call('SoHo Flagship Store');
+      widget.onTitleChanged?.call('Location Details');
     } else if (_mode == InventoryPageMode.labels) {
       widget.onTitleChanged?.call('Labels');
     } else if (_mode == InventoryPageMode.activeStockCount) {
       widget.onTitleChanged?.call('Active Stock Count');
     } else if (_mode == InventoryPageMode.reconciliation) {
       widget.onTitleChanged?.call('Stock Count Reconciliation');
+    } else if (_mode == InventoryPageMode.stockHistory) {
+      widget.onTitleChanged?.call('Stock History & Audit Log');
+    } else if (_mode == InventoryPageMode.damagedStock) {
+      widget.onTitleChanged?.call('Damaged Stock & Quarantine');
     } else if (_mode == InventoryPageMode.createProduct) {
-      widget.onTitleChanged?.call('Create New Product');
+      widget.onTitleChanged?.call('Add Product');
     } else if (_mode == InventoryPageMode.variantMatrix) {
       widget.onTitleChanged?.call('Variant Matrix Configurator');
     } else if (_mode == InventoryPageMode.stockList) {
@@ -129,53 +170,70 @@ class _InventoryPageState extends State<InventoryPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _notifyTitle();
     });
-    _products = [
-      const StockProductItem(
-        id: '1',
-        name: 'Oxford Linen Shirt (Black/M)',
-        sku: 'TS-OX-LN-BLK-M',
-        price: '₹2,450',
-        onHand: 18,
-        status: 'Low Stock',
-        statusType: StockStatusType.lowStock,
-      ),
-      const StockProductItem(
-        id: '2',
-        name: 'Nike Air Max 90 (White/10)',
-        sku: 'NK-AM90-WHT-10',
-        price: '₹11,999',
-        onHand: 142,
-        status: 'Healthy',
-        statusType: StockStatusType.healthy,
-      ),
-      const StockProductItem(
-        id: '3',
-        name: 'Merino Wool Blazer (Navy/L)',
-        sku: 'MW-BLZ-NVY-L',
-        price: '₹8,900',
-        onHand: 4,
-        status: 'Low Stock',
-        statusType: StockStatusType.lowStock,
-      ),
-      const StockProductItem(
-        id: '4',
-        name: 'Silk Evening Dress (Red/S)',
-        sku: 'SLK-DRS-RED-S',
-        price: '₹14,500',
-        onHand: 0,
-        status: 'Stockout',
-        statusType: StockStatusType.stockout,
-      ),
-      const StockProductItem(
-        id: '5',
-        name: 'Casual Denim Jacket (Blue/M)',
-        sku: 'DNM-JKT-BLU-S',
-        price: '₹4,200',
-        onHand: 83,
-        status: 'Healthy',
-        statusType: StockStatusType.healthy,
-      ),
-    ];
+    _products = [];
+    _loadProducts();
+  }
+
+  @override
+  void didUpdateWidget(covariant InventoryPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialMode != oldWidget.initialMode && widget.initialMode != _mode) {
+      setState(() {
+        _mode = widget.initialMode;
+        if (_mode == InventoryPageMode.stockList) {
+          _selectedProductId = null;
+        }
+      });
+    }
+  }
+
+  Future<void> _loadProducts() async {
+    try {
+      final repo = widget.productRepository ?? ProductRepository();
+      final prods = await repo.getProducts(businessId: widget.businessId);
+      final summaries =
+          await InventoryRepository().getProductInventorySummaries(
+        businessId: widget.businessId,
+        preloadedProducts: prods,
+      );
+      if (mounted) {
+        setState(() {
+          _products = prods.map((p) {
+            final summary = summaries[p.id];
+            final onHand = summary?.availableQty ?? 0;
+            String priceStr = '—';
+            if (summary != null && summary.variants.isNotEmpty) {
+              final cents = summary.variants.first.retailPriceCents;
+              priceStr =
+                  '₹${(cents / 100).toStringAsFixed(cents % 100 == 0 ? 0 : 2)}';
+            }
+            return StockProductItem(
+              id: p.id,
+              name: p.name,
+              sku: summary != null &&
+                      summary.variants.isNotEmpty &&
+                      summary.variants.first.sku.isNotEmpty
+                  ? summary.variants.first.sku
+                  : (p.id.length >= 8
+                      ? p.id.substring(0, 8).toUpperCase()
+                      : p.id.toUpperCase()),
+              price: priceStr,
+              onHand: onHand,
+              status: summary?.stockStatusLabel ??
+                  (p.isActive ? 'Healthy' : 'Draft'),
+              statusType: summary?.stockStatus == StockStatus.healthy ||
+                      summary?.stockStatus == StockStatus.inStock
+                  ? StockStatusType.healthy
+                  : (summary?.stockStatus == StockStatus.lowStock
+                      ? StockStatusType.lowStock
+                      : StockStatusType.stockout),
+            );
+          }).toList();
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading stock registry: $e');
+    }
   }
 
   void _showFeedback(String message, {bool isDestructive = false}) {
@@ -262,8 +320,31 @@ class _InventoryPageState extends State<InventoryPage> {
       return DesktopContentConstraint(
         maxWidth: 1320,
         child: UploadFileView(
-          onFilePicked: () {
+          hasUnsavedWork: _importDraft != null,
+          backTooltip: widget.onBackFromUpload != null
+              ? 'Back to inventory setup'
+              : 'Back to inventory',
+          onBack:
+              widget.onBackFromUpload ??
+              () {
+                if (Navigator.canPop(context)) {
+                  Navigator.maybePop(context);
+                  return;
+                }
+                setState(() {
+                  _importDraft = null;
+                  _columnMappings = {};
+                  _mode = InventoryPageMode.stockList;
+                  _notifyTitle();
+                });
+              },
+          onFileReady: (draft) {
             setState(() {
+              _importDraft = draft;
+              _columnMappings = {
+                for (final header in draft.headers)
+                  header: InventoryImportColumnMapper.suggest(header),
+              };
               _mode = InventoryPageMode.mapValidate;
               _notifyTitle();
             });
@@ -276,7 +357,15 @@ class _InventoryPageState extends State<InventoryPage> {
       return DesktopContentConstraint(
         maxWidth: 1320,
         child: MapValidateView(
+          draft: _importDraft,
+          columnMappings: _columnMappings,
+          onMappingsChanged: (mappings) {
+            setState(() => _columnMappings = mappings);
+          },
           onContinue: () {
+            if (_importDraft == null) {
+              return;
+            }
             setState(() {
               _mode = InventoryPageMode.validateRows;
               _notifyTitle();
@@ -296,6 +385,8 @@ class _InventoryPageState extends State<InventoryPage> {
       return DesktopContentConstraint(
         maxWidth: 1320,
         child: ValidateRowsView(
+          draft: _importDraft,
+          columnMappings: _columnMappings,
           onContinue: () {
             setState(() {
               _mode = InventoryPageMode.reviewImport;
@@ -313,23 +404,112 @@ class _InventoryPageState extends State<InventoryPage> {
     }
 
     if (_mode == InventoryPageMode.activeStockCount) {
-      return const DesktopContentConstraint(
+      return DesktopContentConstraint(
         maxWidth: 1360,
-        child: ActiveStockCountView(),
+        child: ActiveStockCountView(
+          onGoToReconciliation: () {
+            setState(() {
+              _mode = InventoryPageMode.reconciliation;
+              _notifyTitle();
+            });
+          },
+        ),
       );
     }
 
     if (_mode == InventoryPageMode.reconciliation) {
-      return const DesktopContentConstraint(
+      return DesktopContentConstraint(
         maxWidth: 1360,
-        child: StockCountReconciliationView(),
+        child: StockCountReconciliationView(
+          onBack: () {
+            setState(() {
+              _mode = InventoryPageMode.activeStockCount;
+              _notifyTitle();
+            });
+          },
+          onReconciliationCompleted: () {
+            setState(() {
+              _mode = InventoryPageMode.stockList;
+              _notifyTitle();
+            });
+          },
+        ),
+      );
+    }
+
+    if (_mode == InventoryPageMode.stockHistory) {
+      return DesktopContentConstraint(
+        maxWidth: 1360,
+        child: StockHistoryView(
+          onBack: () {
+            setState(() {
+              _mode = InventoryPageMode.stockList;
+              _notifyTitle();
+            });
+          },
+        ),
+      );
+    }
+
+    if (_mode == InventoryPageMode.damagedStock) {
+      return DesktopContentConstraint(
+        maxWidth: 1360,
+        child: DamagedStockView(
+          onBack: () {
+            setState(() {
+              _mode = InventoryPageMode.stockList;
+              _notifyTitle();
+            });
+          },
+        ),
       );
     }
 
     if (_mode == InventoryPageMode.createProduct) {
-      return const DesktopContentConstraint(
+      return DesktopContentConstraint(
         maxWidth: 1360,
-        child: CreateNewProductView(),
+        child: CreateNewProductView(
+          businessId: widget.businessId,
+          initialProductId: _selectedProductId,
+          brandRepository: widget.brandRepository,
+          brandProvider: widget.brandProvider,
+          categoryRepository: widget.categoryRepository,
+          mediaRepository: widget.mediaRepository,
+          productRepository: widget.productRepository,
+          supplierRepository: widget.supplierRepository,
+          locationRepository: widget.locationRepository,
+          onPublishSuccess: (_) {},
+          onPublishProduct: () async {
+            if (widget.onCatalogSetupCompleted != null) {
+              await widget.onCatalogSetupCompleted!();
+            }
+            if (!context.mounted) return;
+            setState(() {
+              _mode = InventoryPageMode.stockList;
+              _inventoryRefreshKey++;
+              _notifyTitle();
+            });
+            _loadProducts();
+            if (widget.onBackFromUpload != null) {
+              widget.onBackFromUpload!();
+            } else if (Navigator.canPop(context)) {
+              Navigator.maybePop(context);
+            }
+          },
+          onBack: () {
+            setState(() {
+              _mode = InventoryPageMode.stockList;
+              _inventoryRefreshKey++;
+              _notifyTitle();
+            });
+            _loadProducts();
+            if (widget.onBackFromUpload != null) {
+              widget.onBackFromUpload!();
+            } else if (Navigator.canPop(context)) {
+              Navigator.maybePop(context);
+            }
+          },
+        ),
       );
     }
 
@@ -344,6 +524,10 @@ class _InventoryPageState extends State<InventoryPage> {
       return DesktopContentConstraint(
         maxWidth: 1360,
         child: ProductDetailsView(
+          productId: _selectedProductId,
+          businessId: widget.businessId,
+          productRepository: widget.productRepository,
+          locationRepository: widget.locationRepository,
           onBackToInventory: () {
             setState(() {
               _mode = InventoryPageMode.stockList;
@@ -356,6 +540,13 @@ class _InventoryPageState extends State<InventoryPage> {
               _notifyTitle();
             });
           },
+          onAdjustStock: (type) {
+            setState(() {
+              _selectedAdjustmentType = type;
+              _mode = InventoryPageMode.stockAdjustment;
+              _notifyTitle();
+            });
+          },
         ),
       );
     }
@@ -364,8 +555,15 @@ class _InventoryPageState extends State<InventoryPage> {
       return DesktopContentConstraint(
         maxWidth: 1360,
         child: InventoryProductsView(
+          key: ValueKey('inv_products_$_inventoryRefreshKey'),
+          businessId: widget.businessId,
+          productRepository: widget.productRepository,
+          categoryRepository: widget.categoryRepository,
+          supplierRepository: widget.supplierRepository,
+          locationRepository: widget.locationRepository,
           onAddProduct: () {
             setState(() {
+              _selectedProductId = null;
               _mode = InventoryPageMode.createProduct;
               _notifyTitle();
             });
@@ -382,15 +580,49 @@ class _InventoryPageState extends State<InventoryPage> {
               _notifyTitle();
             });
           },
+          onStockHistory: () {
+            setState(() {
+              _mode = InventoryPageMode.stockHistory;
+              _notifyTitle();
+            });
+          },
+          onDamagedStock: () {
+            setState(() {
+              _mode = InventoryPageMode.damagedStock;
+              _notifyTitle();
+            });
+          },
           onAdjustStock: () {
             setState(() {
               _mode = InventoryPageMode.stockAdjustment;
               _notifyTitle();
             });
           },
-          onViewProductDetails: (sku) {
+          onViewProductDetails: (productId) {
             setState(() {
+              _selectedProductId = productId;
               _mode = InventoryPageMode.productDetails;
+              _notifyTitle();
+            });
+          },
+          onEditProduct: (productId) {
+            setState(() {
+              _selectedProductId = productId;
+              _mode = InventoryPageMode.createProduct;
+              _notifyTitle();
+            });
+          },
+          onAdjustProductStock: (productId) {
+            setState(() {
+              _selectedProductId = productId;
+              _mode = InventoryPageMode.stockAdjustment;
+              _notifyTitle();
+            });
+          },
+          onProductStockHistory: (productId) {
+            setState(() {
+              _selectedProductId = productId;
+              _mode = InventoryPageMode.stockHistory;
               _notifyTitle();
             });
           },
@@ -449,16 +681,18 @@ class _InventoryPageState extends State<InventoryPage> {
       return DesktopContentConstraint(
         maxWidth: 1320,
         child: StockAdjustmentView(
-          initialLocation: 'Central Store',
+          initialProductId: _selectedProductId,
+          initialAdjustmentType: _selectedAdjustmentType,
           onViewHistory: () {
             setState(() {
-              _mode = InventoryPageMode.ageingReport;
+              _mode = InventoryPageMode.stockHistory;
               _notifyTitle();
             });
           },
           onAdjustStockCompleted: () {
             setState(() {
-              _mode = InventoryPageMode.ageingReport;
+              _mode = InventoryPageMode.stockList;
+              _inventoryRefreshKey++;
               _notifyTitle();
             });
           },
@@ -470,11 +704,18 @@ class _InventoryPageState extends State<InventoryPage> {
       return DesktopContentConstraint(
         maxWidth: 1320,
         child: ReviewImportView(
+          draft: _importDraft,
+          columnMappings: _columnMappings,
           onConfirm: () {
-            setState(() {
-              _mode = InventoryPageMode.stockList;
-              _notifyTitle();
-            });
+            widget.onCatalogSetupCompleted?.call();
+            if (widget.onBackFromUpload != null) {
+              widget.onBackFromUpload!();
+            } else {
+              setState(() {
+                _mode = InventoryPageMode.stockList;
+                _notifyTitle();
+              });
+            }
           },
           onBack: () {
             setState(() {
@@ -549,7 +790,11 @@ class _InventoryPageState extends State<InventoryPage> {
               _notifyTitle();
             });
           },
-          icon: const Icon(Icons.analytics_outlined, size: 16, color: Color(0xFF8C5E33)),
+          icon: const Icon(
+            Icons.analytics_outlined,
+            size: 16,
+            color: Color(0xFF8C5E33),
+          ),
           label: Text(
             'Analytics View',
             style: GoogleFonts.inter(
@@ -633,22 +878,13 @@ class _InventoryPageState extends State<InventoryPage> {
                         width: 280,
                         child: _buildColumnHeader('Product'),
                       ),
-                      SizedBox(
-                        width: 170,
-                        child: _buildColumnHeader('SKU'),
-                      ),
-                      SizedBox(
-                        width: 120,
-                        child: _buildColumnHeader('Price'),
-                      ),
+                      SizedBox(width: 170, child: _buildColumnHeader('SKU')),
+                      SizedBox(width: 120, child: _buildColumnHeader('Price')),
                       SizedBox(
                         width: 120,
                         child: _buildColumnHeader('On Hand'),
                       ),
-                      SizedBox(
-                        width: 110,
-                        child: _buildColumnHeader('Status'),
-                      ),
+                      SizedBox(width: 110, child: _buildColumnHeader('Status')),
                       const SizedBox(width: 60),
                     ],
                   ),

@@ -1,104 +1,58 @@
-// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-class StockCountItem {
-  StockCountItem({
-    required this.name,
-    required this.variant,
-    required this.sku,
-    required this.systemQty,
-    required this.countedQty,
-    required this.imageAsset,
-  });
-
-  final String name;
-  final String variant;
-  final String sku;
-  final int systemQty;
-  int countedQty;
-  final String imageAsset;
-
-  int get variance => countedQty - systemQty;
-  bool get isMatched => variance == 0;
-}
+import '../../../../core/auth/authorization_service.dart';
+import '../../data/location_repository.dart';
+import '../../data/product_repository.dart';
+import '../../data/stock_count_repository.dart';
+import '../../domain/models/product_variant.dart';
+import '../../domain/models/stock_count.dart';
+import '../../domain/models/stock_count_line.dart';
+import '../../domain/models/stock_location.dart';
 
 class ActiveStockCountView extends StatefulWidget {
+  final VoidCallback? onViewFullReport;
+  final VoidCallback? onPauseSession;
+  final VoidCallback? onSubmitAudit;
+  final VoidCallback? onScanBarcode;
+  final VoidCallback? onGoToReconciliation;
+
   const ActiveStockCountView({
     super.key,
     this.onViewFullReport,
     this.onPauseSession,
     this.onSubmitAudit,
     this.onScanBarcode,
+    this.onGoToReconciliation,
   });
-
-  final VoidCallback? onViewFullReport;
-  final VoidCallback? onPauseSession;
-  final VoidCallback? onSubmitAudit;
-  final VoidCallback? onScanBarcode;
 
   @override
   State<ActiveStockCountView> createState() => _ActiveStockCountViewState();
 }
 
 class _ActiveStockCountViewState extends State<ActiveStockCountView> {
+  final StockCountRepository _stockCountRepo = StockCountRepository();
+  final LocationRepository _locationRepo = LocationRepository();
+  final ProductRepository _productRepo = ProductRepository();
+
+  bool _isLoading = true;
+  bool _isSubmitting = false;
+  String? _errorMessage;
+
+  List<StockLocation> _locations = [];
+  List<StockCount> _activeCounts = [];
+  StockCount? _selectedCount;
+  List<StockCountLine> _lines = [];
+
+  final Map<String, int> _countedQuantities = {};
+  final Map<String, String> _lineReasons = {};
+
   final TextEditingController _searchController = TextEditingController();
-  int _selectedCategoryIndex = 0;
-
-  late final List<StockCountItem> _items;
-
-  final List<String> _categories = [
-    'Denim (145/200)',
-    'Knitwear (89/120)',
-    'Outerwear (20/150)',
-    'Accessories (593/854)',
-  ];
+  String _filterType = 'all'; // all, uncounted, discrepant
 
   @override
   void initState() {
     super.initState();
-    _items = [
-      StockCountItem(
-        name: 'Oxford Linen Shirt',
-        variant: 'Black / M',
-        sku: 'TS-10492-BM',
-        systemQty: 50,
-        countedQty: 48,
-        imageAsset: 'assets/oxford_linen_shirt.jpg',
-      ),
-      StockCountItem(
-        name: 'Raw Denim Jeans',
-        variant: 'Indigo / 32',
-        sku: 'TS-22322-IND32',
-        systemQty: 30,
-        countedQty: 30,
-        imageAsset: 'assets/oxford_linen_shirt_blue.jpg',
-      ),
-      StockCountItem(
-        name: 'Cashmere Sweater',
-        variant: 'Camel / L',
-        sku: 'TS-50155-CL',
-        systemQty: 12,
-        countedQty: 15,
-        imageAsset: 'assets/cashmere_sweater.jpg',
-      ),
-      StockCountItem(
-        name: 'Silk Evening Dress',
-        variant: 'Red / S',
-        sku: 'TS-16166-RS',
-        systemQty: 8,
-        countedQty: 8,
-        imageAsset: 'assets/silk_evening_dress.jpg',
-      ),
-      StockCountItem(
-        name: 'Gabardine Trench Coat',
-        variant: 'Beige / M',
-        sku: 'TS-27193-BM',
-        systemQty: 24,
-        countedQty: 23,
-        imageAsset: 'assets/gabardine_trench.jpg',
-      ),
-    ];
+    _loadInitialData();
   }
 
   @override
@@ -107,996 +61,681 @@ class _ActiveStockCountViewState extends State<ActiveStockCountView> {
     super.dispose();
   }
 
-  List<StockCountItem> get _filteredItems {
-    final q = _searchController.text.trim().toLowerCase();
-    if (q.isEmpty) return _items;
-    return _items.where((i) {
-      return i.name.toLowerCase().contains(q) ||
-          i.variant.toLowerCase().contains(q) ||
-          i.sku.toLowerCase().contains(q);
+  Future<void> _loadInitialData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final locs = await _locationRepo.getLocations();
+      final inProgressCounts = await _stockCountRepo.getStockCounts(status: 'in_progress');
+
+      _locations = locs;
+      _activeCounts = inProgressCounts;
+
+      if (_activeCounts.isNotEmpty) {
+        _selectedCount = _activeCounts.first;
+        await _loadCountLines(_selectedCount!.id);
+      } else {
+        _selectedCount = null;
+        _lines = [];
+      }
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadCountLines(String countId) async {
+    final list = await _stockCountRepo.getStockCountLines(countId: countId);
+    _countedQuantities.clear();
+    _lineReasons.clear();
+    for (final line in list) {
+      if (line.countedQty != null) {
+        _countedQuantities[line.variantId] = line.countedQty!;
+      }
+      if (line.reason != null) {
+        _lineReasons[line.variantId] = line.reason!;
+      }
+    }
+    if (mounted) {
+      setState(() => _lines = list);
+    }
+  }
+
+  Future<void> _showStartCountModal() async {
+    final canAdjust = AuthorizationService.instance.can('inventory.adjust');
+    if (!canAdjust) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Access Denied: You do not have inventory.adjust permission.'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
+
+    if (_locations.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No stock locations available to count.')),
+      );
+      return;
+    }
+
+    String selectedLocId = _locations.first.id;
+    String countType = 'full';
+    final notesController = TextEditingController();
+
+    await showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              title: Text('Start Physical Stock Count', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+              content: SizedBox(
+                width: 440,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Creates an audited count session snapshotting active product variants. Zero-balance variants are automatically included.',
+                      style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280)),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      initialValue: selectedLocId,
+                      decoration: const InputDecoration(labelText: 'Location', border: OutlineInputBorder(), isDense: true),
+                      items: _locations.map((loc) => DropdownMenuItem(value: loc.id, child: Text(loc.name))).toList(),
+                      onChanged: (val) {
+                        if (val != null) setModalState(() => selectedLocId = val);
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    DropdownButtonFormField<String>(
+                      initialValue: countType,
+                      decoration: const InputDecoration(labelText: 'Count Scope', border: OutlineInputBorder(), isDense: true),
+                      items: const [
+                        DropdownMenuItem(value: 'full', child: Text('Full Physical Count (All SKUs)')),
+                        DropdownMenuItem(value: 'cycle', child: Text('Cycle Count')),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) setModalState(() => countType = val);
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: notesController,
+                      decoration: const InputDecoration(labelText: 'Notes / Session Label', border: OutlineInputBorder(), isDense: true),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.of(dialogCtx).pop(), child: const Text('Cancel')),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF181513), foregroundColor: Colors.white),
+                  onPressed: () async {
+                    Navigator.of(dialogCtx).pop();
+                    setState(() => _isLoading = true);
+                    try {
+                      final res = await _stockCountRepo.startStockCount(
+                        locationId: selectedLocId,
+                        countType: countType,
+                        notes: notesController.text.trim().isNotEmpty ? notesController.text.trim() : null,
+                      );
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Count started successfully: ${res['count_number']} (${res['lines_initialized']} items in scope)'),
+                          backgroundColor: const Color(0xFF16A34A),
+                        ),
+                      );
+                      await _loadInitialData();
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to start count: $e'), backgroundColor: const Color(0xFFDC2626)),
+                      );
+                      setState(() => _isLoading = false);
+                    }
+                  },
+                  child: const Text('Start Count'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _showAddUnexpectedSkuModal() async {
+    if (_selectedCount == null) return;
+
+    final skuController = TextEditingController();
+    final qtyController = TextEditingController(text: '1');
+    String? modalError;
+    ProductVariant? foundVariant;
+
+    await showDialog(
+      context: context,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              title: Text('Scan / Add Unexpected SKU', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+              content: SizedBox(
+                width: 420,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'If a physically present item was not initially expected in this count, discover and add it with expected_qty = 0.',
+                      style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280)),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: skuController,
+                            decoration: const InputDecoration(
+                              labelText: 'SKU or Barcode',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () async {
+                            final code = skuController.text.trim();
+                            if (code.isEmpty) return;
+                            try {
+                              final variant = await _productRepo.findVariantBySkuOrBarcode(code);
+                              setModalState(() {
+                                foundVariant = variant;
+                                modalError = variant == null ? 'No variant found with SKU: $code' : null;
+                              });
+                            } catch (e) {
+                              setModalState(() => modalError = e.toString());
+                            }
+                          },
+                          child: const Text('Lookup'),
+                        ),
+                      ],
+                    ),
+                    if (modalError != null) ...[
+                      const SizedBox(height: 8),
+                      Text(modalError!, style: GoogleFonts.inter(fontSize: 12, color: Colors.red)),
+                    ],
+                    if (foundVariant != null) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(8)),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Discovered: ${foundVariant!.title}', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600)),
+                            Text('SKU: ${foundVariant!.sku} | Expected: 0 units', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B))),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      TextField(
+                        controller: qtyController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: 'Counted Quantity Physically Present', border: OutlineInputBorder(), isDense: true),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.of(dialogCtx).pop(), child: const Text('Cancel')),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF181513), foregroundColor: Colors.white),
+                  onPressed: foundVariant == null
+                      ? null
+                      : () {
+                          final counted = int.tryParse(qtyController.text) ?? 1;
+                          setState(() {
+                            _countedQuantities[foundVariant!.id] = counted;
+                            // Add synthetic line into UI list if not present
+                            if (!_lines.any((l) => l.variantId == foundVariant!.id)) {
+                              _lines.add(
+                                StockCountLine(
+                                  id: 'temp_${foundVariant!.id}',
+                                  businessId: _selectedCount!.businessId,
+                                  countId: _selectedCount!.id,
+                                  variantId: foundVariant!.id,
+                                  expectedQty: 0,
+                                  countedQty: counted,
+                                  discrepancy: counted,
+                                  status: 'counted',
+                                  sku: foundVariant!.sku,
+                                  createdAt: DateTime.now(),
+                                  updatedAt: DateTime.now(),
+                                ),
+                              );
+                            }
+                          });
+                          Navigator.of(dialogCtx).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Added SKU ${foundVariant!.sku} with counted quantity: $counted')),
+                          );
+                        },
+                  child: const Text('Add to Count'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _submitAuditForReconciliation() async {
+    final canAdjust = AuthorizationService.instance.can('inventory.adjust');
+    if (!canAdjust) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Access Denied: You do not have inventory.adjust permission.'), backgroundColor: Color(0xFFDC2626)),
+      );
+      return;
+    }
+
+    if (_selectedCount == null) return;
+
+    final uncountedCount = _lines.where((l) => !_countedQuantities.containsKey(l.variantId)).length;
+    if (uncountedCount > 0) {
+      final proceed = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Uncounted Items Remain'),
+          content: Text(
+            'There are $uncountedCount items with no counted quantity recorded. Uncounted items will default to 0 during submission. Continue?',
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Review Count')),
+            ElevatedButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Proceed & Submit')),
+          ],
+        ),
+      );
+      if (proceed != true) return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    final linesPayload = _lines.map((l) {
+      final counted = _countedQuantities[l.variantId] ?? 0;
+      return {
+        'variant_id': l.variantId,
+        'counted_qty': counted,
+        'reason': _lineReasons[l.variantId] ?? (counted != l.expectedQty ? 'Discrepancy recorded during count' : null),
+      };
     }).toList();
+
+    try {
+      final res = await _stockCountRepo.submitStockCount(
+        countId: _selectedCount!.id,
+        lines: linesPayload,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Stock count submitted for reconciliation: ${res['discrepant_lines_count']} discrepancies found.'),
+            backgroundColor: const Color(0xFF16A34A),
+          ),
+        );
+        widget.onGoToReconciliation?.call();
+        await _loadInitialData();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Submission failed: $e'), backgroundColor: const Color(0xFFDC2626)),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  Future<void> _cancelActiveCount() async {
+    if (_selectedCount == null) return;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cancel Stock Count'),
+        content: const Text('Are you sure you want to cancel this stock count? This action cannot be undone.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Back')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626), foregroundColor: Colors.white),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Cancel Count Session'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    setState(() => _isSubmitting = true);
+    try {
+      await _stockCountRepo.cancelStockCount(countId: _selectedCount!.id, reason: 'Cancelled by user');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stock count session cancelled.')));
+        await _loadInitialData();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red));
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  List<StockCountLine> get _filteredLines {
+    var list = _lines;
+    if (_filterType == 'uncounted') {
+      list = list.where((l) => !_countedQuantities.containsKey(l.variantId)).toList();
+    } else if (_filterType == 'discrepant') {
+      list = list.where((l) {
+        final c = _countedQuantities[l.variantId];
+        return c != null && c != l.expectedQty;
+      }).toList();
+    }
+
+    final q = _searchController.text.trim().toLowerCase();
+    if (q.isEmpty) return list;
+    return list.where((l) {
+      final sku = (l.variantSku ?? '').toLowerCase();
+      final name = (l.productName ?? '').toLowerCase();
+      return sku.contains(q) || name.contains(q);
+    }).toList();
+  }
+
+  String _formatDate(DateTime? dt) {
+    if (dt == null) return '-';
+    final d = dt.toLocal();
+    final y = d.year;
+    final m = d.month.toString().padLeft(2, '0');
+    final day = d.day.toString().padLeft(2, '0');
+    final h = d.hour.toString().padLeft(2, '0');
+    final min = d.minute.toString().padLeft(2, '0');
+    return '$y-$m-$day $h:$min';
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Header Row
-          _buildHeader(),
-          const SizedBox(height: 18),
+    if (_isLoading) {
+      return const Center(child: Padding(padding: EdgeInsets.all(60), child: CircularProgressIndicator()));
+    }
 
-          // 2. Hero Progress Card: Q3 Full Inventory Count
-          _buildHeroProgressCard(),
-          const SizedBox(height: 20),
-
-          // 3. Main 2-Column Layout (Items Table & Live Analytics)
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 1060;
-
-              if (isWide) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Left Column: Items Table (~70%)
-                    Expanded(
-                      flex: 70,
-                      child: _buildItemsTableColumn(),
-                    ),
-                    const SizedBox(width: 18),
-
-                    // Right Column: Analytics & Team (~30%)
-                    Expanded(
-                      flex: 30,
-                      child: _buildAnalyticsColumn(),
-                    ),
-                  ],
-                );
-              }
-
-              // Stacked for smaller screens
-              return Column(
-                children: [
-                  _buildItemsTableColumn(),
-                  const SizedBox(height: 20),
-                  _buildAnalyticsColumn(),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 20),
-
-          // 4. Bottom 2-Card Row: AI Auditor Insights & Quick Actions
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 900;
-              if (isWide) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 58, child: _buildAiAuditorInsightsCard()),
-                    const SizedBox(width: 16),
-                    Expanded(flex: 42, child: _buildQuickActionsCard()),
-                  ],
-                );
-              }
-              return Column(
-                children: [
-                  _buildAiAuditorInsightsCard(),
-                  const SizedBox(height: 16),
-                  _buildQuickActionsCard(),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
-  }
-
-  // 1. Header
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  'Active Stock Count',
-                  style: GoogleFonts.inter(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF111827),
-                    letterSpacing: -0.4,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDCFCE7),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF15803D),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        'In Progress',
-                        style: GoogleFonts.inter(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF15803D),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Real-time inventory counting and variance tracking.',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF6B7280),
-              ),
-            ),
-          ],
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Text('Error loading count data: $_errorMessage', style: GoogleFonts.inter(color: Colors.red)),
         ),
-        Row(
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'Started by Alex Mercer (08:30 AM)',
-                  style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
-                ),
-                Text(
-                  'Q3 Full Inventory Count — Zone A',
-                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF374151)),
-                ),
-              ],
-            ),
-            const SizedBox(width: 12),
-            Container(
-              height: 36,
-              width: 36,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: const Icon(Icons.more_vert_rounded, size: 18, color: Color(0xFF6B7280)),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+      );
+    }
 
-  // 2. Hero Progress Card
-  Widget _buildHeroProgressCard() {
+    final totalCount = _lines.length;
+    final countedCount = _lines.where((l) => _countedQuantities.containsKey(l.variantId)).length;
+    final discrepantCount = _lines.where((l) {
+      final c = _countedQuantities[l.variantId];
+      return c != null && c != l.expectedQty;
+    }).length;
+
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
+      color: const Color(0xFFF9FAFB),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: Title + 64% Complete pill
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFBF4EB),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.inventory_rounded, size: 18, color: Color(0xFFB45309)),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Q3 Full Inventory Count',
-                        style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
-                      ),
-                      const SizedBox(height: 1),
-                      Text(
-                        'Zone A  •  Started Aug 27, 2026  •  08:30 AM',
-                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFFBEB),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFFDE68A)),
-                ),
-                child: Text(
-                  '64% Complete',
-                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFFB45309)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-
-          // Progress Bar (64% filled)
-          ClipRRect(
-            borderRadius: BorderRadius.circular(6),
-            child: LinearProgressIndicator(
-              value: 0.64,
-              backgroundColor: const Color(0xFFF1F5F9),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFB45309)),
-              minHeight: 8,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Stats row
-          Row(
-            children: [
-              _buildStatMetric('847', 'Counted Items'),
-              const SizedBox(width: 32),
-              _buildStatMetric('477', 'Remaining'),
-              const SizedBox(width: 32),
-              _buildStatMetric('1,324', 'Total SKUs'),
-              const SizedBox(width: 32),
-              Row(
-                children: [
-                  const Icon(Icons.schedule_rounded, size: 18, color: Color(0xFF6B7280)),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Est. Time Remaining', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280))),
-                      Text('2h 15m', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
-                    ],
-                  ),
-                ],
-              ),
-              const Spacer(),
-              OutlinedButton(
-                onPressed: () {},
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: const Color(0xFFB45309),
-                  side: const BorderSide(color: Color(0xFFFDE68A)),
-                  backgroundColor: const Color(0xFFFFFBEB).withOpacity(0.5),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  textStyle: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Text('View Details'),
-                    SizedBox(width: 4),
-                    Icon(Icons.arrow_forward_rounded, size: 14),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatMetric(String val, String label) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(val, style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
-        Text(label, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280))),
-      ],
-    );
-  }
-
-  // 3A. Left Column: Items Table Column
-  Widget _buildItemsTableColumn() {
-    return Column(
-      children: [
-        // Category Pills & Search Toolbar Row
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Category Pills
-            Row(
-              children: [
-                for (int i = 0; i < _categories.length; i++) ...[
-                  InkWell(
-                    onTap: () => setState(() => _selectedCategoryIndex = i),
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _selectedCategoryIndex == i ? const Color(0xFF181513) : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: _selectedCategoryIndex == i ? const Color(0xFF181513) : const Color(0xFFE2E8F0),
-                        ),
-                      ),
-                      child: Text(
-                        _categories[i],
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          fontWeight: _selectedCategoryIndex == i ? FontWeight.w600 : FontWeight.w500,
-                          color: _selectedCategoryIndex == i ? Colors.white : const Color(0xFF4B5563),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                ],
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: const Icon(Icons.more_horiz_rounded, size: 16, color: Color(0xFF6B7280)),
-                ),
-              ],
-            ),
-
-            // Search input & Filter
-            Row(
-              children: [
-                Container(
-                  width: 170,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFD1D5DB)),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.search_rounded, size: 15, color: Color(0xFF9CA3AF)),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          style: GoogleFonts.inter(fontSize: 12),
-                          decoration: const InputDecoration(
-                            hintText: 'Search items...',
-                            hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12),
-                            border: InputBorder.none,
-                            isDense: true,
-                          ),
-                          onChanged: (_) => setState(() {}),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.tune_rounded, size: 14),
-                  label: const Text('Filters'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF374151),
-                    side: const BorderSide(color: Color(0xFFD1D5DB)),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    minimumSize: Size.zero,
-                    textStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-
-        // Items Table Card
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Column(
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                child: Row(
-                  children: [
-                    const SizedBox(width: 20, child: Icon(Icons.check_box_outline_blank, size: 16, color: Color(0xFFCBD5E1))),
-                    const SizedBox(width: 10),
-                    Expanded(flex: 34, child: Text('Item Details', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                    Expanded(flex: 22, child: Text('SKU', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                    Expanded(flex: 12, child: Center(child: Text('System Qty', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                    Expanded(flex: 14, child: Center(child: Text('Counted Qty', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                    Expanded(flex: 10, child: Center(child: Text('Variance', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                    Expanded(flex: 12, child: Center(child: Text('Status', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                    const SizedBox(width: 24),
-                  ],
-                ),
-              ),
-              const Divider(height: 1, color: Color(0xFFF1F5F9)),
-
-              // Item Rows
-              for (final item in _filteredItems) ...[
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 20, child: Icon(Icons.check_box_outline_blank, size: 16, color: Color(0xFFCBD5E1))),
-                      const SizedBox(width: 10),
-
-                      // Thumbnail & Item Details
-                      Expanded(
-                        flex: 34,
-                        child: Row(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(6),
-                              child: Image.asset(
-                                item.imageAsset,
-                                width: 34,
-                                height: 34,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => Container(
-                                  width: 34,
-                                  height: 34,
-                                  color: const Color(0xFFF1F5F9),
-                                  child: const Icon(Icons.checkroom_rounded, size: 16, color: Color(0xFF94A3B8)),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    item.name,
-                                    style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    item.variant,
-                                    style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280)),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // SKU
-                      Expanded(
-                        flex: 22,
-                        child: Text(
-                          item.sku,
-                          style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF4B5563)),
-                        ),
-                      ),
-
-                      // System Qty
-                      Expanded(
-                        flex: 12,
-                        child: Center(
-                          child: Text(
-                            '${item.systemQty}',
-                            style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                          ),
-                        ),
-                      ),
-
-                      // Counted Qty (editable box)
-                      Expanded(
-                        flex: 14,
-                        child: Center(
-                          child: Container(
-                            width: 50,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFAFAFA),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFFD1D5DB)),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '${item.countedQty}',
-                              style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Variance
-                      Expanded(
-                        flex: 10,
-                        child: Center(
-                          child: Text(
-                            item.variance == 0
-                                ? '0'
-                                : (item.variance > 0 ? '+${item.variance}' : '${item.variance}'),
-                            style: GoogleFonts.inter(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: item.variance == 0
-                                  ? const Color(0xFF6B7280)
-                                  : (item.variance > 0 ? const Color(0xFF16A34A) : const Color(0xFFDC2626)),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Status Pill
-                      Expanded(
-                        flex: 12,
-                        child: Center(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: item.isMatched ? const Color(0xFFDCFCE7) : const Color(0xFFFFFBEB),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              item.isMatched ? 'Matched' : 'Variance',
-                              style: GoogleFonts.inter(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w600,
-                                color: item.isMatched ? const Color(0xFF15803D) : const Color(0xFFB45309),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      // Actions
-                      const SizedBox(
-                        width: 24,
-                        child: Icon(Icons.more_horiz_rounded, size: 16, color: Color(0xFF9CA3AF)),
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1, color: Color(0xFFF1F5F9)),
-              ],
-
-              // Footer Pagination
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Showing 1–5 of 145 items', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280))),
-                    Row(
-                      children: [
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
-                          child: const Icon(Icons.chevron_left_rounded, size: 16, color: Color(0xFF94A3B8)),
-                        ),
-                        const SizedBox(width: 4),
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(color: const Color(0xFFFBF4EB), borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFD97706))),
-                          alignment: Alignment.center,
-                          child: Text('1', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFFB45309))),
-                        ),
-                        const SizedBox(width: 4),
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
-                          alignment: Alignment.center,
-                          child: Text('2', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280))),
-                        ),
-                        const SizedBox(width: 4),
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
-                          alignment: Alignment.center,
-                          child: Text('3', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280))),
-                        ),
-                        const SizedBox(width: 4),
-                        Text('...', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF94A3B8))),
-                        const SizedBox(width: 4),
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
-                          alignment: Alignment.center,
-                          child: Text('29', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280))),
-                        ),
-                        const SizedBox(width: 4),
-                        Container(
-                          width: 26,
-                          height: 26,
-                          decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
-                          child: const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF94A3B8)),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  // 3B. Right Column: Analytics & Team Column
-  Widget _buildAnalyticsColumn() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Live Counting Analytics + View Full Report
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.insights_rounded, size: 17, color: Color(0xFF111827)),
-                  const SizedBox(width: 8),
-                  Text('Live Counting Analytics', style: GoogleFonts.inter(fontSize: 14.5, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
-                ],
-              ),
-              InkWell(
-                onTap: widget.onViewFullReport,
-                child: Row(
-                  children: [
-                    Text('View Full Report', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFB45309))),
-                    const SizedBox(width: 2),
-                    const Icon(Icons.arrow_forward_rounded, size: 12, color: Color(0xFFB45309)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Stats with Circular Progress
+          // Header
           Row(
             children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Total SKUs Handled', style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280))),
-                        Text('847 / 1,324', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Discrepancies Flagged', style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280))),
-                        Text('23 items', style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFFDC2626))),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Categories Done', style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280))),
-                        Text('4 / 8 complete', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF15803D))),
-                      ],
+                    Text('Active Stock Count', style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
+                    const SizedBox(height: 4),
+                    Text(
+                      _selectedCount != null
+                          ? 'Session ${_selectedCount!.countNumber} • Location: ${_selectedCount!.locationName ?? 'Store'} • Started ${_formatDate(_selectedCount!.startedAt)}'
+                          : 'No active stock count session in progress.',
+                      style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6B7280)),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 14),
+              if (_selectedCount == null)
+                ElevatedButton.icon(
+                  onPressed: _showStartCountModal,
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Start New Count'),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF181513), foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
+                )
+              else ...[
+                OutlinedButton.icon(
+                  onPressed: _showAddUnexpectedSkuModal,
+                  icon: const Icon(Icons.qr_code_scanner_rounded, size: 16),
+                  label: const Text('Scan Unexpected SKU'),
+                  style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFF374151), side: const BorderSide(color: Color(0xFFD1D5DB))),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: _cancelActiveCount,
+                  style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFDC2626), side: const BorderSide(color: Color(0xFFFCA5A5))),
+                  child: const Text('Cancel Session'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: _isSubmitting ? null : _submitAuditForReconciliation,
+                  icon: _isSubmitting
+                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Icon(Icons.send_rounded, size: 16),
+                  label: const Text('Submit for Reconciliation'),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF181513), foregroundColor: Colors.white),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 20),
 
-              // Circular Gauge showing 64%
-              SizedBox(
-                width: 52,
-                height: 52,
-                child: Stack(
-                  fit: StackFit.expand,
+          if (_selectedCount == null) ...[
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    CircularProgressIndicator(
-                      value: 0.64,
-                      strokeWidth: 5.5,
-                      backgroundColor: const Color(0xFFF1F5F9),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFB45309)),
+                    Icon(Icons.fact_check_outlined, size: 64, color: Colors.grey.shade400),
+                    const SizedBox(height: 16),
+                    Text('No Active Physical Count', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF374151))),
+                    const SizedBox(height: 6),
+                    Text('Start a new count to snapshot expected quantities across all tracked products.', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6B7280))),
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF181513), foregroundColor: Colors.white),
+                      onPressed: _showStartCountModal,
+                      child: const Text('Start Stock Count'),
                     ),
-                    Center(
-                      child: Text(
-                        '64%',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                  ],
+                ),
+              ),
+            ),
+          ] else ...[
+            // Metrics Summary Row (Honest Data)
+            Row(
+              children: [
+                _buildStatCard('Total Items in Scope', '$totalCount SKUs', Icons.inventory_2_outlined, const Color(0xFF475569)),
+                const SizedBox(width: 12),
+                _buildStatCard('Counted Items', '$countedCount / $totalCount', Icons.check_circle_outline_rounded, const Color(0xFF16A34A)),
+                const SizedBox(width: 12),
+                _buildStatCard('Discrepancies', '$discrepantCount SKUs', Icons.warning_amber_rounded, const Color(0xFFDC2626)),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Filter bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE5E7EB))),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: const InputDecoration(
+                        hintText: 'Search SKU or product name...',
+                        prefixIcon: Icon(Icons.search, size: 18),
+                        border: InputBorder.none,
+                        isDense: true,
                       ),
+                      onChanged: (_) => setState(() {}),
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 12),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'all', label: Text('All')),
+                      ButtonSegment(value: 'uncounted', label: Text('Uncounted')),
+                      ButtonSegment(value: 'discrepant', label: Text('Discrepancies')),
+                    ],
+                    selected: {_filterType},
+                    onSelectionChanged: (set) => setState(() => _filterType = set.first),
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          const SizedBox(height: 14),
+            ),
+            const SizedBox(height: 12),
 
-          // Team Assignments
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Team Assignments', style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
-              InkWell(
-                onTap: () {},
-                child: Row(
-                  children: [
-                    Text('Manage Team', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFB45309))),
-                    const SizedBox(width: 2),
-                    const Icon(Icons.arrow_forward_rounded, size: 12, color: Color(0xFFB45309)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
+            // Count Lines Table
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFE5E7EB))),
+                child: ListView.separated(
+                  itemCount: _filteredLines.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                  itemBuilder: (ctx, i) {
+                    final line = _filteredLines[i];
+                    final hasCounted = _countedQuantities.containsKey(line.variantId);
+                    final counted = _countedQuantities[line.variantId] ?? 0;
+                    final variance = hasCounted ? (counted - line.expectedQty) : null;
 
-          // Team Member 1: Sarah K.
-          _buildTeamMemberRow('assets/emma_carter.jpg', 'Sarah K.', 'Denim Section', '847 / 1,324'),
-          const SizedBox(height: 8),
-
-          // Team Member 2: Mike R.
-          _buildTeamMemberRow('assets/vikram_singh.jpg', 'Mike R.', 'Outerwear Section', '612 / 854'),
-          const SizedBox(height: 18),
-
-          // Action 1: Pause & Save Session
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: widget.onPauseSession ??
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Stock count session paused and saved.'),
-                        backgroundColor: Color(0xFF181513),
-                        behavior: SnackBarBehavior.floating,
+                    return ListTile(
+                      title: Text(line.productName ?? 'Product', style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                      subtitle: Text('SKU: ${line.variantSku ?? '-'} | Expected: ${line.expectedQty} units', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280))),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (variance != null)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: variance == 0
+                                    ? const Color(0xFFDCFCE7)
+                                    : (variance < 0 ? const Color(0xFFFEE2E2) : const Color(0xFFFEF3C7)),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '${variance > 0 ? '+' : ''}$variance',
+                                style: GoogleFonts.inter(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                  color: variance == 0
+                                      ? const Color(0xFF15803D)
+                                      : (variance < 0 ? const Color(0xFFDC2626) : const Color(0xFFD97706)),
+                                ),
+                              ),
+                            ),
+                          const SizedBox(width: 14),
+                          // Stepper
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline, size: 20),
+                            onPressed: () {
+                              final current = _countedQuantities[line.variantId] ?? line.expectedQty;
+                              if (current > 0) {
+                                setState(() => _countedQuantities[line.variantId] = current - 1);
+                              }
+                            },
+                          ),
+                          SizedBox(
+                            width: 50,
+                            child: TextFormField(
+                              key: ValueKey('${line.variantId}_$counted'),
+                              initialValue: hasCounted ? '$counted' : '',
+                              textAlign: TextAlign.center,
+                              keyboardType: TextInputType.number,
+                              decoration: const InputDecoration(hintText: '-', isDense: true, contentPadding: EdgeInsets.symmetric(vertical: 6)),
+                              onChanged: (val) {
+                                final parsed = int.tryParse(val);
+                                if (parsed != null && parsed >= 0) {
+                                  setState(() => _countedQuantities[line.variantId] = parsed);
+                                }
+                              },
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline, size: 20),
+                            onPressed: () {
+                              final current = _countedQuantities[line.variantId] ?? line.expectedQty;
+                              setState(() => _countedQuantities[line.variantId] = current + 1);
+                            },
+                          ),
+                        ],
                       ),
                     );
                   },
-              icon: const Icon(Icons.pause_rounded, size: 16),
-              label: const Text('Pause & Save Session'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF181513),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-
-          // Action 2: Submit Count for Audit
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: widget.onSubmitAudit ??
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Stock count submitted for inventory manager audit.'),
-                        backgroundColor: Color(0xFF181513),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-              icon: const Icon(Icons.check_rounded, size: 16, color: Color(0xFF111827)),
-              label: const Text('Submit Count for Audit'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF111827),
-                side: const BorderSide(color: Color(0xFFD1D5DB)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(vertical: 11),
-                textStyle: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600),
-              ),
-            ),
-          ),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildTeamMemberRow(String asset, String name, String section, String count) {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 14,
-          backgroundImage: AssetImage(asset),
-          backgroundColor: const Color(0xFFF1F5F9),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(name, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF111827))),
-              Text(section, style: GoogleFonts.inter(fontSize: 10.5, color: const Color(0xFF6B7280))),
-            ],
-          ),
-        ),
-        Text(count, style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF374151))),
-      ],
-    );
-  }
-
-  // 4A. Bottom Left: AI Auditor Insights Card
-  Widget _buildAiAuditorInsightsCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFDE68A)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFBF4EB),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFB45309), size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE5E7EB))),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 12),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'AI Auditor Insights',
-                  style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w700, color: const Color(0xFF92400E)),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Delhi flagship has completed Denim. Recommend merging counts automatically to speed up variance resolution.',
-                  style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280), height: 1.3),
-                ),
+                Text(label, style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280))),
+                Text(value, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFFB45309),
-              side: const BorderSide(color: Color(0xFFFDE68A)),
-              backgroundColor: const Color(0xFFFFFBEB).withOpacity(0.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              textStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text('View AI Insights'),
-                SizedBox(width: 4),
-                Icon(Icons.arrow_forward_rounded, size: 13),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // 4B. Bottom Right: Quick Actions Card
-  Widget _buildQuickActionsCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.tune_rounded, size: 16, color: Color(0xFF111827)),
-              const SizedBox(width: 8),
-              Text(
-                'Quick Actions',
-                style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionButton(Icons.qr_code_scanner_rounded, 'Scan Barcode', widget.onScanBarcode),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildActionButton(Icons.file_upload_outlined, 'Bulk Update', () {}),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _buildActionButton(Icons.description_outlined, 'Export Report', () {}),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButton(IconData icon, String title, VoidCallback? onTap) {
-    return OutlinedButton(
-      onPressed: onTap ?? () {},
-      style: OutlinedButton.styleFrom(
-        foregroundColor: const Color(0xFF374151),
-        side: const BorderSide(color: Color(0xFFD1D5DB)),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        minimumSize: Size.zero,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 14, color: const Color(0xFF4B5563)),
-          const SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              title,
-              style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

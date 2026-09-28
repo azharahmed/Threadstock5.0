@@ -54,44 +54,7 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
   bool _selectAll = false;
   bool _isEditingQuantities = false;
 
-  final List<ProposalProductItem> _products = [
-    ProposalProductItem(
-      name: 'Oxford Linen Shirt',
-      sku: 'TS-10432-W / M',
-      location: 'Delhi Flagship',
-      available: 18,
-      forecast: 120,
-      recommended: 150,
-      supplier: 'Biella Fabric',
-      unitCost: '₹800',
-      totalCost: '₹1,20,000',
-      imageAsset: 'Assets/oxford_linen_shirt.jpg',
-    ),
-    ProposalProductItem(
-      name: 'Merino Wool Blazer',
-      sku: 'MWB-20188-L',
-      location: 'Mumbai Phoenix',
-      available: 4,
-      forecast: 45,
-      recommended: 60,
-      supplier: 'Biella Fabric',
-      unitCost: '₹3,000',
-      totalCost: '₹1,80,000',
-      imageAsset: 'Assets/merino_wool_blazer.jpg',
-    ),
-    ProposalProductItem(
-      name: 'Silk Evening Dress',
-      sku: 'SED-16186-S',
-      location: 'Lucknow Regent',
-      available: 0,
-      forecast: 30,
-      recommended: 50,
-      supplier: 'Como Weavers',
-      unitCost: '₹3,640',
-      totalCost: '₹1,82,000',
-      imageAsset: 'Assets/silk_evening_dress.jpg',
-    ),
-  ];
+  final List<ProposalProductItem> _products = const [];
 
   void _toggleSelectAll(bool? val) {
     setState(() {
@@ -111,7 +74,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: Text(
           'Edit Recommended Quantity',
-          style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: const Color(0xFF181513)),
+          style: GoogleFonts.inter(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF181513),
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -119,24 +86,42 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
           children: [
             Text(
               item.name,
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600, color: const Color(0xFF181513)),
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF181513),
+              ),
             ),
             const SizedBox(height: 4),
             Text(
               'SKU: ${item.sku} • Location: ${item.location}',
-              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF64748B)),
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: const Color(0xFF64748B),
+              ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: controller,
               keyboardType: TextInputType.number,
               autofocus: true,
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w600),
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
               decoration: InputDecoration(
                 labelText: 'Recommended Units',
-                labelStyle: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF64748B)),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                labelStyle: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF64748B),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
             ),
           ],
@@ -144,7 +129,10 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -159,9 +147,14 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF181513),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: Text('Save', style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+            child: Text(
+              'Save',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -170,6 +163,57 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_products.isEmpty) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildBreadcrumbs(),
+            const SizedBox(height: 24),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.receipt_long_outlined,
+                    size: 36,
+                    color: Color(0xFFCBD5E1),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No proposal details available',
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF181513),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Active replenishment proposals and item breakdowns will appear here for review once generated.',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF64748B),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: LayoutBuilder(
@@ -203,10 +247,7 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                 const SizedBox(width: 24),
 
                 // Right Column: Proposal Summary Card
-                SizedBox(
-                  width: 350,
-                  child: _buildProposalSummaryCard(),
-                ),
+                SizedBox(width: 350, child: _buildProposalSummaryCard()),
               ],
             );
           }
@@ -253,7 +294,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
           ),
         ),
         const SizedBox(width: 8),
-        const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF94A3B8)),
+        const Icon(
+          Icons.chevron_right_rounded,
+          size: 16,
+          color: Color(0xFF94A3B8),
+        ),
         const SizedBox(width: 8),
         Text(
           'Delhi Hub',
@@ -264,7 +309,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
           ),
         ),
         const SizedBox(width: 8),
-        const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF94A3B8)),
+        const Icon(
+          Icons.chevron_right_rounded,
+          size: 16,
+          color: Color(0xFF94A3B8),
+        ),
         const SizedBox(width: 8),
         Text(
           'Low Stock Replenishment',
@@ -319,7 +368,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.schedule_rounded, size: 15, color: Color(0xFFB45309)),
+              const Icon(
+                Icons.schedule_rounded,
+                size: 15,
+                color: Color(0xFFB45309),
+              ),
               const SizedBox(width: 6),
               Text(
                 'AWAITING APPROVAL',
@@ -374,7 +427,7 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                       icon: Icons.currency_rupee_rounded,
                       label: 'PROJECTED COST',
                       value: '₹4,82,000',
-                      subtitle: 'Biella Mills preferred',
+                      subtitle: 'Preferred supplier',
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -417,7 +470,7 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                 icon: Icons.currency_rupee_rounded,
                 label: 'PROJECTED COST',
                 value: '₹4,82,000',
-                subtitle: 'Biella Mills preferred',
+                subtitle: 'Preferred supplier',
               ),
             ),
             const SizedBox(width: 14),
@@ -538,7 +591,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
         children: [
           Row(
             children: [
-              const Icon(Icons.auto_awesome_rounded, size: 18, color: Color(0xFFB45309)),
+              const Icon(
+                Icons.auto_awesome_rounded,
+                size: 18,
+                color: Color(0xFFB45309),
+              ),
               const SizedBox(width: 8),
               Text(
                 'WHY TAKE THIS ACTION?',
@@ -743,7 +800,10 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
               },
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
@@ -752,7 +812,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.edit_outlined, size: 14, color: Color(0xFF181513)),
+                    const Icon(
+                      Icons.edit_outlined,
+                      size: 14,
+                      color: Color(0xFF181513),
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       _isEditingQuantities ? 'Done Editing' : 'Edit Quantities',
@@ -788,7 +852,10 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
             children: [
               // Table Header
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: const BoxDecoration(
                   border: Border(
                     bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1.2),
@@ -802,7 +869,9 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                         value: _selectAll,
                         onChanged: _toggleSelectAll,
                         activeColor: const Color(0xFF181513),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
@@ -811,56 +880,88 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                       flex: 3,
                       child: Text(
                         'Product / SKU',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     Expanded(
                       flex: 2,
                       child: Text(
                         'Location',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 65,
                       child: Text(
                         'Available',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 65,
                       child: Text(
                         'Forecast',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 90,
                       child: Text(
                         'Recommended',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     Expanded(
                       flex: 2,
                       child: Text(
                         'Supplier',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 75,
                       child: Text(
                         'Unit Cost',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     SizedBox(
                       width: 85,
                       child: Text(
                         'Total Cost',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B)),
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF64748B),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 30),
@@ -874,13 +975,21 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                 final isLast = index == _products.length - 1;
 
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
-                    color: item.isSelected ? const Color(0xFFFBF8F3) : Colors.white,
+                    color: item.isSelected
+                        ? const Color(0xFFFBF8F3)
+                        : Colors.white,
                     border: isLast
                         ? null
                         : const Border(
-                            bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1.0),
+                            bottom: BorderSide(
+                              color: Color(0xFFF1F5F9),
+                              width: 1.0,
+                            ),
                           ),
                   ),
                   child: Row(
@@ -896,8 +1005,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                             });
                           },
                           activeColor: const Color(0xFF181513),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -918,7 +1030,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                                   width: 42,
                                   height: 42,
                                   color: const Color(0xFFE2E8F0),
-                                  child: const Icon(Icons.image_not_supported_outlined, size: 20, color: Color(0xFF94A3B8)),
+                                  child: const Icon(
+                                    Icons.image_not_supported_outlined,
+                                    size: 20,
+                                    color: Color(0xFF94A3B8),
+                                  ),
                                 ),
                               ),
                             ),
@@ -1012,7 +1128,9 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                                 color: const Color(0xFFF8FAFC),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: _isEditingQuantities ? const Color(0xFFB45309) : const Color(0xFFE2E8F0),
+                                  color: _isEditingQuantities
+                                      ? const Color(0xFFB45309)
+                                      : const Color(0xFFE2E8F0),
                                   width: _isEditingQuantities ? 1.5 : 1.0,
                                 ),
                               ),
@@ -1074,7 +1192,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                       SizedBox(
                         width: 30,
                         child: IconButton(
-                          icon: const Icon(Icons.more_vert_rounded, size: 18, color: Color(0xFF94A3B8)),
+                          icon: const Icon(
+                            Icons.more_vert_rounded,
+                            size: 18,
+                            color: Color(0xFF94A3B8),
+                          ),
                           padding: EdgeInsets.zero,
                           constraints: const BoxConstraints(),
                           onPressed: () => _showQuantityEditDialog(item),
@@ -1110,7 +1232,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
               color: Color(0xFFFEF3C7),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.lightbulb_outline_rounded, size: 20, color: Color(0xFFB45309)),
+            child: const Icon(
+              Icons.lightbulb_outline_rounded,
+              size: 20,
+              color: Color(0xFFB45309),
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -1161,7 +1287,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFFB45309)),
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 14,
+                    color: Color(0xFFB45309),
+                  ),
                 ],
               ),
             ),
@@ -1204,7 +1334,7 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: Image.asset(
-              'Assets/replenishment_stack.jpg',
+              '',
               height: 175,
               width: double.infinity,
               fit: BoxFit.cover,
@@ -1212,7 +1342,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                 height: 175,
                 width: double.infinity,
                 color: const Color(0xFFE2E8F0),
-                child: const Icon(Icons.image_outlined, size: 36, color: Color(0xFF94A3B8)),
+                child: const Icon(
+                  Icons.image_outlined,
+                  size: 36,
+                  color: Color(0xFF94A3B8),
+                ),
               ),
             ),
           ),
@@ -1298,7 +1432,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.near_me_outlined, size: 16, color: Colors.white),
+                  const Icon(
+                    Icons.near_me_outlined,
+                    size: 16,
+                    color: Colors.white,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Approve & Prepare PO',
@@ -1331,7 +1469,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.close_rounded, size: 14, color: Color(0xFF181513)),
+                        const Icon(
+                          Icons.close_rounded,
+                          size: 14,
+                          color: Color(0xFF181513),
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Reject Plan',
@@ -1366,7 +1508,11 @@ class _ProposalDetailViewState extends State<ProposalDetailView> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.edit_outlined, size: 14, color: Color(0xFF181513)),
+                        const Icon(
+                          Icons.edit_outlined,
+                          size: 14,
+                          color: Color(0xFF181513),
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'Edit Quantities',

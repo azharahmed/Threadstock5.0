@@ -19,7 +19,7 @@ class HistoryEventItem {
     this.isSelected = false,
     this.userRequest,
     this.aiResponseSummary,
-    this.triggeredBy = 'Alex Mercer',
+    this.triggeredBy = 'Store Admin',
     this.assignedLocation = 'Zone A Warehouse',
     this.executionStatus = 'Completed',
     this.relatedItems = '3 SKUs',
@@ -69,7 +69,8 @@ class AiHistoryView extends StatefulWidget {
 }
 
 class _AiHistoryViewState extends State<AiHistoryView> {
-  int _selectedFilterIndex = 0; // 0: All, 1: Recommendations, 2: User Queries, 3: Generated Reports, 4: Automations
+  int _selectedFilterIndex =
+      0; // 0: All, 1: Recommendations, 2: User Queries, 3: Generated Reports, 4: Automations
   String _selectedDateRange = 'Date Range';
   String _selectedActionType = 'Action Type';
   bool _isInspectorOpen = true;
@@ -137,10 +138,7 @@ class _AiHistoryViewState extends State<AiHistoryView> {
                 if (_isInspectorOpen) ...[
                   const SizedBox(width: 22),
                   // Right Column: Activity Inspector Panel
-                  SizedBox(
-                    width: 350,
-                    child: _buildActivityInspector(),
-                  ),
+                  SizedBox(width: 350, child: _buildActivityInspector()),
                 ],
               ],
             );
@@ -211,7 +209,11 @@ class _AiHistoryViewState extends State<AiHistoryView> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.download_rounded, size: 16, color: Color(0xFF181513)),
+                const Icon(
+                  Icons.download_rounded,
+                  size: 16,
+                  color: Color(0xFF181513),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Export History',
@@ -231,7 +233,13 @@ class _AiHistoryViewState extends State<AiHistoryView> {
 
   // 2. Filter Tabs & Date/Action Dropdowns
   Widget _buildFilterRow() {
-    final tabs = ['All', 'Recommendations', 'User Queries', 'Generated Reports', 'Automations'];
+    final tabs = [
+      'All',
+      'Recommendations',
+      'User Queries',
+      'Generated Reports',
+      'Automations',
+    ];
 
     return Row(
       children: [
@@ -251,20 +259,31 @@ class _AiHistoryViewState extends State<AiHistoryView> {
                     },
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 7,
+                      ),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF181513) : Colors.white,
+                        color: isSelected
+                            ? const Color(0xFF181513)
+                            : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isSelected ? const Color(0xFF181513) : const Color(0xFFE2E8F0),
+                          color: isSelected
+                              ? const Color(0xFF181513)
+                              : const Color(0xFFE2E8F0),
                         ),
                       ),
                       child: Text(
                         tabs[idx],
                         style: GoogleFonts.inter(
                           fontSize: 12.5,
-                          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                          color: isSelected ? Colors.white : const Color(0xFF64748B),
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                          color: isSelected
+                              ? Colors.white
+                              : const Color(0xFF64748B),
                         ),
                       ),
                     ),
@@ -287,8 +306,14 @@ class _AiHistoryViewState extends State<AiHistoryView> {
           itemBuilder: (context) => [
             const PopupMenuItem(value: 'All Time', child: Text('All Time')),
             const PopupMenuItem(value: 'Today', child: Text('Today')),
-            const PopupMenuItem(value: 'Past 7 Days', child: Text('Past 7 Days')),
-            const PopupMenuItem(value: 'Past 30 Days', child: Text('Past 30 Days')),
+            const PopupMenuItem(
+              value: 'Past 7 Days',
+              child: Text('Past 7 Days'),
+            ),
+            const PopupMenuItem(
+              value: 'Past 30 Days',
+              child: Text('Past 30 Days'),
+            ),
           ],
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
@@ -309,7 +334,11 @@ class _AiHistoryViewState extends State<AiHistoryView> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF94A3B8)),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 16,
+                  color: Color(0xFF94A3B8),
+                ),
               ],
             ),
           ),
@@ -325,8 +354,14 @@ class _AiHistoryViewState extends State<AiHistoryView> {
             setState(() => _selectedActionType = val);
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'All Actions', child: Text('All Actions')),
-            const PopupMenuItem(value: 'Replenishment', child: Text('Replenishment')),
+            const PopupMenuItem(
+              value: 'All Actions',
+              child: Text('All Actions'),
+            ),
+            const PopupMenuItem(
+              value: 'Replenishment',
+              child: Text('Replenishment'),
+            ),
             const PopupMenuItem(value: 'Transfers', child: Text('Transfers')),
             const PopupMenuItem(value: 'Pricing', child: Text('Pricing')),
             const PopupMenuItem(value: 'Anomalies', child: Text('Anomalies')),
@@ -350,7 +385,11 @@ class _AiHistoryViewState extends State<AiHistoryView> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF94A3B8)),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 16,
+                  color: Color(0xFF94A3B8),
+                ),
               ],
             ),
           ),
@@ -360,7 +399,49 @@ class _AiHistoryViewState extends State<AiHistoryView> {
   }
 
   // 3. Timeline Event List
-  Widget _buildTimelineList(List<HistoryEventItem> todayItems, List<HistoryEventItem> yesterdayItems) {
+  Widget _buildTimelineList(
+    List<HistoryEventItem> todayItems,
+    List<HistoryEventItem> yesterdayItems,
+  ) {
+    if (todayItems.isEmpty && yesterdayItems.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Column(
+          children: [
+            const Icon(
+              Icons.history_rounded,
+              size: 36,
+              color: Color(0xFF94A3B8),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'No AI history recorded yet',
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF1E293B),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Audit logs will populate as AI recommendations, queries, and automated actions occur.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: const Color(0xFF64748B),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -368,7 +449,7 @@ class _AiHistoryViewState extends State<AiHistoryView> {
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 12),
             child: Text(
-              'TODAY — JAN 24, 2027',
+              'TODAY',
               style: GoogleFonts.inter(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,
@@ -384,7 +465,7 @@ class _AiHistoryViewState extends State<AiHistoryView> {
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 12),
             child: Text(
-              'YESTERDAY — JAN 23, 2027',
+              'YESTERDAY',
               style: GoogleFonts.inter(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,
@@ -419,7 +500,9 @@ class _AiHistoryViewState extends State<AiHistoryView> {
             color: isSelected ? const Color(0xFFFFFDF9) : Colors.white,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: isSelected ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0),
+              color: isSelected
+                  ? const Color(0xFFFDE68A)
+                  : const Color(0xFFE2E8F0),
               width: isSelected ? 1.4 : 1.0,
             ),
             boxShadow: [
@@ -512,7 +595,10 @@ class _AiHistoryViewState extends State<AiHistoryView> {
 
               // Status Pill
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: item.statusBg,
                   borderRadius: BorderRadius.circular(6),
@@ -530,7 +616,11 @@ class _AiHistoryViewState extends State<AiHistoryView> {
 
               // Action ⋮
               IconButton(
-                icon: const Icon(Icons.more_vert_rounded, size: 18, color: Color(0xFF94A3B8)),
+                icon: const Icon(
+                  Icons.more_vert_rounded,
+                  size: 18,
+                  color: Color(0xFF94A3B8),
+                ),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: () {
@@ -608,7 +698,11 @@ class _AiHistoryViewState extends State<AiHistoryView> {
                         shape: BoxShape.circle,
                         border: Border.all(color: const Color(0xFFCBD5E1)),
                       ),
-                      child: const Icon(Icons.close_rounded, size: 13, color: Color(0xFF64748B)),
+                      child: const Icon(
+                        Icons.close_rounded,
+                        size: 13,
+                        color: Color(0xFF64748B),
+                      ),
                     ),
                   ),
                 ],
@@ -630,7 +724,11 @@ class _AiHistoryViewState extends State<AiHistoryView> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.chat_bubble_outline_rounded, size: 16, color: Color(0xFFD97706)),
+                    const Icon(
+                      Icons.chat_bubble_outline_rounded,
+                      size: 16,
+                      color: Color(0xFFD97706),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'USER REQUEST',
@@ -645,7 +743,8 @@ class _AiHistoryViewState extends State<AiHistoryView> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  item.userRequest ?? '“Which stores are currently at the highest stockout risk prior to the holiday weekend?”',
+                  item.userRequest ??
+                      '“Which stores are currently at the highest stockout risk prior to the holiday weekend?”',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -710,7 +809,11 @@ class _AiHistoryViewState extends State<AiHistoryView> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.auto_awesome_rounded, size: 16, color: Color(0xFFB45309)),
+                    const Icon(
+                      Icons.auto_awesome_rounded,
+                      size: 16,
+                      color: Color(0xFFB45309),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'AI RESPONSE SUMMARY',
@@ -770,7 +873,11 @@ class _AiHistoryViewState extends State<AiHistoryView> {
                           ),
                         ),
                         const SizedBox(width: 6),
-                        const Icon(Icons.arrow_forward_rounded, size: 14, color: Color(0xFFB45309)),
+                        const Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 14,
+                          color: Color(0xFFB45309),
+                        ),
                       ],
                     ),
                   ),
@@ -835,7 +942,11 @@ class _AiHistoryViewState extends State<AiHistoryView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.play_arrow_rounded, size: 18, color: Colors.white),
+                  const Icon(
+                    Icons.play_arrow_rounded,
+                    size: 18,
+                    color: Colors.white,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'Re-Run Diagnostic Query',
@@ -866,7 +977,11 @@ class _AiHistoryViewState extends State<AiHistoryView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.article_outlined, size: 15, color: Color(0xFF181513)),
+                  const Icon(
+                    Icons.article_outlined,
+                    size: 15,
+                    color: Color(0xFF181513),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     'View Related Actions',

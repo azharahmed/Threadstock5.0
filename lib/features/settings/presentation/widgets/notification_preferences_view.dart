@@ -134,8 +134,7 @@ class _NotificationPreferencesViewState
             NotificationItem(
               id: 'supplier_price_change',
               title: 'Supplier price change',
-              description:
-                  'Alert for adjustments on recorded base catalogs',
+              description: 'Alert for adjustments on recorded base catalogs',
               inApp: false,
               email: true,
               push: false,
@@ -160,8 +159,7 @@ class _NotificationPreferencesViewState
             NotificationItem(
               id: 'refund_processed',
               title: 'Refund processed',
-              description:
-                  'When a cashier triggers a refund matrix on POS',
+              description: 'When a cashier triggers a refund matrix on POS',
               inApp: true,
               email: false,
               push: false,
@@ -181,8 +179,11 @@ class _NotificationPreferencesViewState
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -249,8 +250,10 @@ class _NotificationPreferencesViewState
                 decoration: BoxDecoration(
                   color: const Color(0xFFFAF2E6),
                   shape: BoxShape.circle,
-                  border:
-                      Border.all(color: const Color(0xFFE8DDD0), width: 1.2),
+                  border: Border.all(
+                    color: const Color(0xFFE8DDD0),
+                    width: 1.2,
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: const Icon(
@@ -359,9 +362,7 @@ class _NotificationPreferencesViewState
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Color(0xFFEBE2D5)),
-        ),
+        border: Border(bottom: BorderSide(color: Color(0xFFEBE2D5))),
       ),
       child: Row(
         children: [
@@ -469,17 +470,11 @@ class _NotificationPreferencesViewState
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 9),
           decoration: const BoxDecoration(
             color: Color(0xFFFDF8F0),
-            border: Border(
-              bottom: BorderSide(color: Color(0xFFF4ECE1)),
-            ),
+            border: Border(bottom: BorderSide(color: Color(0xFFF4ECE1))),
           ),
           child: Row(
             children: [
-              Icon(
-                group.icon,
-                size: 15,
-                color: const Color(0xFF7A481B),
-              ),
+              Icon(group.icon, size: 15, color: const Color(0xFF7A481B)),
               const SizedBox(width: 8),
               Text(
                 group.name,
@@ -545,7 +540,8 @@ class _NotificationPreferencesViewState
               onChanged: (val) {
                 setState(() => item.inApp = val);
                 _showFeedback(
-                    '${item.title}: In-App alert ${val ? "enabled" : "disabled"}');
+                  '${item.title}: In-App alert ${val ? "enabled" : "disabled"}',
+                );
               },
             ),
           ),
@@ -559,7 +555,8 @@ class _NotificationPreferencesViewState
               onChanged: (val) {
                 setState(() => item.email = val);
                 _showFeedback(
-                    '${item.title}: Email alert ${val ? "enabled" : "disabled"}');
+                  '${item.title}: Email alert ${val ? "enabled" : "disabled"}',
+                );
               },
             ),
           ),
@@ -573,7 +570,8 @@ class _NotificationPreferencesViewState
               onChanged: (val) {
                 setState(() => item.push = val);
                 _showFeedback(
-                    '${item.title}: Push notification ${val ? "enabled" : "disabled"}');
+                  '${item.title}: Push notification ${val ? "enabled" : "disabled"}',
+                );
               },
             ),
           ),

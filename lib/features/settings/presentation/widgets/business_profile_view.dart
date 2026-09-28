@@ -1,45 +1,203 @@
 // ignore_for_file: deprecated_member_use
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/business/current_business_service.dart';
 import '../../../../core/responsive/desktop_layout.dart';
+import '../../../../core/widgets/safe_image.dart';
+import '../../data/business_profile_repository.dart';
 
 class BusinessProfileView extends StatefulWidget {
-  const BusinessProfileView({super.key});
+  const BusinessProfileView({
+    super.key,
+    this.repository,
+  });
+
+  final BusinessProfileRepository? repository;
 
   @override
   State<BusinessProfileView> createState() => _BusinessProfileViewState();
 }
 
 class _BusinessProfileViewState extends State<BusinessProfileView> {
+  late final BusinessProfileRepository _repository;
+
   // Business Identity
-  final TextEditingController _businessNameController =
-      TextEditingController(text: 'ThreadStock India Ltd');
-  final TextEditingController _legalEntityController =
-      TextEditingController(text: 'ThreadStock Private Limited');
+  final TextEditingController _businessNameController = TextEditingController();
+  final TextEditingController _legalEntityController = TextEditingController();
   String _businessType = 'Apparel & Accessories Retail';
   String _registeredCountry = 'India (IN)';
+  String? _currentLogoUrl;
 
   // Contact Matrix
-  final TextEditingController _emailController =
-      TextEditingController(text: 'ops@threadstock.ai');
-  final TextEditingController _phoneController =
-      TextEditingController(text: '+91 98450 11200');
-  final TextEditingController _websiteController =
-      TextEditingController(text: 'https://threadstock.ai');
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _websiteController = TextEditingController();
 
   // Registered Office Address
-  final TextEditingController _streetAddressController =
-      TextEditingController(text: 'Level 4, Block 2, Brigade Tech Gardens');
-  final TextEditingController _cityController =
-      TextEditingController(text: 'Bengaluru, Karnataka');
-  final TextEditingController _postalCodeController =
-      TextEditingController(text: '560037');
+  final TextEditingController _streetAddressController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _postalCodeController = TextEditingController();
 
   // System Localization
   String _defaultLanguage = 'English (United States)';
   String _timezone = 'India Standard Time (GMT+5:30)';
   String _accountingCurrency = 'INR (₹) - Indian Rupee';
+
+  bool _isLoading = true;
+  bool _isSaving = false;
+  bool _isUploadingLogo = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _repository = widget.repository ?? BusinessProfileRepository();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final bizId = CurrentBusinessService.instance.currentBusinessId ??
+        await CurrentBusinessService.instance.resolveCurrentBusinessId();
+    if (bizId == null || bizId.isEmpty) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final data = await _repository.loadProfile(businessId: bizId);
+      if (!mounted) return;
+      setState(() {
+        if (data['display_name'] != null && (data['display_name'] as String).isNotEmpty) {
+          _businessNameController.text = data['display_name'] as String;
+        }
+        if (data['legal_entity_name'] != null && (data['legal_entity_name'] as String).isNotEmpty) {
+          _legalEntityController.text = data['legal_entity_name'] as String;
+        }
+        if (data['business_type'] != null) {
+          _businessType = data['business_type'] as String;
+        }
+        if (data['registered_country'] != null) {
+          _registeredCountry = data['registered_country'] as String;
+        }
+        if (data['email'] != null) {
+          _emailController.text = data['email'] as String;
+        }
+        if (data['phone'] != null) {
+          _phoneController.text = data['phone'] as String;
+        }
+        if (data['website'] != null) {
+          _websiteController.text = data['website'] as String;
+        }
+        if (data['street_address'] != null) {
+          _streetAddressController.text = data['street_address'] as String;
+        }
+        if (data['city'] != null) {
+          _cityController.text = data['city'] as String;
+        }
+        if (data['postal_code'] != null) {
+          _postalCodeController.text = data['postal_code'] as String;
+        }
+        if (data['default_language'] != null) {
+          _defaultLanguage = data['default_language'] as String;
+        }
+        if (data['timezone'] != null) {
+          _timezone = data['timezone'] as String;
+        }
+        if (data['primary_currency'] != null) {
+          _accountingCurrency = data['primary_currency'] as String;
+        }
+        if (data['logo_url'] != null) {
+          _currentLogoUrl = data['logo_url'] as String;
+        }
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('[BusinessProfileView] Error loading business profile: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _pickAndUploadLogo() async {
+    final bizId = CurrentBusinessService.instance.currentBusinessId ??
+        await CurrentBusinessService.instance.resolveCurrentBusinessId();
+    if (bizId == null || bizId.isEmpty) {
+      _showFeedback('No active business selected.', isError: true);
+      return;
+    }
+
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['png', 'jpg', 'jpeg', 'webp'],
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return;
+    final file = result.files.first;
+    if (file.bytes == null) return;
+
+    setState(() => _isUploadingLogo = true);
+    try {
+      final url = await _repository.uploadLogo(
+        businessId: bizId,
+        bytes: file.bytes!,
+        fileName: file.name,
+      );
+      if (!mounted) return;
+      setState(() {
+        _currentLogoUrl = url;
+        _isUploadingLogo = false;
+      });
+      _showFeedback('Company logo updated successfully.');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isUploadingLogo = false);
+      _showFeedback('Error uploading logo: $e', isError: true);
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    final bizId = CurrentBusinessService.instance.currentBusinessId ??
+        await CurrentBusinessService.instance.resolveCurrentBusinessId();
+    if (bizId == null || bizId.isEmpty) {
+      _showFeedback('No active business selected.', isError: true);
+      return;
+    }
+    if (_businessNameController.text.trim().isEmpty) {
+      _showFeedback('Business Name is required.', isError: true);
+      return;
+    }
+    if (_legalEntityController.text.trim().isEmpty) {
+      _showFeedback('Legal Entity Name is required.', isError: true);
+      return;
+    }
+
+    setState(() => _isSaving = true);
+    try {
+      await _repository.saveProfile(
+        businessId: bizId,
+        displayName: _businessNameController.text.trim(),
+        legalEntityName: _legalEntityController.text.trim(),
+        businessType: _businessType,
+        registeredCountry: _registeredCountry,
+        primaryCurrency: _accountingCurrency,
+        defaultLanguage: _defaultLanguage,
+        timezone: _timezone,
+        email: _emailController.text.trim(),
+        phone: _phoneController.text.trim(),
+        website: _websiteController.text.trim(),
+        streetAddress: _streetAddressController.text.trim(),
+        city: _cityController.text.trim(),
+        postalCode: _postalCodeController.text.trim(),
+      );
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      _showFeedback('Business profile parameters saved successfully.');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSaving = false);
+      _showFeedback('Failed to save business profile: $e', isError: true);
+    }
+  }
 
   @override
   void dispose() {
@@ -54,29 +212,45 @@ class _BusinessProfileViewState extends State<BusinessProfileView> {
     super.dispose();
   }
 
-  void _showFeedback(String message) {
+  void _showFeedback(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Color(0xFFBA8A55), size: 18),
+            Icon(
+              isError ? Icons.error_outline_rounded : Icons.check_circle_rounded,
+              color: isError ? const Color(0xFFFCA5A5) : const Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
-            Text(
-              message,
-              style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
+              ),
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF1E1C1A),
+        backgroundColor: isError ? const Color(0xFF991B1B) : const Color(0xFF1E1C1A),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        duration: const Duration(seconds: 2),
+        duration: const Duration(seconds: 3),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 80),
+          child: CircularProgressIndicator(color: Color(0xFFBA8A55)),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: DesktopContentConstraint(
@@ -89,7 +263,7 @@ class _BusinessProfileViewState extends State<BusinessProfileView> {
               _buildHeader(),
               const SizedBox(height: 24),
 
-              // Card 1: Business Identity
+              // Card 1: Business Identity & Brand Logo
               _buildBusinessIdentityCard(),
               const SizedBox(height: 18),
 
@@ -151,7 +325,7 @@ class _BusinessProfileViewState extends State<BusinessProfileView> {
         Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: () => _showFeedback('Business profile parameters saved successfully.'),
+            onTap: _isSaving ? null : _saveProfile,
             borderRadius: BorderRadius.circular(8),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
@@ -169,14 +343,24 @@ class _BusinessProfileViewState extends State<BusinessProfileView> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
-                    Icons.save_outlined,
-                    size: 16,
-                    color: Colors.white,
-                  ),
+                  if (_isSaving)
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  else
+                    const Icon(
+                      Icons.save_outlined,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                   const SizedBox(width: 8),
                   Text(
-                    'Save Changes',
+                    _isSaving ? 'Saving...' : 'Save Changes',
                     style: GoogleFonts.inter(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
@@ -193,15 +377,85 @@ class _BusinessProfileViewState extends State<BusinessProfileView> {
   }
 
   // ========================================================
-  // CARD 1: BUSINESS IDENTITY
+  // CARD 1: BUSINESS IDENTITY & BRAND LOGO
   // ========================================================
   Widget _buildBusinessIdentityCard() {
     return _buildCardContainer(
       icon: Icons.business_outlined,
       title: 'BUSINESS IDENTITY',
-      subtitle: 'Basic information about your business entity.',
+      subtitle: 'Basic information and brand assets for your business entity.',
       child: Column(
         children: [
+          // Logo Upload / Display section
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFAF7F2),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFE5DCD0)),
+            ),
+            child: Row(
+              children: [
+                SafeImage(
+                  source: _currentLogoUrl,
+                  width: 52,
+                  height: 52,
+                  borderRadius: BorderRadius.circular(8),
+                  fallbackIcon: Icons.storefront_rounded,
+                  fallbackColor: const Color(0xFFEDE5DA),
+                  iconColor: const Color(0xFFBA8A55),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Company Brand Logo',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1E1C1A),
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Upload your business logo for sidebar, invoices, and documents (PNG, JPG, or WEBP).',
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          color: const Color(0xFF6E665B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                OutlinedButton.icon(
+                  onPressed: _isUploadingLogo ? null : _pickAndUploadLogo,
+                  icon: _isUploadingLogo
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Color(0xFFBA8A55),
+                          ),
+                        )
+                      : const Icon(Icons.upload_file_rounded, size: 16),
+                  label: Text(_currentLogoUrl != null ? 'Change Logo' : 'Upload Logo'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF382718),
+                    side: const BorderSide(color: Color(0xFFBA8A55)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                    textStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
           // Row 1: Business Name * & Legal Entity Name *
           Row(
             children: [
@@ -504,11 +758,7 @@ class _BusinessProfileViewState extends State<BusinessProfileView> {
                   border: Border.all(color: const Color(0xFFE8DFD3)),
                 ),
                 alignment: Alignment.center,
-                child: Icon(
-                  icon,
-                  size: 18,
-                  color: const Color(0xFFBA8A55),
-                ),
+                child: Icon(icon, size: 18, color: const Color(0xFFBA8A55)),
               ),
               const SizedBox(width: 12),
               Column(
@@ -620,6 +870,10 @@ class _BusinessProfileViewState extends State<BusinessProfileView> {
     required List<String> options,
     required ValueChanged<String> onSelected,
   }) {
+    final effectiveOptions = options.contains(value) || value.isEmpty
+        ? options
+        : [value, ...options];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -639,7 +893,7 @@ class _BusinessProfileViewState extends State<BusinessProfileView> {
             borderRadius: BorderRadius.circular(8),
             side: const BorderSide(color: Color(0xFFDFD4C5)),
           ),
-          itemBuilder: (ctx) => options.map((opt) {
+          itemBuilder: (ctx) => effectiveOptions.map((opt) {
             final isSelected = opt == value;
             return PopupMenuItem<String>(
               value: opt,
@@ -650,13 +904,21 @@ class _BusinessProfileViewState extends State<BusinessProfileView> {
                     opt,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                      color: isSelected ? const Color(0xFF1E1C1A) : const Color(0xFF4A4237),
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: isSelected
+                          ? const Color(0xFF1E1C1A)
+                          : const Color(0xFF4A4237),
                     ),
                   ),
                   if (isSelected) ...[
                     const Spacer(),
-                    const Icon(Icons.check_rounded, size: 16, color: Color(0xFFBA8A55)),
+                    const Icon(
+                      Icons.check_rounded,
+                      size: 16,
+                      color: Color(0xFFBA8A55),
+                    ),
                   ],
                 ],
               ),

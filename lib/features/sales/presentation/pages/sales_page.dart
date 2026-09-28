@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/business/current_business_service.dart';
 import '../../../../core/responsive/desktop_layout.dart';
 import '../widgets/customers_view.dart';
 import '../widgets/held_sales_view.dart';
@@ -10,6 +12,8 @@ import '../widgets/return_exchange_view.dart';
 import '../widgets/sale_detail_view.dart';
 import '../widgets/sale_invoice_view.dart';
 import '../widgets/sales_analytics_view.dart';
+import '../widgets/sale_complete_modal.dart';
+import '../../data/sales_repository.dart';
 
 enum SalesPageMode {
   analytics,
@@ -26,13 +30,15 @@ class SalesPage extends StatefulWidget {
   const SalesPage({
     super.key,
     this.initialMode = SalesPageMode.analytics,
-    this.initialSaleId = '#TS-10482',
+    this.initialSaleId = '',
     this.onTitleChanged,
+    this.onModeRequested,
   });
 
   final SalesPageMode initialMode;
   final String initialSaleId;
   final ValueChanged<String>? onTitleChanged;
+  final ValueChanged<SalesPageMode>? onModeRequested;
 
   @override
   State<SalesPage> createState() => _SalesPageState();
@@ -92,225 +98,13 @@ class _SalesTransaction {
 
 class _SalesPageState extends State<SalesPage> {
   late SalesPageMode _mode;
-  int _selectedTab = 0; // 0: All Sales, 1: Returns, 2: Exchanges
+  int _selectedTab = 0;
   late String _selectedSaleId;
+  bool _isLoadingTransactions = true;
   final Set<String> _selectedRowIds = {};
   final _searchController = TextEditingController();
 
-  final List<_SalesTransaction> _transactions = const [
-    _SalesTransaction(
-      id: '#TS-10482',
-      customerName: 'Emma\nCarter',
-      itemsSummary: '2 items',
-      location: 'Central Store',
-      paymentMethod: 'Card\n(Visa 4292)',
-      totalAmount: '₹8,420',
-      status: 'Completed',
-      time: '10:42 AM',
-      cashier: 'Priya S.',
-      paymentDetails: 'Visa Ending 4292',
-      dateTime: 'Feb 18, 2027, 10:42 AM',
-      subtotal: '₹8,420',
-      cgst: '₹757.80',
-      sgst: '₹757.80',
-      totalWithTax: '₹9,935.60',
-      items: [
-        _SaleItem(
-          title: 'Oxford Linen Shirt',
-          variantInfo: 'Black • M • QTY: 2',
-          price: '₹4,980',
-          imageAsset: 'Assets/oxford_linen_shirt.jpg',
-        ),
-        _SaleItem(
-          title: 'Raw Denim Jeans',
-          variantInfo: 'Indigo • L • QTY: 1',
-          price: '₹3,440',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-      ],
-    ),
-    _SalesTransaction(
-      id: '#TS-10481',
-      customerName: 'Aarav\nSharma',
-      itemsSummary: '1 item',
-      location: 'Delhi Flagship',
-      paymentMethod: 'UPI',
-      totalAmount: '₹2,490',
-      status: 'Completed',
-      time: '10:15 AM',
-      cashier: 'Rohit M.',
-      paymentDetails: 'Google Pay (UPI)',
-      dateTime: 'Feb 18, 2027, 10:15 AM',
-      subtotal: '₹2,490',
-      cgst: '₹224.10',
-      sgst: '₹224.10',
-      totalWithTax: '₹2,938.20',
-      items: [
-        _SaleItem(
-          title: 'Oxford Linen Shirt',
-          variantInfo: 'Blue • L • QTY: 1',
-          price: '₹2,490',
-          imageAsset: 'Assets/oxford_linen_shirt_blue.jpg',
-        ),
-      ],
-    ),
-    _SalesTransaction(
-      id: '#TS-10480',
-      customerName: 'Riya\nSen',
-      itemsSummary: '3 items',
-      location: 'Central Store',
-      paymentMethod: 'Card',
-      totalAmount: '₹11,890',
-      status: 'Completed',
-      time: '09:58 AM',
-      cashier: 'Priya S.',
-      paymentDetails: 'Mastercard Ending 8812',
-      dateTime: 'Feb 18, 2027, 09:58 AM',
-      subtotal: '₹11,890',
-      cgst: '₹1,070.10',
-      sgst: '₹1,070.10',
-      totalWithTax: '₹14,030.20',
-      items: [
-        _SaleItem(
-          title: 'Silk Evening Dress',
-          variantInfo: 'Bronze • S • QTY: 1',
-          price: '₹11,890',
-          imageAsset: 'Assets/silk_evening_dress.jpg',
-        ),
-      ],
-    ),
-    _SalesTransaction(
-      id: '#TS-10479',
-      customerName: 'Kavya\nMehta',
-      itemsSummary: '4 items',
-      location: 'Central Store',
-      paymentMethod: 'Card',
-      totalAmount: '₹14,320',
-      status: 'Completed',
-      time: '09:21 AM',
-      cashier: 'Priya S.',
-      paymentDetails: 'Amex Ending 1004',
-      dateTime: 'Feb 18, 2027, 09:21 AM',
-      subtotal: '₹14,320',
-      cgst: '₹1,288.80',
-      sgst: '₹1,288.80',
-      totalWithTax: '₹16,897.60',
-      items: [
-        _SaleItem(
-          title: 'Merino Wool Blazer',
-          variantInfo: 'Charcoal • 40R • QTY: 1',
-          price: '₹14,320',
-          imageAsset: 'Assets/merino_wool_blazer.jpg',
-        ),
-      ],
-    ),
-    _SalesTransaction(
-      id: '#TS-10478',
-      customerName: 'Arjun\nNair',
-      itemsSummary: '1 item',
-      location: 'Mumbai Hub',
-      paymentMethod: 'UPI',
-      totalAmount: '₹3,280',
-      status: 'Completed',
-      time: '09:05 AM',
-      cashier: 'Deepak K.',
-      paymentDetails: 'Paytm UPI',
-      dateTime: 'Feb 18, 2027, 09:05 AM',
-      subtotal: '₹3,280',
-      cgst: '₹295.20',
-      sgst: '₹295.20',
-      totalWithTax: '₹3,870.40',
-      items: [
-        _SaleItem(
-          title: 'Raw Denim Jeans',
-          variantInfo: 'Black • 32 • QTY: 1',
-          price: '₹3,280',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-      ],
-    ),
-    _SalesTransaction(
-      id: '#TS-10477',
-      customerName: 'Neha\nKapoor',
-      itemsSummary: '2 items',
-      location: 'Central Store',
-      paymentMethod: 'Card',
-      totalAmount: '₹6,760',
-      status: 'Completed',
-      time: '08:47 AM',
-      cashier: 'Priya S.',
-      paymentDetails: 'Visa Ending 7721',
-      dateTime: 'Feb 18, 2027, 08:47 AM',
-      subtotal: '₹6,760',
-      cgst: '₹608.40',
-      sgst: '₹608.40',
-      totalWithTax: '₹7,976.80',
-      items: [
-        _SaleItem(
-          title: 'Oxford Linen Shirt',
-          variantInfo: 'White • S • QTY: 2',
-          price: '₹6,760',
-          imageAsset: 'Assets/oxford_linen_shirt_blue.jpg',
-        ),
-      ],
-    ),
-    _SalesTransaction(
-      id: '#TS-10476',
-      customerName: 'Vikram\nJoshi',
-      itemsSummary: '5 items',
-      location: 'Delhi Flagship',
-      paymentMethod: 'Card',
-      totalAmount: '₹18,450',
-      status: 'Completed',
-      time: '08:32 AM',
-      cashier: 'Rohit M.',
-      paymentDetails: 'Visa Ending 3319',
-      dateTime: 'Feb 18, 2027, 08:32 AM',
-      subtotal: '₹18,450',
-      cgst: '₹1,660.50',
-      sgst: '₹1,660.50',
-      totalWithTax: '₹21,771.00',
-      items: [
-        _SaleItem(
-          title: 'Gabardine Trench',
-          variantInfo: 'Camel • 42 • QTY: 1',
-          price: '₹18,450',
-          imageAsset: 'Assets/gabardine_trench.jpg',
-        ),
-      ],
-    ),
-    _SalesTransaction(
-      id: '#TS-10475',
-      customerName: 'Sara\nKhan',
-      itemsSummary: '2 items',
-      location: 'Central Store',
-      paymentMethod: 'UPI',
-      totalAmount: '₹5,980',
-      status: 'Completed',
-      time: '08:15 AM',
-      cashier: 'Priya S.',
-      paymentDetails: 'PhonePe UPI',
-      dateTime: 'Feb 18, 2027, 08:15 AM',
-      subtotal: '₹5,980',
-      cgst: '₹538.20',
-      sgst: '₹538.20',
-      totalWithTax: '₹7,056.40',
-      items: [
-        _SaleItem(
-          title: 'Raw Denim Jeans',
-          variantInfo: 'Indigo • M • QTY: 1',
-          price: '₹3,490',
-          imageAsset: 'Assets/raw_denim_jeans.jpg',
-        ),
-        _SaleItem(
-          title: 'Oxford Linen Shirt',
-          variantInfo: 'Blue • M • QTY: 1',
-          price: '₹2,490',
-          imageAsset: 'Assets/oxford_linen_shirt_blue.jpg',
-        ),
-      ],
-    ),
-  ];
+  List<_SalesTransaction> _transactions = [];
 
   _SalesTransaction? get _selectedTransaction {
     try {
@@ -338,7 +132,7 @@ class _SalesPageState extends State<SalesPage> {
       } else if (_mode == SalesPageMode.heldSales) {
         widget.onTitleChanged?.call('Held Sales');
       } else if (_mode == SalesPageMode.invoice) {
-        widget.onTitleChanged?.call('PO-10482 Invoice');
+        widget.onTitleChanged?.call('Invoice');
       } else if (_mode == SalesPageMode.customers) {
         widget.onTitleChanged?.call('Customers');
       } else if (_mode == SalesPageMode.returnExchange) {
@@ -347,6 +141,39 @@ class _SalesPageState extends State<SalesPage> {
         widget.onTitleChanged?.call('Sales');
       }
     });
+    _loadTransactions();
+  }
+
+  @override
+  void didUpdateWidget(covariant SalesPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialMode != widget.initialMode) {
+      setState(() {
+        _mode = widget.initialMode;
+      });
+      if (_mode == SalesPageMode.analytics) {
+        widget.onTitleChanged?.call('Sales Analytics');
+      } else if (_mode == SalesPageMode.saleDetail) {
+        widget.onTitleChanged?.call('Sale $_selectedSaleId');
+      } else if (_mode == SalesPageMode.newSale) {
+        widget.onTitleChanged?.call('New Sale');
+      } else if (_mode == SalesPageMode.heldSales) {
+        widget.onTitleChanged?.call('Held Sales');
+      } else if (_mode == SalesPageMode.invoice) {
+        widget.onTitleChanged?.call('Invoice');
+      } else if (_mode == SalesPageMode.customers) {
+        widget.onTitleChanged?.call('Customers');
+      } else if (_mode == SalesPageMode.returnExchange) {
+        widget.onTitleChanged?.call('Return / Exchange');
+      } else {
+        widget.onTitleChanged?.call('Sales');
+      }
+    }
+    if (oldWidget.initialSaleId != widget.initialSaleId) {
+      setState(() {
+        _selectedSaleId = widget.initialSaleId;
+      });
+    }
   }
 
   @override
@@ -355,12 +182,142 @@ class _SalesPageState extends State<SalesPage> {
     super.dispose();
   }
 
+  Future<void> _loadTransactions() async {
+    try {
+      final sb = Supabase.instance.client;
+      final businessId = CurrentBusinessService.instance.currentBusinessId;
+      if (businessId == null ||
+          businessId.isEmpty ||
+          businessId.startsWith('biz_')) {
+        if (mounted) setState(() => _isLoadingTransactions = false);
+        return;
+      }
+      final response = await sb
+          .from('sales')
+          .select(
+            'id, sale_number, status, total_minor, created_at, location_id, customers(name), sale_items(id), sale_payments(payment_method)',
+          )
+          .eq('business_id', businessId)
+          .inFilter('status', ['completed', 'refunded', 'partially_refunded'])
+          .order('created_at', ascending: false)
+          .limit(50);
+      final list = (response as List).map((row) {
+        final totalMinor = (row['total_minor'] as num?)?.toDouble() ?? 0;
+        final createdAt = row['created_at'] as String? ?? '';
+        final status = row['status'] as String? ?? 'completed';
+        final items = row['sale_items'];
+        final itemCount = items is List ? items.length : 0;
+        final customer = row['customers'];
+        final customerName = customer is Map
+            ? (customer['name'] as String? ?? 'Walk-in')
+            : 'Walk-in';
+        final payments = row['sale_payments'];
+        final paymentMethod = payments is List && payments.isNotEmpty
+            ? (payments.first as Map)['payment_method'] as String? ?? '—'
+            : '—';
+        final formatted = totalMinor > 0
+            ? _salFormatCurrency(totalMinor / 100)
+            : '—';
+        return _SalesTransaction(
+          id:
+              row['sale_number'] as String? ??
+              '#${(row['id'] as String).substring(0, 8).toUpperCase()}',
+          customerName: customerName,
+          itemsSummary: itemCount > 0
+              ? '$itemCount item${itemCount == 1 ? '' : 's'}'
+              : '—',
+          location: '—',
+          paymentMethod: paymentMethod,
+          totalAmount: formatted,
+          status: _salStatusDisplayName(status),
+          time: _salFormatTime(createdAt),
+          cashier: '—',
+          paymentDetails: paymentMethod,
+          dateTime: _salFormatDateTime(createdAt),
+          subtotal: formatted,
+          cgst: '—',
+          sgst: '—',
+          totalWithTax: formatted,
+          items: const [],
+        );
+      }).toList();
+      if (mounted) {
+        setState(() {
+          _transactions = list;
+          _isLoadingTransactions = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[SalesPage] _loadTransactions error: $e');
+      if (mounted) setState(() => _isLoadingTransactions = false);
+    }
+  }
+
+  static String _salStatusDisplayName(String status) {
+    return status
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : w)
+        .join(' ');
+  }
+
+  static String _salFormatCurrency(double amount) {
+    if (amount >= 10000000)
+      return '₹${(amount / 10000000).toStringAsFixed(1)}Cr';
+    if (amount >= 100000) return '₹${(amount / 100000).toStringAsFixed(1)}L';
+    if (amount >= 1000) {
+      return '₹${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d+?)(?=(\d\d)+(\d)(?!\d))'), (m) => '${m[1]},')}';
+    }
+    return '₹${amount.toStringAsFixed(0)}';
+  }
+
+  static String _salFormatTime(String iso) {
+    if (iso.isEmpty) return '—';
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+      final m = dt.minute.toString().padLeft(2, '0');
+      final amPm = dt.hour < 12 ? 'AM' : 'PM';
+      return '$h:$m $amPm';
+    } catch (_) {
+      return iso;
+    }
+  }
+
+  static String _salFormatDateTime(String iso) {
+    if (iso.isEmpty) return '—';
+    try {
+      final dt = DateTime.parse(iso).toLocal();
+      const months = [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
+      final h = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+      final m = dt.minute.toString().padLeft(2, '0');
+      final amPm = dt.hour < 12 ? 'AM' : 'PM';
+      return '${months[dt.month - 1]} ${dt.day}, ${dt.year}, $h:$m $amPm';
+    } catch (_) {
+      return iso;
+    }
+  }
+
   List<_SalesTransaction> get _filteredTransactions {
     final query = _searchController.text.trim().toLowerCase();
 
     return _transactions.where((t) {
       if (query.isNotEmpty) {
-        final matches = t.id.toLowerCase().contains(query) ||
+        final matches =
+            t.id.toLowerCase().contains(query) ||
             t.customerName.toLowerCase().contains(query) ||
             t.location.toLowerCase().contains(query) ||
             t.paymentMethod.toLowerCase().contains(query);
@@ -375,8 +332,11 @@ class _SalesPageState extends State<SalesPage> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -390,6 +350,25 @@ class _SalesPageState extends State<SalesPage> {
         duration: const Duration(seconds: 2),
       ),
     );
+  }
+
+  Future<void> _openInvoiceForSale(String saleId) async {
+    final businessId = CurrentBusinessService.instance.currentBusinessId ?? '';
+    if (businessId.isEmpty) {
+      _showFeedback('Please select a business first');
+      return;
+    }
+
+    final invoice = await SalesRepository.instance.loadInvoiceData(
+      businessId: businessId,
+      saleId: saleId,
+    );
+
+    if (invoice != null && mounted) {
+      FullInvoicePreviewDialog.show(context: context, invoice: invoice);
+    } else if (mounted) {
+      _showFeedback('Invoice record not found for $saleId');
+    }
   }
 
   @override
@@ -454,7 +433,13 @@ class _SalesPageState extends State<SalesPage> {
         backgroundColor: Colors.transparent,
         body: DesktopContentConstraint(
           maxWidth: 1320,
-          child: const HeldSalesView(),
+          child: HeldSalesView(
+            onResumeOpened: () {
+              widget.onModeRequested?.call(SalesPageMode.newSale);
+              setState(() => _mode = SalesPageMode.newSale);
+              widget.onTitleChanged?.call('New Sale');
+            },
+          ),
         ),
       );
     }
@@ -509,7 +494,8 @@ class _SalesPageState extends State<SalesPage> {
               // Responsive Split Layout: Left Table vs Right Selected Transaction
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final isWide = constraints.maxWidth >= 1050 && selectedTx != null;
+                  final isWide =
+                      constraints.maxWidth >= 1050 && selectedTx != null;
 
                   if (isWide) {
                     return Row(
@@ -700,6 +686,22 @@ class _SalesPageState extends State<SalesPage> {
   // 2. TOP 4 KPI CARDS
   // ========================================================
   Widget _buildKpiMetricsRow() {
+    final totalOrders = _transactions.length;
+    double totalSales = 0.0;
+    int returnOrders = 0;
+    for (final tx in _transactions) {
+      final cleaned = tx.totalAmount
+          .replaceAll('₹', '')
+          .replaceAll(',', '')
+          .trim();
+      final parsed = double.tryParse(cleaned) ?? 0.0;
+      totalSales += parsed;
+      if (tx.status.toLowerCase().contains('return')) {
+        returnOrders++;
+      }
+    }
+    final aov = totalOrders > 0 ? totalSales / totalOrders : 0.0;
+
     return Row(
       children: [
         // 1. Today's Sales
@@ -709,9 +711,9 @@ class _SalesPageState extends State<SalesPage> {
             iconBg: const Color(0xFFFAF4EA),
             iconColor: const Color(0xFF9E6516),
             label: 'Today\'s Sales',
-            value: '₹1,48,200',
-            trendText: '↑ 12%',
-            trendSubtext: 'vs yesterday',
+            value: totalSales > 0 ? '₹${_salFormatCurrency(totalSales)}' : '₹0',
+            trendText: totalOrders > 0 ? 'Live' : '—',
+            trendSubtext: totalOrders > 0 ? 'active' : 'no data',
             isPositive: true,
           ),
         ),
@@ -724,24 +726,20 @@ class _SalesPageState extends State<SalesPage> {
             iconBg: const Color(0xFFFAF4EA),
             iconColor: const Color(0xFF9E6516),
             label: 'Orders',
-            value: '24',
-            trendText: '↑ 8%',
-            trendSubtext: 'vs yesterday',
+            value: '$totalOrders',
+            trendText: totalOrders > 0 ? '$totalOrders total' : '—',
+            trendSubtext: totalOrders > 0 ? 'recorded' : 'no orders',
             isPositive: true,
           ),
         ),
         const SizedBox(width: 14),
 
         // 3. Average Order Value
-        Expanded(
-          child: _buildAovKpiBox(),
-        ),
+        Expanded(child: _buildAovKpiBox(aov)),
         const SizedBox(width: 14),
 
         // 4. Returns Today
-        Expanded(
-          child: _buildReturnsKpiBox(),
-        ),
+        Expanded(child: _buildReturnsKpiBox(returnOrders)),
       ],
     );
   }
@@ -843,7 +841,7 @@ class _SalesPageState extends State<SalesPage> {
     );
   }
 
-  Widget _buildAovKpiBox() {
+  Widget _buildAovKpiBox(double aov) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -893,7 +891,7 @@ class _SalesPageState extends State<SalesPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '₹6,175',
+                aov > 0 ? '₹${_salFormatCurrency(aov)}' : '₹0',
                 style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -907,7 +905,7 @@ class _SalesPageState extends State<SalesPage> {
                   borderRadius: BorderRadius.circular(5),
                 ),
                 child: Text(
-                  'Healthy',
+                  aov > 0 ? 'Healthy' : '—',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -922,7 +920,7 @@ class _SalesPageState extends State<SalesPage> {
     );
   }
 
-  Widget _buildReturnsKpiBox() {
+  Widget _buildReturnsKpiBox(int returnCount) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
@@ -972,7 +970,7 @@ class _SalesPageState extends State<SalesPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '3',
+                '$returnCount',
                 style: GoogleFonts.inter(
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
@@ -986,7 +984,7 @@ class _SalesPageState extends State<SalesPage> {
                   borderRadius: BorderRadius.circular(5),
                 ),
                 child: Text(
-                  'Attention',
+                  returnCount > 0 ? 'Attention' : '—',
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -1124,20 +1122,30 @@ class _SalesPageState extends State<SalesPage> {
                 children: [
                   // Table Header Row
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 11,
+                    ),
                     decoration: const BoxDecoration(
                       border: Border(
-                        bottom: BorderSide(color: Color(0xFFEDE5DA), width: 1.0),
+                        bottom: BorderSide(
+                          color: Color(0xFFEDE5DA),
+                          width: 1.0,
+                        ),
                       ),
                     ),
                     child: Row(
                       children: [
                         _buildCheckbox(
-                          value: _selectedRowIds.length == transactions.length && transactions.isNotEmpty,
+                          value:
+                              _selectedRowIds.length == transactions.length &&
+                              transactions.isNotEmpty,
                           onChanged: (val) {
                             setState(() {
                               if (val == true) {
-                                _selectedRowIds.addAll(transactions.map((t) => t.id));
+                                _selectedRowIds.addAll(
+                                  transactions.map((t) => t.id),
+                                );
                               } else {
                                 _selectedRowIds.clear();
                               }
@@ -1166,16 +1174,54 @@ class _SalesPageState extends State<SalesPage> {
                   ),
 
                   // Table Rows
-                  if (transactions.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 36),
+                  if (_isLoadingTransactions)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
                       child: Center(
-                        child: Text(
-                          'No sales transactions found matching query.',
-                          style: GoogleFonts.inter(
-                            fontSize: 13,
-                            color: const Color(0xFF7E766B),
-                          ),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFFBA8A55),
+                        ),
+                      ),
+                    )
+                  else if (transactions.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 48),
+                      child: Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF5EDE1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.receipt_long_outlined,
+                                size: 24,
+                                color: Color(0xFFBA8A55),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No sales transactions yet',
+                              style: GoogleFonts.inter(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: const Color(0xFF1E1C1A),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Completed sales will appear here.',
+                              style: GoogleFonts.inter(
+                                fontSize: 12.5,
+                                color: const Color(0xFF7E766B),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     )
@@ -1188,7 +1234,10 @@ class _SalesPageState extends State<SalesPage> {
                         onTap: () => setState(() => _selectedSaleId = tx.id),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 150),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
                             color: isRowSelected
                                 ? const Color(0xFFFDF7EE)
@@ -1375,7 +1424,11 @@ class _SalesPageState extends State<SalesPage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Showing 1–${transactions.length} of 24 sales',
+                  _isLoadingTransactions
+                      ? 'Loading transactions...'
+                      : transactions.isEmpty
+                      ? 'No sales transactions yet'
+                      : 'Showing 1\u2013${transactions.length} of ${_transactions.length} sales',
                   style: GoogleFonts.inter(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w400,
@@ -1459,7 +1512,10 @@ class _SalesPageState extends State<SalesPage> {
 
                     // Dropdown: 10 per page
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(6),
@@ -1664,11 +1720,12 @@ class _SalesPageState extends State<SalesPage> {
                       child: Image.asset(
                         item.imageAsset,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
-                          Icons.checkroom_rounded,
-                          color: Color(0xFFBA8A55),
-                          size: 20,
-                        ),
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(
+                              Icons.checkroom_rounded,
+                              color: Color(0xFFBA8A55),
+                              size: 20,
+                            ),
                       ),
                     ),
                   ),
@@ -1818,7 +1875,7 @@ class _SalesPageState extends State<SalesPage> {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
-                onTap: () => _showFeedback('Printing thermal POS receipt for ${tx.id}...'),
+                onTap: () => _openInvoiceForSale(tx.id),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(
@@ -1858,7 +1915,9 @@ class _SalesPageState extends State<SalesPage> {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(8),
-                onTap: () => _showFeedback('Return/Exchange workflow initiated for ${tx.id}.'),
+                onTap: () => _showFeedback(
+                  'Return/Exchange workflow initiated for ${tx.id}.',
+                ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   child: Row(

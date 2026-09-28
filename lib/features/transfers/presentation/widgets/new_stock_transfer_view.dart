@@ -1,6 +1,8 @@
-// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+import '../../../inventory/data/location_repository.dart';
+import '../../../inventory/domain/models/stock_location.dart';
 
 class TransferManifestItem {
   TransferManifestItem({
@@ -39,39 +41,41 @@ class NewStockTransferView extends StatefulWidget {
 }
 
 class _NewStockTransferViewState extends State<NewStockTransferView> {
-  String _fromLocation = 'Central Warehouse (Zone A)';
-  String _toLocation = 'Flagship Delhi (Main Floor)';
-  final TextEditingController _dateController =
-      TextEditingController(text: '2027-10-24');
-  final TextEditingController _notesController = TextEditingController(
-    text: 'Autumn replenishment for seasonal demand spike.',
-  );
+  final LocationRepository _locationRepository = LocationRepository();
+  List<StockLocation> _locations = [];
+  bool _isLoadingLocations = true;
+
+  String _fromLocation = '';
+  String _toLocation = '';
+  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
   final TextEditingController _searchManifestController =
       TextEditingController();
 
-  late final List<TransferManifestItem> _items;
+  final List<TransferManifestItem> _items = [];
 
   @override
   void initState() {
     super.initState();
-    _items = [
-      TransferManifestItem(
-        name: 'Oxford Linen Shirt (Black/M)',
-        categoryVariant: 'Shirts  •  Black / M',
-        sku: 'TS-10492-BM',
-        imagePath: 'assets/black_linen_shirt.jpg',
-        srcAvailable: 245,
-        transferQty: 18,
-      ),
-      TransferManifestItem(
-        name: 'Merino Wool Blazer (Navy/L)',
-        categoryVariant: 'Outerwear  •  Navy / L',
-        sku: 'TS-20188-NL',
-        imagePath: 'assets/merino_wool_blazer.jpg',
-        srcAvailable: 18,
-        transferQty: 5,
-      ),
-    ];
+    _loadLocations();
+  }
+
+  Future<void> _loadLocations() async {
+    try {
+      final locs = await _locationRepository.getLocations();
+      if (!mounted) return;
+      setState(() {
+        _locations = locs;
+        if (locs.isNotEmpty) {
+          _fromLocation = locs.first.name;
+          _toLocation = locs.length > 1 ? locs[1].name : locs.first.name;
+        }
+        _isLoadingLocations = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoadingLocations = false);
+    }
   }
 
   @override
@@ -209,45 +213,72 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
         Row(
           children: [
             OutlinedButton(
-              onPressed: widget.onSaveDraft ??
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Transfer draft saved successfully.'),
-                        backgroundColor: Color(0xFF181513),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
+              onPressed: _locations.length <= 1
+                  ? null
+                  : (widget.onSaveDraft ??
+                        () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Transfer draft saved successfully.',
+                              ),
+                              backgroundColor: Color(0xFF181513),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }),
               style: OutlinedButton.styleFrom(
                 foregroundColor: const Color(0xFF1F2937),
+                disabledForegroundColor: const Color(0xFF9CA3AF),
                 side: const BorderSide(color: Color(0xFFD1D5DB)),
                 backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
               child: const Text('Save Draft'),
             ),
             const SizedBox(width: 12),
             ElevatedButton(
-              onPressed: widget.onShipTransfer ??
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Stock transfer initiated and status updated to In-Transit!'),
-                        backgroundColor: Color(0xFF181513),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
+              onPressed: (_locations.length <= 1 || _items.isEmpty)
+                  ? null
+                  : (widget.onShipTransfer ??
+                        () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Stock transfer initiated and status updated to In-Transit!',
+                              ),
+                              backgroundColor: Color(0xFF181513),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF181513),
+                disabledBackgroundColor: const Color(0xFFE2E8F0),
+                disabledForegroundColor: const Color(0xFF94A3B8),
                 foregroundColor: Colors.white,
                 elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               child: const Text('Ship Transfer'),
             ),
@@ -259,6 +290,16 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
 
   // Left Card 1: Origin & Destination Details
   Widget _buildOriginDestinationCard() {
+    final locationNames = _locations.isNotEmpty
+        ? _locations.map((l) => l.name).toList()
+        : ['No locations available'];
+    final safeFrom = locationNames.contains(_fromLocation)
+        ? _fromLocation
+        : locationNames.first;
+    final safeTo = locationNames.contains(_toLocation)
+        ? _toLocation
+        : locationNames.first;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -272,9 +313,42 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
           _buildCardHeader(
             icon: Icons.location_on_outlined,
             title: 'Origin & Destination Details',
-            subtitle: 'Select source and destination locations with expected delivery details.',
+            subtitle:
+                'Select source and destination locations with expected delivery details.',
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+
+          if (!_isLoadingLocations && _locations.length <= 1) ...[
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBEB),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFDE68A)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline_rounded,
+                    color: Color(0xFFB45309),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Add another location before creating an inter-location transfer.',
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF92400E),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
 
           // From and To Locations
           Row(
@@ -287,20 +361,19 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                     _buildFieldLabel('From Location', isRequired: true),
                     const SizedBox(height: 6),
                     _buildDropdown(
-                      value: _fromLocation,
-                      items: const [
-                        'Central Warehouse (Zone A)',
-                        'East Coast Hub',
-                        'Milano Warehouse',
-                      ],
+                      value: safeFrom,
+                      items: locationNames,
                       onChanged: (val) {
                         if (val != null) setState(() => _fromLocation = val);
                       },
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Main distribution warehouse',
-                      style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280)),
+                      'Source stock location',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        color: const Color(0xFF6B7280),
+                      ),
                     ),
                   ],
                 ),
@@ -313,20 +386,19 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                     _buildFieldLabel('To Location', isRequired: true),
                     const SizedBox(height: 6),
                     _buildDropdown(
-                      value: _toLocation,
-                      items: const [
-                        'Flagship Delhi (Main Floor)',
-                        'SoHo Flagship Store',
-                        'Mumbai High Street',
-                      ],
+                      value: safeTo,
+                      items: locationNames,
                       onChanged: (val) {
                         if (val != null) setState(() => _toLocation = val);
                       },
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Retail store - Delhi',
-                      style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280)),
+                      'Destination stock location',
+                      style: GoogleFonts.inter(
+                        fontSize: 11.5,
+                        color: const Color(0xFF6B7280),
+                      ),
                     ),
                   ],
                 ),
@@ -343,10 +415,16 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildFieldLabel('Expected Delivery Date', isRequired: true),
+                    _buildFieldLabel(
+                      'Expected Delivery Date',
+                      isRequired: true,
+                    ),
                     const SizedBox(height: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
@@ -357,14 +435,22 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                           Expanded(
                             child: TextField(
                               controller: _dateController,
-                              style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF1F2937), fontWeight: FontWeight.w500),
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: const Color(0xFF1F2937),
+                                fontWeight: FontWeight.w500,
+                              ),
                               decoration: const InputDecoration(
                                 border: InputBorder.none,
                                 isDense: true,
                               ),
                             ),
                           ),
-                          const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFF6B7280)),
+                          const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 16,
+                            color: Color(0xFF6B7280),
+                          ),
                         ],
                       ),
                     ),
@@ -391,8 +477,17 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                             controller: _notesController,
                             maxLines: 2,
                             maxLength: 200,
-                            buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
-                            style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF1F2937)),
+                            buildCounter:
+                                (
+                                  _, {
+                                  required currentLength,
+                                  required isFocused,
+                                  maxLength,
+                                }) => null,
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: const Color(0xFF1F2937),
+                            ),
                             decoration: const InputDecoration(
                               contentPadding: EdgeInsets.all(10),
                               border: InputBorder.none,
@@ -404,7 +499,10 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                             padding: const EdgeInsets.only(right: 8, bottom: 6),
                             child: Text(
                               '${_notesController.text.length}/200',
-                              style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF)),
+                              style: GoogleFonts.inter(
+                                fontSize: 11,
+                                color: const Color(0xFF9CA3AF),
+                              ),
                             ),
                           ),
                         ],
@@ -455,7 +553,11 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Row(
                         children: [
-                          const Icon(Icons.search_rounded, size: 15, color: Color(0xFF9CA3AF)),
+                          const Icon(
+                            Icons.search_rounded,
+                            size: 15,
+                            color: Color(0xFF9CA3AF),
+                          ),
                           const SizedBox(width: 6),
                           Expanded(
                             child: TextField(
@@ -463,7 +565,10 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                               style: GoogleFonts.inter(fontSize: 12),
                               decoration: const InputDecoration(
                                 hintText: 'Search or scan items...',
-                                hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 11.5),
+                                hintStyle: TextStyle(
+                                  color: Color(0xFF9CA3AF),
+                                  fontSize: 11.5,
+                                ),
                                 border: InputBorder.none,
                                 isDense: true,
                               ),
@@ -475,14 +580,26 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                     const SizedBox(width: 10),
                     OutlinedButton.icon(
                       onPressed: () {},
-                      icon: const Icon(Icons.add_rounded, size: 15, color: Color(0xFFB45309)),
+                      icon: const Icon(
+                        Icons.add_rounded,
+                        size: 15,
+                        color: Color(0xFFB45309),
+                      ),
                       label: const Text('Add Items'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFB45309),
                         side: const BorderSide(color: Color(0xFFD97706)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        textStyle: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        textStyle: GoogleFonts.inter(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -499,14 +616,68 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
               children: [
                 SizedBox(
                   width: 20,
-                  child: Icon(Icons.check_box_outline_blank, size: 16, color: const Color(0xFFCBD5E1)),
+                  child: Icon(
+                    Icons.check_box_outline_blank,
+                    size: 16,
+                    color: const Color(0xFFCBD5E1),
+                  ),
                 ),
                 const SizedBox(width: 12),
-                Expanded(flex: 38, child: Text('Product', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 20, child: Text('SKU', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 16, child: Text('Src Available', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 14, child: Text('Transfer Qty', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 10, child: Text('Unit', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
+                Expanded(
+                  flex: 38,
+                  child: Text(
+                    'Product',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 20,
+                  child: Text(
+                    'SKU',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 16,
+                  child: Text(
+                    'Src Available',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 14,
+                  child: Text(
+                    'Transfer Qty',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 10,
+                  child: Text(
+                    'Unit',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
                 const SizedBox(width: 28),
               ],
             ),
@@ -514,132 +685,195 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
 
           // Table Rows
-          for (final item in _items) ...[
+          if (_items.isEmpty)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              child: Row(
-                children: [
-                  InkWell(
-                    onTap: () => setState(() => item.isSelected = !item.isSelected),
-                    child: SizedBox(
-                      width: 20,
-                      child: Icon(
-                        item.isSelected ? Icons.check_box_rounded : Icons.check_box_outline_blank,
-                        size: 16,
-                        color: item.isSelected ? const Color(0xFFB45309) : const Color(0xFFCBD5E1),
+              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.inventory_2_outlined,
+                      size: 36,
+                      color: Color(0xFF9CA3AF),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'No items in transfer manifest',
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF181513),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Add items to be transferred between locations.',
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            for (final item in _items) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    InkWell(
+                      onTap: () =>
+                          setState(() => item.isSelected = !item.isSelected),
+                      child: SizedBox(
+                        width: 20,
+                        child: Icon(
+                          item.isSelected
+                              ? Icons.check_box_rounded
+                              : Icons.check_box_outline_blank,
+                          size: 16,
+                          color: item.isSelected
+                              ? const Color(0xFFB45309)
+                              : const Color(0xFFCBD5E1),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
 
-                  // Product thumbnail and info
-                  Expanded(
-                    flex: 38,
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.asset(
-                            item.imagePath,
-                            width: 36,
-                            height: 36,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
+                    // Product thumbnail and info
+                    Expanded(
+                      flex: 38,
+                      child: Row(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.asset(
+                              item.imagePath,
                               width: 36,
                               height: 36,
-                              color: const Color(0xFFF1F5F9),
-                              child: const Icon(Icons.checkroom_rounded, size: 18, color: Color(0xFF94A3B8)),
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    color: const Color(0xFFF1F5F9),
+                                    child: const Icon(
+                                      Icons.checkroom_rounded,
+                                      size: 18,
+                                      color: Color(0xFF94A3B8),
+                                    ),
+                                  ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.inter(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF111827),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF111827),
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                item.categoryVariant,
-                                style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280)),
-                              ),
-                            ],
+                                Text(
+                                  item.categoryVariant,
+                                  style: GoogleFonts.inter(
+                                    fontSize: 11,
+                                    color: const Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // SKU
+                    Expanded(
+                      flex: 20,
+                      child: Text(
+                        item.sku,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF4B5563),
+                        ),
+                      ),
+                    ),
+
+                    // Src Available
+                    Expanded(
+                      flex: 16,
+                      child: Text(
+                        '${item.srcAvailable} units',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: const Color(0xFF4B5563),
+                        ),
+                      ),
+                    ),
+
+                    // Transfer Qty (Editable input box)
+                    Expanded(
+                      flex: 14,
+                      child: Container(
+                        width: 54,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFD1D5DB)),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '${item.transferQty}',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF111827),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-
-                  // SKU
-                  Expanded(
-                    flex: 20,
-                    child: Text(
-                      item.sku,
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF4B5563)),
-                    ),
-                  ),
-
-                  // Src Available
-                  Expanded(
-                    flex: 16,
-                    child: Text(
-                      '${item.srcAvailable} units',
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF4B5563)),
-                    ),
-                  ),
-
-                  // Transfer Qty (Editable input box)
-                  Expanded(
-                    flex: 14,
-                    child: Container(
-                      width: 54,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFD1D5DB)),
                       ),
-                      alignment: Alignment.center,
+                    ),
+
+                    // Unit
+                    Expanded(
+                      flex: 10,
                       child: Text(
-                        '${item.transferQty}',
+                        item.unit,
                         style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF111827),
+                          fontSize: 12,
+                          color: const Color(0xFF6B7280),
                         ),
                       ),
                     ),
-                  ),
 
-                  // Unit
-                  Expanded(
-                    flex: 10,
-                    child: Text(
-                      item.unit,
-                      style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
+                    // Delete action
+                    IconButton(
+                      onPressed: () => setState(() => _items.remove(item)),
+                      icon: const Icon(
+                        Icons.delete_outline_rounded,
+                        size: 16,
+                        color: Color(0xFF9CA3AF),
+                      ),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
-                  ),
-
-                  // Delete action
-                  IconButton(
-                    onPressed: () => setState(() => _items.remove(item)),
-                    icon: const Icon(Icons.delete_outline_rounded, size: 16, color: Color(0xFF9CA3AF)),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const Divider(height: 1, color: Color(0xFFF1F5F9)),
-          ],
+              const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            ],
 
           // Bottom Inventory Check Banner
           Padding(
@@ -663,7 +897,11 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                           color: Color(0xFF16A34A),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.check_rounded, size: 16, color: Colors.white),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          size: 16,
+                          color: Colors.white,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Column(
@@ -671,11 +909,18 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                         children: [
                           Text(
                             'Inventory Check',
-                            style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF111827),
+                            ),
                           ),
                           Text(
                             'All selected items are available for transfer.',
-                            style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280)),
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: const Color(0xFF6B7280),
+                            ),
                           ),
                         ],
                       ),
@@ -686,11 +931,18 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                     children: [
                       Text(
                         'Total Transfer Units',
-                        style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280)),
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: const Color(0xFF6B7280),
+                        ),
                       ),
                       Text(
                         '$_totalTransferUnits units',
-                        style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: const Color(0xFF111827)),
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: const Color(0xFF111827),
+                        ),
                       ),
                     ],
                   ),
@@ -722,7 +974,10 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
           ),
           const SizedBox(height: 18),
 
-          _buildSummaryRow('Total Distinct Line Items', '$_totalStylesCount styles'),
+          _buildSummaryRow(
+            'Total Distinct Line Items',
+            '$_totalStylesCount styles',
+          ),
           const Divider(height: 20, color: Color(0xFFF1F5F9)),
           _buildSummaryRow('Cumulative Units', '$_totalTransferUnits units'),
           const Divider(height: 20, color: Color(0xFFF1F5F9)),
@@ -734,10 +989,16 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
             children: [
               Text(
                 'Logistics Carriage Priority',
-                style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF4B5563)),
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  color: const Color(0xFF4B5563),
+                ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFEF3C7),
                   borderRadius: BorderRadius.circular(6),
@@ -745,11 +1006,19 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.flight_takeoff_rounded, size: 14, color: Color(0xFFB45309)),
+                    const Icon(
+                      Icons.flight_takeoff_rounded,
+                      size: 14,
+                      color: Color(0xFFB45309),
+                    ),
                     const SizedBox(width: 5),
                     Text(
                       'Express Air',
-                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFFB45309)),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFFB45309),
+                      ),
                     ),
                   ],
                 ),
@@ -767,11 +1036,18 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
       children: [
         Text(
           label,
-          style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF4B5563)),
+          style: GoogleFonts.inter(
+            fontSize: 12.5,
+            color: const Color(0xFF4B5563),
+          ),
         ),
         Text(
           value,
-          style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF111827),
+          ),
         ),
       ],
     );
@@ -782,7 +1058,7 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFFBEB).withOpacity(0.6),
+        color: const Color(0xFFFFFBEB).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFFDE68A)),
       ),
@@ -791,7 +1067,11 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
         children: [
           Row(
             children: [
-              const Icon(Icons.auto_awesome_rounded, size: 16, color: Color(0xFFB45309)),
+              const Icon(
+                Icons.auto_awesome_rounded,
+                size: 16,
+                color: Color(0xFFB45309),
+              ),
               const SizedBox(width: 8),
               Text(
                 'AI AUDIT INSIGHTS',
@@ -806,7 +1086,7 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
           ),
           const SizedBox(height: 10),
           Text(
-            'Transfer of Oxford Linen Shirt fully covers the expected 34% Delhi demand spike. Order approved to prevent stockout.',
+            'ThreadStock AI will analyze demand spikes and recommend inter-location rebalancing once inventory transfers and sales history are established.',
             style: GoogleFonts.inter(
               fontSize: 12.5,
               height: 1.45,
@@ -820,9 +1100,14 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
               foregroundColor: const Color(0xFFB45309),
               side: const BorderSide(color: Color(0xFFFDE68A)),
               backgroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(6),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              textStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+              textStyle: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             child: const Text('View AI Insights →'),
           ),
@@ -984,11 +1269,18 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
           children: [
             Text(
               title,
-              style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF111827),
+              ),
             ),
             Text(
               subtitle,
-              style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280)),
+              style: GoogleFonts.inter(
+                fontSize: 11.5,
+                color: const Color(0xFF6B7280),
+              ),
             ),
           ],
         ),
@@ -1000,12 +1292,19 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
     return RichText(
       text: TextSpan(
         text: label,
-        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF374151)),
+        style: GoogleFonts.inter(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF374151),
+        ),
         children: [
           if (isRequired)
             const TextSpan(
               text: ' *',
-              style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Color(0xFFDC2626),
+                fontWeight: FontWeight.bold,
+              ),
             ),
         ],
       ),
@@ -1028,13 +1327,18 @@ class _NewStockTransferViewState extends State<NewStockTransferView> {
         child: DropdownButton<String>(
           value: value,
           isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: Color(0xFF6B7280)),
-          style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF1F2937), fontWeight: FontWeight.w500),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 18,
+            color: Color(0xFF6B7280),
+          ),
+          style: GoogleFonts.inter(
+            fontSize: 13,
+            color: const Color(0xFF1F2937),
+            fontWeight: FontWeight.w500,
+          ),
           items: items.map((it) {
-            return DropdownMenuItem<String>(
-              value: it,
-              child: Text(it),
-            );
+            return DropdownMenuItem<String>(value: it, child: Text(it));
           }).toList(),
           onChanged: onChanged,
         ),

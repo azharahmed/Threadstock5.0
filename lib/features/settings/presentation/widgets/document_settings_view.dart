@@ -17,8 +17,8 @@ class DocumentSequenceItem {
     required this.icon,
     required String prefix,
     required String serial,
-  })  : prefixController = TextEditingController(text: prefix),
-        serialController = TextEditingController(text: serial);
+  }) : prefixController = TextEditingController(text: prefix),
+       serialController = TextEditingController(text: serial);
 
   void dispose() {
     prefixController.dispose();
@@ -43,7 +43,7 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
   // Document Footer Text Controller
   final TextEditingController _footerTextController = TextEditingController(
     text:
-        'Thank you for partnering with ThreadStock. For returns, standard atelier policies apply. Contact support@threadstock.ai for logistics queries.',
+        'Thank you for partnering with ThreadStock. For returns, standard ThreadStock policies apply. Contact support@threadstock.ai for logistics queries.',
   );
 
   @override
@@ -54,35 +54,35 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
         id: 'po',
         name: 'Purchase Orders',
         icon: Icons.shopping_cart_outlined,
-        prefix: 'PO-2024-',
+        prefix: 'PO-',
         serial: '0001',
       ),
       DocumentSequenceItem(
         id: 'trf',
         name: 'Transfer Orders',
         icon: Icons.swap_horiz_rounded,
-        prefix: 'TRF-2024-',
+        prefix: 'TRF-',
         serial: '0001',
       ),
       DocumentSequenceItem(
         id: 'adj',
         name: 'Stock Adjustments',
         icon: Icons.inventory_2_outlined,
-        prefix: 'ADJ-2024-',
+        prefix: 'ADJ-',
         serial: '0001',
       ),
       DocumentSequenceItem(
         id: 'sc',
         name: 'Stock Counts',
         icon: Icons.format_list_bulleted_rounded,
-        prefix: 'SC-2024-',
+        prefix: 'SC-',
         serial: '0001',
       ),
       DocumentSequenceItem(
         id: 'inv',
         name: 'Customer Invoices',
         icon: Icons.receipt_long_outlined,
-        prefix: 'INV-2024-',
+        prefix: 'INV-',
         serial: '0001',
       ),
     ];
@@ -109,7 +109,11 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline_rounded, color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -300,14 +304,22 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
                   flex: 3,
                   child: Text(
                     'Document Type',
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF7A7268)),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF7A7268),
+                    ),
                   ),
                 ),
                 Expanded(
                   flex: 2,
                   child: Text(
                     'Prefix Code',
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF7A7268)),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF7A7268),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -315,7 +327,11 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
                   flex: 2,
                   child: Text(
                     'Next Serial',
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF7A7268)),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF7A7268),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -323,13 +339,14 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
                   flex: 3,
                   child: Text(
                     'Format Preview',
-                    style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF7A7268)),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF7A7268),
+                    ),
                   ),
                 ),
-                const SizedBox(
-                  width: 32,
-                  child: SizedBox.shrink(),
-                ),
+                const SizedBox(width: 32, child: SizedBox.shrink()),
               ],
             ),
           ),
@@ -341,13 +358,21 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _sequences.length,
-            separatorBuilder: (ctx, index) => const Divider(height: 1, thickness: 1, color: Color(0xFFF6F1EA)),
+            separatorBuilder: (ctx, index) => const Divider(
+              height: 1,
+              thickness: 1,
+              color: Color(0xFFF6F1EA),
+            ),
             itemBuilder: (ctx, index) {
               final seq = _sequences[index];
-              final preview = '${seq.prefixController.text}${seq.serialController.text}';
+              final preview =
+                  '${seq.prefixController.text}${seq.serialController.text}';
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
                     // Document Type with Icon
@@ -355,7 +380,11 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
                       flex: 3,
                       child: Row(
                         children: [
-                          Icon(seq.icon, size: 18, color: const Color(0xFFBA8A55)),
+                          Icon(
+                            seq.icon,
+                            size: 18,
+                            color: const Color(0xFFBA8A55),
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -383,11 +412,17 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
                         ),
                         child: TextField(
                           controller: seq.prefixController,
-                          style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500),
+                          style: GoogleFonts.inter(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                          ),
                           decoration: const InputDecoration(
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 9,
+                            ),
                           ),
                         ),
                       ),
@@ -407,11 +442,17 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
                         child: TextField(
                           controller: seq.serialController,
                           keyboardType: TextInputType.number,
-                          style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500),
+                          style: GoogleFonts.inter(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w500,
+                          ),
                           decoration: const InputDecoration(
                             border: InputBorder.none,
                             isDense: true,
-                            contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 9,
+                            ),
                           ),
                         ),
                       ),
@@ -435,10 +476,16 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
                     SizedBox(
                       width: 32,
                       child: PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_horiz_rounded, size: 18, color: Color(0xFF7A7268)),
+                        icon: const Icon(
+                          Icons.more_horiz_rounded,
+                          size: 18,
+                          color: Color(0xFF7A7268),
+                        ),
                         padding: EdgeInsets.zero,
                         color: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         itemBuilder: (ctx) => [
                           PopupMenuItem(
                             value: 'reset',
@@ -460,7 +507,9 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
                             seq.serialController.text = '0001';
                             _showFeedback('Reset ${seq.name} serial to 0001');
                           } else if (val == 'advanced') {
-                            _showFeedback('Configuring pattern for ${seq.name}');
+                            _showFeedback(
+                              'Configuring pattern for ${seq.name}',
+                            );
                           }
                         },
                       ),
@@ -655,15 +704,28 @@ class _DocumentSettingsViewState extends State<DocumentSettingsView> {
               ),
               OutlinedButton.icon(
                 onPressed: () => _showFeedback('File upload picker opened'),
-                icon: const Icon(Icons.upload_rounded, size: 14, color: Color(0xFF181513)),
+                icon: const Icon(
+                  Icons.upload_rounded,
+                  size: 14,
+                  color: Color(0xFF181513),
+                ),
                 label: Text(
                   'Upload',
-                  style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF181513)),
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF181513),
+                  ),
                 ),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Color(0xFFDECDB9)),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
                 ),
               ),
             ],

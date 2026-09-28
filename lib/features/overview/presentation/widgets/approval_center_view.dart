@@ -55,10 +55,7 @@ class ApprovalItemData {
 }
 
 class ApprovalCenterView extends StatefulWidget {
-  const ApprovalCenterView({
-    super.key,
-    this.onViewOperationalOverview,
-  });
+  const ApprovalCenterView({super.key, this.onViewOperationalOverview});
 
   final VoidCallback? onViewOperationalOverview;
 
@@ -79,9 +76,10 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
       urgencyLabel: 'Normal Urgency',
       urgencyType: 'normal',
       title: 'PO-2891 Auto-Reorder — 3 SKUs',
-      requestorInfo: 'Requestor: System (Low Stock Automation)  •  Today, 09:30 AM',
+      requestorInfo:
+          'Requestor: System (Low Stock Automation)  •  Today, 09:30 AM',
       calloutIcon: Icons.inventory_2_outlined,
-      calloutText: 'Includes 3 SKUs: Oxford Linen Shirt, Merino Wool Blazer, Silk Evening Dress',
+      calloutText: 'Includes 3 SKUs: Replenishment item lines',
       valueImpactLabel: '₹18,400',
       iconData: Icons.description_outlined,
       iconBgColor: Color(0xFFFFF9EE),
@@ -97,10 +95,10 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
       categoryLabel: 'TRANSFER',
       urgencyLabel: 'High Urgency',
       urgencyType: 'high',
-      title: 'Transfer #TR-445 Central Warehouse → Indiranagar',
-      requestorInfo: 'Requestor: Priya S. (Store Manager)  •  Today, 07:15 AM',
+      title: 'Transfer #TR-445 Main Facility → Secondary Store',
+      requestorInfo: 'Requestor: Store Manager  •  Today, 07:15 AM',
       calloutIcon: Icons.inventory_2_outlined,
-      calloutText: '42 units  |  4 SKUs  |  Target: Indiranagar Store',
+      calloutText: '42 units  |  4 SKUs  |  Target: Secondary Store',
       valueImpactLabel: '42 units',
       iconData: Icons.swap_horiz_rounded,
       iconBgColor: Color(0xFFEFF6FF),
@@ -117,9 +115,11 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
       urgencyLabel: 'Attention Urgency',
       urgencyType: 'attention',
       title: 'Markdown 12 items — Summer Collection (-20%)',
-      requestorInfo: 'Requestor: ThreadStock AI Recommendation  •  Yesterday, 04:30 PM',
+      requestorInfo:
+          'Requestor: ThreadStock AI Recommendation  •  Yesterday, 04:30 PM',
       calloutIcon: Icons.bar_chart_rounded,
-      calloutText: '12 items  |  Estimated impact: ₹82,000  |  Collection: Summer \'27',
+      calloutText:
+          '12 items  |  Estimated impact: ₹82,000  |  Collection: Summer \'27',
       valueImpactLabel: '₹82,000',
       valueImpactSubtitle: 'projected impact',
       iconData: Icons.local_offer_outlined,
@@ -140,7 +140,9 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
           message,
           style: GoogleFonts.inter(fontSize: 13, color: Colors.white),
         ),
-        backgroundColor: isError ? const Color(0xFF991B1B) : const Color(0xFF181513),
+        backgroundColor: isError
+            ? const Color(0xFF991B1B)
+            : const Color(0xFF181513),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         duration: const Duration(seconds: 2),
@@ -215,7 +217,8 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
           children: [
             // Approve All (12) Button (Dark solid)
             InkWell(
-              onTap: () => _showNotification('Approved all 12 pending requests.'),
+              onTap: () =>
+                  _showNotification('Approved all 12 pending requests.'),
               borderRadius: BorderRadius.circular(8),
               child: Container(
                 height: 40,
@@ -258,7 +261,10 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
             InkWell(
               onTap: () {
                 if (_selectedItemIds.isEmpty) {
-                  _showNotification('No items selected to reject.', isError: true);
+                  _showNotification(
+                    'No items selected to reject.',
+                    isError: true,
+                  );
                 } else {
                   final count = _selectedItemIds.length;
                   setState(() => _selectedItemIds.clear());
@@ -308,21 +314,14 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
         if (isCompact) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              titleWidget,
-              const SizedBox(height: 14),
-              buttonsWidget,
-            ],
+            children: [titleWidget, const SizedBox(height: 14), buttonsWidget],
           );
         }
 
         return Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            titleWidget,
-            buttonsWidget,
-          ],
+          children: [titleWidget, buttonsWidget],
         );
       },
     );
@@ -481,9 +480,13 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
       child: Row(
         children: [
           Icon(
-            isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
+            isSelected
+                ? Icons.radio_button_checked_rounded
+                : Icons.radio_button_off_rounded,
             size: 16,
-            color: isSelected ? const Color(0xFF181513) : const Color(0xFF94A3B8),
+            color: isSelected
+                ? const Color(0xFF181513)
+                : const Color(0xFF94A3B8),
           ),
           const SizedBox(width: 10),
           Text(
@@ -520,7 +523,9 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF181513) : Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
+          border: isSelected
+              ? null
+              : Border.all(color: const Color(0xFFE2E8F0)),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(isSelected ? 0.08 : 0.02),
@@ -544,7 +549,9 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFF2C2825) : const Color(0xFFF1F5F9),
+                color: isSelected
+                    ? const Color(0xFF2C2825)
+                    : const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -615,13 +622,19 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
                       color: isChecked ? const Color(0xFF181513) : Colors.white,
                       borderRadius: BorderRadius.circular(5),
                       border: Border.all(
-                        color: isChecked ? const Color(0xFF181513) : const Color(0xFFCBD5E1),
+                        color: isChecked
+                            ? const Color(0xFF181513)
+                            : const Color(0xFFCBD5E1),
                         width: 1.5,
                       ),
                     ),
                     child: isChecked
                         ? const Center(
-                            child: Icon(Icons.check_rounded, size: 13, color: Colors.white),
+                            child: Icon(
+                              Icons.check_rounded,
+                              size: 13,
+                              color: Colors.white,
+                            ),
                           )
                         : null,
                   ),
@@ -652,7 +665,10 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
                       children: [
                         // Category Badge
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3.5,
+                          ),
                           decoration: BoxDecoration(
                             color: item.badgeBgColor,
                             borderRadius: BorderRadius.circular(5),
@@ -671,7 +687,10 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
 
                         // Urgency Badge
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3.5,
+                          ),
                           decoration: BoxDecoration(
                             color: item.urgencyBgColor,
                             borderRadius: BorderRadius.circular(5),
@@ -715,7 +734,10 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
                     // Callout Box with SKUs / stats
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 9,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(8),
@@ -799,7 +821,9 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
                 // Solid Dark Review & Approve Button
                 InkWell(
                   onTap: () {
-                    _showNotification('Opened review draft for "${item.title}".');
+                    _showNotification(
+                      'Opened review draft for "${item.title}".',
+                    );
                   },
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
@@ -834,7 +858,10 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFF0FDF4),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFF86EFAC), width: 1.2),
+                      border: Border.all(
+                        color: const Color(0xFF86EFAC),
+                        width: 1.2,
+                      ),
                     ),
                     child: Center(
                       child: Text(
@@ -863,7 +890,10 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFF1F2),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFFECDD3), width: 1.2),
+                    border: Border.all(
+                      color: const Color(0xFFFECDD3),
+                      width: 1.2,
+                    ),
                   ),
                   child: Center(
                     child: Text(
@@ -968,7 +998,11 @@ class _ApprovalCenterViewState extends State<ApprovalCenterView> {
       ),
       child: Column(
         children: [
-          const Icon(Icons.check_circle_outline_rounded, size: 48, color: Color(0xFF10B981)),
+          const Icon(
+            Icons.check_circle_outline_rounded,
+            size: 48,
+            color: Color(0xFF10B981),
+          ),
           const SizedBox(height: 12),
           Text(
             'All caught up!',

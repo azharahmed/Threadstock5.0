@@ -1,20 +1,30 @@
 // ignore_for_file: deprecated_member_use
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/auth/auth_service.dart';
+import '../../../../core/auth/authorization_service.dart';
 import '../../../../core/business/current_business_service.dart';
+import '../../../../core/config/app_preferences_service.dart';
+import '../../../../core/navigation/navigation_guard.dart';
 import '../../../../core/reference/country_currency_reference.dart';
+import '../../../../core/services/google_places_service.dart';
+import '../../../../app/router/app_router.dart';
 import '../../../inventory/data/brand_repository.dart';
 import '../../../inventory/data/category_repository.dart';
 import '../../../inventory/data/location_repository.dart';
+import '../../../inventory/domain/models/stock_location.dart';
 import '../../../inventory/data/product_media_repository.dart';
 import '../../../inventory/data/product_repository.dart';
 import '../../../inventory/data/supplier_repository.dart';
 import '../../../inventory/presentation/pages/inventory_page.dart';
 import '../../../inventory/presentation/providers/brand_provider.dart';
 import '../../data/onboarding_repository.dart';
+import '../../domain/models/onboarding_progress.dart';
+import '../widgets/google_location_map_view.dart';
 import '../widgets/team_onboarding_view.dart';
 
 enum LocationRange { one, twoToFive, sixToTwenty, twentyPlus }
@@ -69,27 +79,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
   // 6: Ready / Complete (/onboarding/complete)
   late int _currentStep;
   late OnboardingRepository _repository;
+  bool _isCheckingCompletion = false;
+  bool _redirectScheduled = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _repository = widget.repository ?? OnboardingRepository.instance;
-    final progress = _repository.currentProgress;
+  void _redirectToOverview({required String source}) {
+    if (_redirectScheduled) return;
+    _redirectScheduled = true;
+    if (!mounted) return;
+    NavigationGuard.safePushReplacementNamed(
+      context,
+      AppRoutes.overview,
+      source: source,
+    );
+  }
 
-    if (widget.initialStep == null) {
-      _currentStep = progress.firstIncompleteStep;
-    } else if (widget.enforceStepPrerequisites) {
-      if (widget.initialStep! == 0) {
-        _currentStep = 0;
-      } else if (progress.isStepAccessible(widget.initialStep!)) {
-        _currentStep = widget.initialStep!;
-      } else {
-        _currentStep = progress.firstIncompleteStep;
-      }
-    } else {
-      _currentStep = widget.initialStep!;
-    }
-
+  void _hydrateFields(OnboardingProgress progress) {
     // Hydrate fields from persisted progress if available
     if (progress.businessName != null && progress.businessName!.isNotEmpty) {
       _businessNameController.text = progress.businessName!;
@@ -155,6 +159,121 @@ class _OnboardingPageState extends State<OnboardingPage> {
     }
   }
 
+  Future<void> _verifyServerOnboardingStatus() async {
+    final sb = CurrentBusinessService.instance.client ??
+        (() {
+          try {
+            return Supabase.instance.client;
+          } catch (_) {
+            return null;
+          }
+        })();
+
+    if (sb == null || sb.auth.currentUser == null) {
+      return;
+    }
+
+    try {
+      final bizId = await CurrentBusinessService.instance.resolveCurrentBusinessId();
+      if (bizId != null && bizId.isNotEmpty) {
+        final progress = await _repository.loadProgressForBusiness(bizId);
+        if (progress.isOnboardingCompleted) {
+          _redirectToOverview(
+            source: 'OnboardingPage._verifyServerOnboardingStatus.completed',
+          );
+          return;
+        }
+
+        // Existing products guard: if products already exist, complete onboarding and route to Dashboard
+        try {
+          final products = await sb
+              .from('products')
+              .select('id')
+              .eq('business_id', bizId)
+              .limit(1);
+          if ((products as List).isNotEmpty) {
+            await _repository.markStepComplete(6);
+            _redirectToOverview(
+              source: 'OnboardingPage._verifyServerOnboardingStatus.hasProducts',
+            );
+            return;
+          }
+        } catch (e) {
+          debugPrint('[OnboardingPage] Notice checking existing products: $e');
+        }
+
+        if (mounted) {
+          setState(() {
+            _isCheckingCompletion = false;
+            _hydrateFields(progress);
+            if (widget.initialStep == null ||
+                (widget.enforceStepPrerequisites &&
+                    !progress.isStepAccessible(widget.initialStep!))) {
+              _currentStep = (progress.firstIncompleteStep - 1).clamp(0, 6);
+            }
+          });
+          return;
+        }
+      }
+    } catch (e) {
+      debugPrint('[OnboardingPage] Error checking server onboarding status: $e');
+    }
+
+    if (mounted) {
+      setState(() {
+        _isCheckingCompletion = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    CurrentBusinessService.instance.addListener(_onCurrentBusinessChanged);
+    _repository = widget.repository ?? OnboardingRepository.instance;
+    final progress = _repository.currentProgress;
+
+    // Completed onboarding guard: never reopen onboarding for a completed business
+    if (progress.isOnboardingCompleted) {
+      _currentStep = 6;
+      _isCheckingCompletion = true;
+      _redirectToOverview(
+        source: 'OnboardingPage.initState.alreadyComplete',
+      );
+      return;
+    }
+
+    if (widget.initialStep == null) {
+      _currentStep = (progress.firstIncompleteStep - 1).clamp(0, 6);
+    } else if (widget.enforceStepPrerequisites) {
+      if (widget.initialStep! == 0) {
+        _currentStep = 0;
+      } else if (progress.isStepAccessible(widget.initialStep!)) {
+        _currentStep = widget.initialStep!;
+      } else {
+        _currentStep = (progress.firstIncompleteStep - 1).clamp(0, 6);
+      }
+    } else {
+      _currentStep = widget.initialStep!;
+    }
+
+    _hydrateFields(progress);
+
+    final sb = CurrentBusinessService.instance.client ??
+        (() {
+          try {
+            return Supabase.instance.client;
+          } catch (_) {
+            return null;
+          }
+        })();
+
+    if (sb != null && sb.auth.currentUser != null) {
+      _isCheckingCompletion = true;
+      _verifyServerOnboardingStatus();
+    }
+  }
+
   LocationRange? _parseLocationRange(String? label) {
     if (label == null) return null;
     final clean = label.replaceAll(' ', '');
@@ -189,6 +308,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
   bool _isSavingBusinessStep = false;
   String? _step1ErrorMessage;
 
+  /// Authoritative current business / workspace display name across all onboarding pages.
+  /// Before Business is saved: Setting up: Your Workspace
+  /// After saving Business successfully: Setting up: [Business Name]
+  String get _currentBusinessDisplayName {
+    final progress = _repository.currentProgress;
+    final activeBizName = CurrentBusinessService.instance.currentBusiness?.legalName;
+    if (activeBizName != null && activeBizName.trim().isNotEmpty) {
+      return activeBizName.trim();
+    }
+    final progressName = progress.businessName;
+    if (progressName != null && progressName.trim().isNotEmpty) {
+      return progressName.trim();
+    }
+    return 'Your Workspace';
+  }
+
   // Step 2: Location controllers & state
   final TextEditingController _locationNameController = TextEditingController();
   String? _selectedLocationType;
@@ -204,6 +339,203 @@ class _OnboardingPageState extends State<OnboardingPage> {
   String? _postalError;
   bool _locationReviewRequired = false;
   String? _locationReviewMessage;
+  bool _isSavingLocationStep = false;
+  String? _locationSaveError;
+
+  // Google Places Autocomplete & Details
+  List<PlacePrediction> _namePredictions = [];
+  bool _isSearchingName = false;
+  String? _nameSearchNotice;
+  Timer? _nameDebounceTimer;
+
+  List<PlacePrediction> _streetPredictions = [];
+  bool _isSearchingStreet = false;
+  String? _streetSearchNotice;
+  Timer? _streetDebounceTimer;
+
+  String? _locationPlacesSessionToken;
+  String? _googlePlaceId;
+  double? _selectedLatitude;
+  double? _selectedLongitude;
+  String? _formattedAddress;
+  String? _stateRegion;
+  bool _isGoogleVerified = false;
+
+  void _onLocationNameChanged(String val) {
+    setState(() {
+      _locationNameError = null;
+      _nameSearchNotice = null;
+    });
+    _nameDebounceTimer?.cancel();
+    final query = val.trim();
+    if (query.length < 2) {
+      _locationPlacesSessionToken = null;
+      if (_namePredictions.isNotEmpty || _nameSearchNotice != null) {
+        setState(() {
+          _namePredictions = [];
+          _nameSearchNotice = null;
+        });
+      }
+      return;
+    }
+
+    _locationPlacesSessionToken ??= PlacesSessionToken.generate();
+
+    _nameDebounceTimer = Timer(const Duration(milliseconds: 300), () async {
+      setState(() => _isSearchingName = true);
+      final result = await GooglePlacesService.instance.searchPlacesWithResult(
+        query: query,
+        countryCode: _selectedCountryCode,
+        sessionToken: _locationPlacesSessionToken,
+      );
+      if (mounted) {
+        setState(() {
+          _namePredictions = result.predictions;
+          _isSearchingName = false;
+          if (result.isZeroResults) {
+            _nameSearchNotice =
+                'No matching locations found. Try another search or enter the address manually.';
+          } else if (result.isUnavailable) {
+            _nameSearchNotice =
+                'Location search is temporarily unavailable. You can enter the address manually.';
+          } else {
+            _nameSearchNotice = null;
+          }
+        });
+      }
+    });
+  }
+
+  Future<void> _selectNamePrediction(PlacePrediction prediction) async {
+    final title = prediction.mainText.isNotEmpty
+        ? prediction.mainText
+        : prediction.description;
+    setState(() {
+      _locationNameController.text = title;
+      _namePredictions = [];
+      _nameSearchNotice = null;
+    });
+    if (prediction.placeId.isNotEmpty) {
+      final details = await GooglePlacesService.instance.getPlaceDetails(
+        prediction.placeId,
+        sessionToken: _locationPlacesSessionToken,
+      );
+      _locationPlacesSessionToken = null; // Session ends on selection
+      if (details != null && mounted) {
+        setState(() {
+          if (details.streetAddress.isNotEmpty) {
+            _streetController.text = details.streetAddress;
+          } else if (details.formattedAddress.isNotEmpty) {
+            _streetController.text = details.formattedAddress;
+          }
+          if (details.city.isNotEmpty) {
+            _cityController.text = details.city;
+          }
+          if (details.postalCode.isNotEmpty) {
+            _postalController.text = details.postalCode;
+          }
+          _googlePlaceId = details.placeId;
+          _selectedLatitude = details.latitude;
+          _selectedLongitude = details.longitude;
+          _formattedAddress = details.formattedAddress;
+          _stateRegion = details.state;
+          _isGoogleVerified = true;
+
+          _locationNameError = null;
+          _streetError = null;
+          _cityError = null;
+          _postalError = null;
+        });
+      }
+    }
+  }
+
+  void _onStreetAddressChanged(String val) {
+    setState(() {
+      _streetError = null;
+      _streetSearchNotice = null;
+    });
+    _streetDebounceTimer?.cancel();
+    final query = val.trim();
+    if (query.length < 2) {
+      _locationPlacesSessionToken = null;
+      if (_streetPredictions.isNotEmpty || _streetSearchNotice != null) {
+        setState(() {
+          _streetPredictions = [];
+          _streetSearchNotice = null;
+        });
+      }
+      return;
+    }
+
+    _locationPlacesSessionToken ??= PlacesSessionToken.generate();
+
+    _streetDebounceTimer = Timer(const Duration(milliseconds: 300), () async {
+      setState(() => _isSearchingStreet = true);
+      final result = await GooglePlacesService.instance.searchPlacesWithResult(
+        query: query,
+        countryCode: _selectedCountryCode,
+        sessionToken: _locationPlacesSessionToken,
+        types: 'address',
+      );
+      if (mounted) {
+        setState(() {
+          _streetPredictions = result.predictions;
+          _isSearchingStreet = false;
+          if (result.isZeroResults) {
+            _streetSearchNotice =
+                'No matching locations found. Try another search or enter the address manually.';
+          } else if (result.isUnavailable) {
+            _streetSearchNotice =
+                'Location search is temporarily unavailable. You can enter the address manually.';
+          } else {
+            _streetSearchNotice = null;
+          }
+        });
+      }
+    });
+  }
+
+  Future<void> _selectStreetPrediction(PlacePrediction prediction) async {
+    final addressText = prediction.mainText.isNotEmpty
+        ? prediction.mainText
+        : prediction.description;
+    setState(() {
+      _streetController.text = addressText;
+      _streetPredictions = [];
+      _streetSearchNotice = null;
+    });
+    if (prediction.placeId.isNotEmpty) {
+      final details = await GooglePlacesService.instance.getPlaceDetails(
+        prediction.placeId,
+        sessionToken: _locationPlacesSessionToken,
+      );
+      _locationPlacesSessionToken = null; // Session ends on selection
+      if (details != null && mounted) {
+        setState(() {
+          if (details.streetAddress.isNotEmpty) {
+            _streetController.text = details.streetAddress;
+          }
+          if (details.city.isNotEmpty) {
+            _cityController.text = details.city;
+          }
+          if (details.postalCode.isNotEmpty) {
+            _postalController.text = details.postalCode;
+          }
+          _googlePlaceId = details.placeId;
+          _selectedLatitude = details.latitude;
+          _selectedLongitude = details.longitude;
+          _formattedAddress = details.formattedAddress;
+          _stateRegion = details.state;
+          _isGoogleVerified = true;
+
+          _streetError = null;
+          _cityError = null;
+          _postalError = null;
+        });
+      }
+    }
+  }
 
   // Multiple configured locations list
   final List<Map<String, String>> _configuredLocations = [];
@@ -364,6 +696,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
               _selectedCountryCode,
             )
           : '',
+      'google_place_id': _googlePlaceId ?? '',
+      'latitude': _selectedLatitude?.toString() ?? '',
+      'longitude': _selectedLongitude?.toString() ?? '',
+      'formatted_address': _formattedAddress ?? '',
+      'is_verified': _isGoogleVerified ? 'true' : 'false',
     };
 
     setState(() {
@@ -380,6 +717,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
       _postalController.clear();
       _selectedLocationType = null;
       _useCorporateRules = false;
+      _locationPlacesSessionToken = null;
+      _googlePlaceId = null;
+      _selectedLatitude = null;
+      _selectedLongitude = null;
+      _formattedAddress = null;
+      _stateRegion = null;
+      _isGoogleVerified = false;
+      _namePredictions = [];
+      _streetPredictions = [];
+      _nameSearchNotice = null;
+      _streetSearchNotice = null;
       _locationNameError = null;
       _locationTypeError = null;
       _streetError = null;
@@ -417,6 +765,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
         _cityController.text = loc['city'] ?? '';
         _postalController.text = loc['postal'] ?? '';
         _useCorporateRules = loc['useCorporateRules'] == 'true';
+        _googlePlaceId = loc['google_place_id']?.trim().isNotEmpty == true
+            ? loc['google_place_id']
+            : null;
+        _selectedLatitude = loc['latitude']?.trim().isNotEmpty == true
+            ? double.tryParse(loc['latitude']!)
+            : null;
+        _selectedLongitude = loc['longitude']?.trim().isNotEmpty == true
+            ? double.tryParse(loc['longitude']!)
+            : null;
+        _formattedAddress = loc['formatted_address']?.trim().isNotEmpty == true
+            ? loc['formatted_address']
+            : null;
+        _isGoogleVerified = loc['is_verified'] == 'true';
         _locationNameError = null;
         _locationTypeError = null;
         _streetError = null;
@@ -434,6 +795,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
         _streetController.clear();
         _cityController.clear();
         _postalController.clear();
+        _googlePlaceId = null;
+        _selectedLatitude = null;
+        _selectedLongitude = null;
+        _formattedAddress = null;
+        _stateRegion = null;
+        _isGoogleVerified = false;
       } else if (_editingLocationIndex != null &&
           _editingLocationIndex! > index) {
         _editingLocationIndex = _editingLocationIndex! - 1;
@@ -485,6 +852,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 _selectedCountryCode,
               )
             : '',
+        'google_place_id': _googlePlaceId ?? '',
+        'latitude': _selectedLatitude?.toString() ?? '',
+        'longitude': _selectedLongitude?.toString() ?? '',
+        'formatted_address': _formattedAddress ?? '',
+        'is_verified': _isGoogleVerified ? 'true' : 'false',
       };
 
       if (_editingLocationIndex != null &&
@@ -517,14 +889,77 @@ class _OnboardingPageState extends State<OnboardingPage> {
     _locationReviewRequired = false;
     _locationReviewMessage = null;
 
-    await _repository.markStepComplete(
-      2,
-      data: {'configuredLocations': _configuredLocations},
-    );
-
     setState(() {
-      _currentStep = 3;
+      _isSavingLocationStep = true;
+      _locationSaveError = null;
     });
+
+    try {
+      final locRepo = widget.locationRepository ?? LocationRepository();
+      final bizId = await CurrentBusinessService.instance.resolveCurrentBusinessId();
+
+      StockLocation? firstPersisted;
+      for (final loc in _configuredLocations) {
+        try {
+          final created = await locRepo.createLocation(
+            name: loc['name'] ?? 'Primary Location',
+            locationType: loc['type'] ?? 'retail_store',
+            streetAddress: loc['street'],
+            city: loc['city'],
+            postalCode: loc['postal'],
+            countryCode: loc['countryCode'] ?? _selectedCountryCode,
+            businessId: bizId,
+            googlePlaceId: loc['google_place_id']?.trim().isNotEmpty == true
+                ? loc['google_place_id']
+                : null,
+            latitude: loc['latitude']?.trim().isNotEmpty == true
+                ? double.tryParse(loc['latitude']!)
+                : null,
+            longitude: loc['longitude']?.trim().isNotEmpty == true
+                ? double.tryParse(loc['longitude']!)
+                : null,
+            formattedAddress: loc['formatted_address']?.trim().isNotEmpty == true
+                ? loc['formatted_address']
+                : null,
+          );
+          firstPersisted ??= created;
+        } on StateError catch (_) {
+          final all = await locRepo.getLocations(
+            businessId: bizId,
+            onlyActive: false,
+          );
+          final existing = all.firstWhere(
+            (l) => l.name.trim().toLowerCase() == (loc['name'] ?? '').trim().toLowerCase(),
+            orElse: () => all.first,
+          );
+          firstPersisted ??= existing;
+        }
+      }
+
+      if (firstPersisted != null) {
+        CurrentBusinessService.instance.setCurrentLocationId(firstPersisted.id);
+      }
+
+      await _repository.markStepComplete(
+        2,
+        data: {'configuredLocations': _configuredLocations},
+      );
+
+      if (mounted) {
+        setState(() {
+          _isSavingLocationStep = false;
+          _currentStep = 3;
+        });
+      }
+    } catch (e) {
+      debugPrint('[OnboardingPage] Error saving location: $e');
+      if (mounted) {
+        setState(() {
+          _isSavingLocationStep = false;
+          _locationSaveError = 'Could not save location. Please check details and try again.';
+        });
+      }
+    }
   }
 
   // Step 3: Commerce sales channels
@@ -556,10 +991,73 @@ class _OnboardingPageState extends State<OnboardingPage> {
     return hasSalesChannels && hasPaymentTerms;
   }
 
+  bool _isSavingCommerce = false;
+  String? _commerceSaveError;
+
+  Future<void> _saveCommerceAndContinue() async {
+    if (_isSavingCommerce) return;
+    if (!_validateCommerceStep()) return;
+
+    setState(() {
+      _isSavingCommerce = true;
+      _commerceSaveError = null;
+    });
+
+    try {
+      // 1. await the database upsert & 2. await onboarding step update
+      await _repository.markStepComplete(
+        3,
+        data: {
+          'selectedSalesChannels': _selectedSalesChannels,
+          'paymentTerms': _paymentTerms,
+          'taxSystem': _resolvedTaxSystemLabel,
+        },
+      );
+
+      // 3. Invalidate/refresh the onboarding progress provider with authoritative persisted milestones
+      final bizId = CurrentBusinessService.instance.currentBusinessId ??
+          _repository.currentProgress.businessId;
+      if (bizId != null && bizId.isNotEmpty) {
+        await _repository.loadProgressForBusiness(bizId);
+      }
+
+      // 4. Rebuild the stepper/progress with refreshed persisted state
+      // 5. Navigate to Inventory only after refreshed state is available
+      if (mounted) {
+        setState(() {
+          _isSavingCommerce = false;
+          _hydrateFields(_repository.currentProgress);
+          _currentStep = 4;
+        });
+      }
+    } catch (e) {
+      debugPrint('[OnboardingPage] Error saving commerce profile: $e');
+      if (mounted) {
+        setState(() {
+          _isSavingCommerce = false;
+          _commerceSaveError =
+              'Could not save commerce profile. Please check details and try again.';
+        });
+      }
+    }
+  }
+
   // Step 4: Inventory ingestion option — null until the user explicitly chooses.
   InventoryStartMethod? _inventoryStartMethod;
   String? _inventorySelectionError;
   bool _isInitializingCatalog = false;
+  bool _isSkippingToDashboard = false;
+
+  String _inventoryMethodToString(InventoryStartMethod method) {
+    switch (method) {
+      case InventoryStartMethod.manual:
+        return 'manual';
+      case InventoryStartMethod.fileImport:
+        return 'file_import';
+      case InventoryStartMethod.shopify:
+        return 'shopify';
+    }
+  }
 
   bool _validateInventoryStep() {
     final hasSelection = _inventoryStartMethod != null;
@@ -572,7 +1070,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Future<void> _handleInventoryContinue() async {
-    if (_isInitializingCatalog) {
+    if (_isInitializingCatalog || _isSkippingToDashboard) {
       return;
     }
     if (!_validateInventoryStep()) {
@@ -616,19 +1114,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
               onCatalogSetupCompleted: () async {
                 if (setupCompleted) return;
                 setupCompleted = true;
-                if (method == InventoryStartMethod.manual) {
-                  await _repository.markStepComplete(
-                    4,
-                    data: {
-                      'inventoryStartMethod': 'manual',
-                      'inventorySetupStatus': 'completed',
-                    },
-                  );
-                  if (mounted) {
-                    setState(() {
-                      _currentStep = 5;
-                    });
-                  }
+                await _repository.markStepComplete(
+                  4,
+                  data: {
+                    'inventoryStartMethod': _inventoryMethodToString(method),
+                    'inventorySetupStatus': 'completed',
+                  },
+                );
+                if (mounted) {
+                  setState(() {});
                 }
               },
               onBackFromUpload: () {
@@ -646,17 +1140,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
           await _repository.markStepComplete(
             4,
             data: {
-              'inventoryStartMethod': method == InventoryStartMethod.manual
-                  ? 'manual'
-                  : 'file_import',
+              'inventoryStartMethod': _inventoryMethodToString(method),
               'inventorySetupStatus': 'completed',
             },
           );
         }
-        if (mounted && method == InventoryStartMethod.manual) {
-          setState(() {
-            _currentStep = 5;
-          });
+        if (mounted) {
+          setState(() {});
         }
       }
     } catch (error, stackTrace) {
@@ -675,18 +1165,99 @@ class _OnboardingPageState extends State<OnboardingPage> {
     }
   }
 
-  Future<void> _continueFromInventoryStep() async {
-    if (!_repository.currentProgress.isInventoryCompleted) {
-      setState(() {
-        _inventorySelectionError =
-            'Please complete catalog setup (publish a product or import a file) before continuing to Team.';
-      });
+  Future<void> _skipAndGoToDashboard() async {
+    if (_isSkippingToDashboard || _isInitializingCatalog) {
       return;
     }
-    if (mounted) {
-      setState(() {
-        _currentStep = 5;
-      });
+
+    // MANDATORY REQUIREMENT: Business and Location cannot be bypassed by Skip
+    if (!_repository.currentProgress.isLocationCompleted) {
+      if (mounted) {
+        setState(() {
+          _isSkippingToDashboard = false;
+          _currentStep = 2; // Route to mandatory Location step
+          _inventorySelectionError =
+              'At least one location must be configured before accessing the dashboard.';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Please configure at least one location before proceeding to the dashboard.',
+            ),
+            backgroundColor: Color(0xFFC5A059),
+          ),
+        );
+      }
+      return;
+    }
+
+    setState(() {
+      _isSkippingToDashboard = true;
+      _inventorySelectionError = null;
+    });
+
+    try {
+      final bizId = _repository.currentProgress.businessId ??
+          CurrentBusinessService.instance.currentBusinessId;
+      final methodStr = _inventoryStartMethod != null
+          ? _inventoryMethodToString(_inventoryStartMethod!)
+          : null;
+
+      // 1. Persist completion
+      final completeProgress = await _repository.skipToDashboard(
+        businessId: bizId,
+        inventoryStartMethod: methodStr,
+      );
+
+      // 2. Verify success
+      if (!completeProgress.isOnboardingCompleted) {
+        throw Exception('Failed to record onboarding completion.');
+      }
+
+      // 3. Update/invalidate onboarding provider & business preferences
+      if (bizId != null && bizId.isNotEmpty) {
+        await AppPreferencesService.instance.setCurrentBusinessId(bizId);
+        CurrentBusinessService.instance.setCurrentBusinessId(bizId);
+        try {
+          await AuthorizationService.instance
+              .refreshAuthorization(businessId: bizId);
+        } catch (e) {
+          debugPrint('[OnboardingPage] Notice refreshing authorization: $e');
+        }
+      }
+
+      // 4. Clear local onboarding state
+      // (Atomic inside skipToDashboard)
+
+      if (!mounted) return;
+
+      // 5. Route-replace directly to Overview/Dashboard
+      await NavigationGuard.safePushNamedAndRemoveUntil(
+        context,
+        AppRoutes.overview,
+        (route) => false,
+        source: 'OnboardingPage._skipAndGoToDashboard',
+      );
+    } catch (e, st) {
+      debugPrint('[OnboardingPage] Skip & Go to Dashboard failed: $e\n$st');
+      if (mounted) {
+        final isLocationMissing = e is StateError && e.message.contains('location');
+        setState(() {
+          _inventorySelectionError = isLocationMissing
+              ? 'At least one location must be configured before accessing the dashboard.'
+              : 'Unable to complete onboarding. Please check your connection and try again.';
+          _isSkippingToDashboard = false;
+          if (isLocationMissing) {
+            _currentStep = 2;
+          }
+        });
+      }
+    } finally {
+      if (mounted && _isSkippingToDashboard) {
+        setState(() {
+          _isSkippingToDashboard = false;
+        });
+      }
     }
   }
 
@@ -694,6 +1265,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final List<Map<String, String>> _savedTeamInvites = [];
 
   static const List<String> _stepLabels = [
+    'Login',
     'Business',
     'Location',
     'Commerce',
@@ -703,12 +1275,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   void dispose() {
+    CurrentBusinessService.instance.removeListener(_onCurrentBusinessChanged);
+    _nameDebounceTimer?.cancel();
+    _streetDebounceTimer?.cancel();
     _businessNameController.dispose();
     _locationNameController.dispose();
     _streetController.dispose();
     _cityController.dispose();
     _postalController.dispose();
     super.dispose();
+  }
+
+  void _onCurrentBusinessChanged() {
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   void _goToStep(int step) {
@@ -847,14 +1428,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
           })();
 
       final authUserPresent = sb?.auth.currentUser != null;
-      final currentBizPresent =
-          CurrentBusinessService.instance.currentBusinessId != null;
+      final currentBizId = CurrentBusinessService.instance.currentBusinessId ??
+          CurrentBusinessService.instance.currentBusiness?.id;
+      final onboardingBizId = _repository.currentProgress.businessId;
+      final targetBizId = currentBizId ?? onboardingBizId;
 
       String errorCode = 'UNKNOWN';
       String errorMsg = e.toString();
+      String? errorDetails;
+      String? errorHint;
+
       if (e is PostgrestException) {
         errorCode = e.code ?? 'POSTGREST_ERROR';
         errorMsg = e.message;
+        errorDetails = e.details?.toString();
+        errorHint = e.hint?.toString();
       } else if (e is AuthException) {
         errorCode = e.statusCode ?? 'AUTH_ERROR';
         errorMsg = e.message;
@@ -862,12 +1450,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
       debugPrint(
         '==========================================================\n'
-        '[Step1Business] Save failed:\n'
-        '  operation: createOrUpdateBusiness (Step 1)\n'
-        '  error_code: $errorCode\n'
-        '  message: $errorMsg\n'
-        '  auth user present: ${authUserPresent ? "YES" : "NO"}\n'
-        '  current business present: ${currentBizPresent ? "YES" : "NO"}\n'
+        'Business update failed\n'
+        'operation: update_business\n'
+        'business_id: ${targetBizId ?? "unknown"}\n'
+        'postgres_code: $errorCode\n'
+        'message: $errorMsg\n'
+        'details: ${errorDetails ?? "none"}\n'
+        'hint: ${errorHint ?? "none"}\n'
         '==========================================================',
       );
 
@@ -878,10 +1467,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
         userFacingError =
             'Anonymous Sign-Ins are disabled in your Supabase project. '
             'Please sign in with a registered account or check project authentication settings.';
-      } else if (!authUserPresent) {
+      } else if (sb != null && !authUserPresent) {
         userFacingError =
             "We couldn't establish an authenticated session.\n"
             "Please sign in to your account, then try again.";
+      } else if (errorMsg.contains('record not found or not owned') ||
+                 errorMsg.contains('Business ID mismatch')) {
+        userFacingError =
+            'Workspace authorization failed. Please reload the workspace or re-authenticate.';
       }
 
       setState(() {
@@ -918,13 +1511,156 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Future<void> _finishOnboarding() async {
-    await _repository.markStepComplete(6);
+    final completeProgress = await _repository.markStepComplete(6);
     if (!mounted) return;
-    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+    final bizId = completeProgress.businessId ??
+        CurrentBusinessService.instance.currentBusinessId;
+    if (bizId != null && bizId.isNotEmpty) {
+      await AppPreferencesService.instance.setCurrentBusinessId(bizId);
+      CurrentBusinessService.instance.setCurrentBusinessId(bizId);
+      await CurrentBusinessService.instance
+          .resolveCurrentBusinessId(forceRefresh: true);
+      await _repository.loadProgressForBusiness(bizId);
+      try {
+        await AuthorizationService.instance
+            .refreshAuthorization(businessId: bizId);
+      } catch (e) {
+        debugPrint('[OnboardingPage] Notice refreshing authorization: $e');
+      }
+    }
+    if (!mounted) return;
+    // Navigate to the explicit overview route so the router knows it is a
+    // post-onboarding destination. Navigating to '/' can ambiguously resolve
+    // via the default case before the router has a chance to read the updated
+    // progress. Using AppRoutes.overview is unambiguous.
+    await NavigationGuard.safePushNamedAndRemoveUntil(
+      context,
+      AppRoutes.overview,
+      (route) => false,
+      source: 'OnboardingPage._finishOnboarding',
+    );
+  }
+
+  /// Checks if the user has entered unsaved edits on the current onboarding step.
+  bool get _hasUnsavedEdits {
+    final progress = _repository.currentProgress;
+    switch (_currentStep) {
+      case 1:
+        final nameChanged = _businessNameController.text.trim().isNotEmpty &&
+            _businessNameController.text.trim() != (progress.businessName ?? '');
+        final typeChanged = _selectedIndustry != null &&
+            _selectedIndustry != progress.businessType;
+        final countryChanged = _selectedCountryCode != null &&
+            _selectedCountryCode != progress.countryCode;
+        return nameChanged || typeChanged || countryChanged;
+      case 2:
+        return _locationNameController.text.trim().isNotEmpty ||
+            _streetController.text.trim().isNotEmpty ||
+            _cityController.text.trim().isNotEmpty;
+      case 3:
+        return _selectedSalesChannels.isNotEmpty &&
+            _selectedSalesChannels != progress.selectedSalesChannels;
+      case 4:
+        return _inventoryStartMethod != null &&
+            (_inventoryMethodToString(_inventoryStartMethod!) != progress.inventoryStartMethod);
+      default:
+        return false;
+    }
+  }
+
+  /// Prompts for confirmation if unsaved edits exist, then purges local session and routes to Login.
+  Future<void> _handleSignOut() async {
+    if (_hasUnsavedEdits) {
+      final shouldSignOut = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: const Color(0xFFFAF7F2),
+          title: Text(
+            'Sign out?',
+            style: GoogleFonts.cormorantGaramond(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF1E1C1A),
+            ),
+          ),
+          content: Text(
+            'Unsaved changes on this page will be lost.',
+            style: GoogleFonts.inter(
+              fontSize: 13.5,
+              color: const Color(0xFF5E574E),
+              height: 1.4,
+            ),
+          ),
+          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF7A7268),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              key: const ValueKey('confirm_sign_out_button'),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1E1C1A),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                elevation: 0,
+              ),
+              child: Text(
+                'Sign out',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldSignOut != true) return;
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
+
+    try {
+      await AuthService.instance.signOut();
+    } catch (e) {
+      debugPrint('[OnboardingPage] Error signing out: $e');
+    }
+
+    if (!mounted) return;
+    await NavigationGuard.safePushNamedAndRemoveUntil(
+      context,
+      AppRoutes.login,
+      (route) => false,
+      source: 'OnboardingPage._handleSignOut',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isCheckingCompletion || _repository.currentProgress.isOnboardingCompleted) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 600;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -939,67 +1675,166 @@ class _OnboardingPageState extends State<OnboardingPage> {
               children: [
                 // Top Header: ThreadStock logo only on the left, support link on the right
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 36,
-                    vertical: 18,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : 36,
+                    vertical: isMobile ? 8 : 18,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxHeight: 145,
-                          maxWidth: 340,
-                        ),
-                        child: Image.asset(
-                          'Assets/logo.png',
-                          height: 145,
-                          fit: BoxFit.contain,
-                          filterQuality: FilterQuality.medium,
-                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                      Flexible(
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: isMobile ? 50 : 145,
+                            maxWidth: isMobile ? 120 : 340,
+                          ),
+                          child: Image.asset(
+                            'Assets/logo.png',
+                            height: isMobile ? 50 : 145,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.medium,
+                            errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                          ),
                         ),
                       ),
 
-                      InkWell(
-                        onTap: () {},
-                        borderRadius: BorderRadius.circular(20),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          child: Row(
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
-                                Icons.help_outline_rounded,
-                                size: 18,
-                                color: Color(0xFF1E1C1A),
+                              InkWell(
+                                onTap: () {},
+                                borderRadius: BorderRadius.circular(20),
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: isMobile ? 4 : 6,
+                                    vertical: 4,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.help_outline_rounded,
+                                        size: 15,
+                                        color: Color(0xFF1E1C1A),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        isMobile ? 'Support' : 'ThreadStock Support',
+                                        style: GoogleFonts.inter(
+                                          fontSize: isMobile ? 11.5 : 13,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFF1E1C1A),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'ThreadStock Support',
-                                style: GoogleFonts.inter(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(0xFF1E1C1A),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: Text(
+                                  '|',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: const Color(0xFFD6CABD),
+                                  ),
+                                ),
+                              ),
+                              InkWell(
+                                key: const ValueKey('onboarding_sign_out_button'),
+                                onTap: _handleSignOut,
+                                borderRadius: BorderRadius.circular(20),
+                                hoverColor: Colors.transparent,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 4,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(
+                                        Icons.logout_rounded,
+                                        size: 14,
+                                        color: Color(0xFF7A7268),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      Text(
+                                        'Sign out',
+                                        style: GoogleFonts.inter(
+                                          fontSize: isMobile ? 12 : 13,
+                                          fontWeight: FontWeight.w500,
+                                          color: const Color(0xFF7A7268),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
                           ),
-                        ),
+                          const SizedBox(height: 3),
+                          // Subtle Workspace / Business indicator across all onboarding pages
+                          Container(
+                            key: const ValueKey('onboarding_workspace_badge'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 3.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF6EFE6).withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: const Color(0xFFDFD4C5),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.business_outlined,
+                                  size: 12,
+                                  color: Color(0xFFBA8A55),
+                                ),
+                                const SizedBox(width: 5),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: isMobile ? 130 : 240,
+                                  ),
+                                  child: Text(
+                                    'Setting up: $_currentBusinessDisplayName',
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: GoogleFonts.inter(
+                                      fontSize: isMobile ? 10.5 : 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: const Color(0xFF5E574E),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
 
-                // Center Content Area (Expands to fill available space)
+                // Center Content Area (Biased slightly upward for luxury spacing)
                 Expanded(
-                  child: Center(
+                  child: Align(
+                    alignment: const Alignment(0.0, -0.28),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 8,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isMobile ? 16 : 24,
+                        vertical: isMobile ? 12 : 20,
                       ),
                       child: AnimatedSwitcher(
                         duration: const Duration(milliseconds: 250),
@@ -1028,9 +1863,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   ),
                 ),
 
-                // Bottom Steps Navigation Bar
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 28, top: 12),
+                // Bottom Steps Navigation Bar (Clearly separated vertical zone)
+                Container(
+                  padding: EdgeInsets.only(
+                    top: isMobile ? 14 : 22,
+                    bottom: isMobile ? 18 : 30,
+                    left: isMobile ? 12 : 24,
+                    right: isMobile ? 12 : 24,
+                  ),
                   child: _buildBottomStepBar(),
                 ),
               ],
@@ -1065,7 +1905,88 @@ class _OnboardingPageState extends State<OnboardingPage> {
   // ==========================================
   // STEP 0: WELCOME / BUSINESS (Exact matching design)
   // ==========================================
+  Widget _buildCompactProgressBar(
+    int percentage,
+    int completedCount, {
+    bool isMobile = false,
+  }) {
+    final trackWidth = isMobile ? 90.0 : 130.0;
+    final spacing = isMobile ? 8.0 : 14.0;
+    final fontSize = isMobile ? 11.5 : 12.5;
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            '$percentage% completed',
+            style: GoogleFonts.inter(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF5E574E),
+            ),
+          ),
+          SizedBox(width: spacing),
+          // Progress track & bar (thin 2.5px height, rounded ends)
+          Container(
+            width: trackWidth,
+            height: 2.5,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE5DACD),
+              borderRadius: BorderRadius.circular(2),
+            ),
+            alignment: Alignment.centerLeft,
+            child: FractionallySizedBox(
+              widthFactor: (percentage / 100.0).clamp(0.0, 1.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFBA8A55),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+          ),
+          SizedBox(width: spacing),
+          const Text(
+            '|',
+            style: TextStyle(
+              color: Color(0xFFD6CABD),
+              fontSize: 12,
+              fontWeight: FontWeight.w300,
+            ),
+          ),
+          SizedBox(width: spacing),
+          Text(
+            '$completedCount of 6 completed',
+            style: GoogleFonts.inter(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w500,
+              color: const Color(0xFF5E574E),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // STEP 0: WELCOME / BUSINESS (Exact matching design)
+  // ==========================================
   Widget _buildStep0Welcome() {
+    final progress = _repository.currentProgress;
+    final activeBizId = CurrentBusinessService.instance.currentBusinessId ??
+        progress.businessId;
+    final hasBusiness = activeBizId != null && activeBizId.isNotEmpty;
+    final hasIncompleteBusiness = hasBusiness && !progress.isOnboardingCompleted;
+
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 600;
+
+    final percentage = progress.progressPercentage;
+    final completedCount = progress.completedMilestoneCount;
+
     return Column(
       key: const ValueKey('step_0_welcome'),
       mainAxisAlignment: MainAxisAlignment.center,
@@ -1074,7 +1995,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFFF4ECE1).withOpacity(0.85),
+            color: const Color(0xFFF4ECE1).withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFFD6C5B0), width: 1.0),
           ),
@@ -1099,108 +2020,108 @@ class _OnboardingPageState extends State<OnboardingPage> {
             ],
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: isMobile ? 18 : 24),
 
         // Welcome to ThreadStock (Main editorial serif — Cormorant Garamond)
         Text(
           'Welcome to ThreadStock',
           textAlign: TextAlign.center,
           style: GoogleFonts.cormorantGaramond(
-            fontSize: 60,
+            fontSize: isMobile ? 40 : 60,
             fontWeight: FontWeight.w600,
             color: const Color(0xFF161412),
             letterSpacing: -0.5,
             height: 1.05,
           ),
         ),
-        const SizedBox(height: 14),
+        SizedBox(height: isMobile ? 10 : 14),
 
         // AI Inventory & Commerce OS for Fashion (Gold subtitle — Inter SemiBold)
         Text(
           'AI Inventory & Commerce OS for Fashion',
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
-            fontSize: 22,
+            fontSize: isMobile ? 17 : 22,
             fontWeight: FontWeight.w600,
             color: const Color(0xFFBA8A55),
           ),
         ),
-        const SizedBox(height: 18),
+        SizedBox(height: isMobile ? 14 : 18),
 
         // Subtext description (UI / body sans-serif — Inter)
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 680),
           child: Text(
-            'Set up your workspace parameters in a few steps. ThreadStock coordinates your point of sale, supplier logs, multibranch transfers, and design attributes seamlessly.',
+            'You’re in! Let’s set up your workspace.\n'
+            'ThreadStock will help you configure your business,\n'
+            'set up locations, commerce, inventory and team settings\n'
+            'in a few simple steps.',
             textAlign: TextAlign.center,
             style: GoogleFonts.inter(
-              fontSize: 15.5,
+              fontSize: isMobile ? 14 : 15.5,
               height: 1.6,
               color: const Color(0xFF5E574E),
               fontWeight: FontWeight.w400,
             ),
           ),
         ),
-        const SizedBox(height: 32),
+        SizedBox(height: isMobile ? 18 : 24),
 
-        // Action Buttons Row: [Set Up My Business] [Explore Demo Workspace]
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Black Primary Button: Set Up My Business
-            SizedBox(
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _nextStep,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1E1C1A),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                child: Text(
-                  'Set Up My Business',
-                  maxLines: 1,
-                  softWrap: false,
-                  style: GoogleFonts.inter(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+        // Compact Progress Line
+        _buildCompactProgressBar(
+          percentage,
+          completedCount,
+          isMobile: isMobile,
+        ),
+        SizedBox(height: isMobile ? 24 : 32),
+
+        // Conditional CTA Button: Set Up My Business OR Continue Setup
+        SizedBox(
+          height: 48,
+          child: ElevatedButton(
+            key: ValueKey(
+              hasIncompleteBusiness
+                  ? 'btn_continue_setup'
+                  : 'btn_setup_business',
+            ),
+            onPressed: () {
+              if (hasIncompleteBusiness) {
+                final targetViewStep =
+                    (progress.firstIncompleteStep - 1).clamp(0, 5);
+                _goToStep(targetViewStep);
+              } else {
+                _nextStep();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1E1C1A),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: EdgeInsets.symmetric(horizontal: isMobile ? 18 : 28),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
-            const SizedBox(width: 16),
-
-            // Outlined Secondary Button: Continue Setup
-            SizedBox(
-              height: 48,
-              child: OutlinedButton(
-                onPressed: _finishOnboarding,
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFAF7F2).withOpacity(0.55),
-                  foregroundColor: const Color(0xFF1E1C1A),
-                  side: const BorderSide(color: Color(0xFFD8CDBC), width: 1.2),
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    hasIncompleteBusiness
+                        ? 'Continue Setup'
+                        : 'Set Up My Business',
+                    style: GoogleFonts.inter(
+                      fontSize: isMobile ? 13.5 : 14.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                child: Text(
-                  'Continue Setup',
-                  maxLines: 1,
-                  softWrap: false,
-                  style: GoogleFonts.inter(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+                const SizedBox(width: 8),
+                const Icon(Icons.arrow_forward_rounded, size: 16),
+              ],
             ),
-          ],
+          ),
         ),
       ],
     );
@@ -1210,18 +2131,25 @@ class _OnboardingPageState extends State<OnboardingPage> {
   // STEP 1: BUSINESS PROFILE (Canonical Step 1 of 5)
   // ==========================================
   Widget _buildStep1Business() {
+    final progress = _repository.currentProgress;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 600;
+
     return ConstrainedBox(
       key: const ValueKey('step_1_business'),
       constraints: const BoxConstraints(maxWidth: 540),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 34),
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 20 : 36,
+          vertical: isMobile ? 24 : 34,
+        ),
         decoration: _cardDecoration(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'STEP 1 OF 5 — PROFILE',
+              'STEP 2 OF 6 — BUSINESS',
               style: GoogleFonts.inter(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w600,
@@ -1233,13 +2161,28 @@ class _OnboardingPageState extends State<OnboardingPage> {
             Text(
               'Tell us about your business',
               style: GoogleFonts.cormorantGaramond(
-                fontSize: 34,
+                fontSize: isMobile ? 28 : 34,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF161412),
                 letterSpacing: -0.3,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 6),
+            Text(
+              'Provide your legal and operational details to configure your workspace.',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF615B52),
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildCompactProgressBar(
+              progress.progressPercentage,
+              progress.completedMilestoneCount,
+              isMobile: isMobile,
+            ),
+            const SizedBox(height: 22),
 
             // Field 1: Legal Business Name
             _buildFormField(
@@ -1259,7 +2202,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   color: const Color(0xFF1E1C1A),
                 ),
                 decoration: _inputDecoration(
-                  hint: 'ThreadStock',
+                  hint: 'e.g. Acme Sartoria',
                   errorText: _businessNameError,
                 ),
               ),
@@ -1637,6 +2580,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
   // STEP 2: LOCATION (Nodes)
   // ==========================================
   Widget _buildStep2Location() {
+    final progress = _repository.currentProgress;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 600;
+
     return ConstrainedBox(
       key: const ValueKey('step_2_location'),
       constraints: const BoxConstraints(maxWidth: 1040),
@@ -1647,7 +2594,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
           Expanded(
             flex: 3,
             child: Container(
-              padding: const EdgeInsets.all(36),
+              padding: EdgeInsets.all(isMobile ? 20 : 36),
               decoration: _cardDecoration(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1656,7 +2603,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'STEP 2 OF 5 — NODES',
+                        'STEP 3 OF 6 — LOCATION',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -1666,33 +2613,38 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       ),
                       if (_selectedCountryCode != null &&
                           _selectedCountryCode!.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEDE3D5),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.public_rounded,
-                                size: 13,
-                                color: Color(0xFF6B6358),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                '${CountryCurrencyReference.countryNameFor(_selectedCountryCode)} (${_selectedCountryCode!})',
-                                style: GoogleFonts.inter(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF3B362F),
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEDE3D5),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.public_rounded,
+                                  size: 13,
+                                  color: Color(0xFF6B6358),
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Text(
+                                    '${CountryCurrencyReference.countryNameFor(_selectedCountryCode)} (${_selectedCountryCode!})',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 11.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF3B362F),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                     ],
@@ -1705,11 +2657,27 @@ class _OnboardingPageState extends State<OnboardingPage> {
                               ? 'Create your first location'
                               : 'Add another location'),
                     style: GoogleFonts.cormorantGaramond(
-                      fontSize: 34,
+                      fontSize: isMobile ? 28 : 34,
                       fontWeight: FontWeight.w600,
                       color: const Color(0xFF161412),
                     ),
                   ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Set up your warehouse, boutique, or fulfillment center.',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      color: const Color(0xFF615B52),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildCompactProgressBar(
+                    progress.progressPercentage,
+                    progress.completedMilestoneCount,
+                    isMobile: isMobile,
+                  ),
+                  const SizedBox(height: 18),
                   if (_locationReviewRequired) ...[
                     const SizedBox(height: 16),
                     Container(
@@ -1918,23 +2886,56 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
                   // Location Name & Type
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
                         flex: 3,
                         child: _buildFormField(
                           label: 'LOCATION NAME *',
                           errorText: _locationNameError,
-                          child: TextField(
-                            controller: _locationNameController,
-                            onChanged: (_) =>
-                                setState(() => _locationNameError = null),
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w400,
-                            ),
-                            decoration: _inputDecoration(
-                              hint: 'Enter location name',
-                            ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextField(
+                                controller: _locationNameController,
+                                onChanged: _onLocationNameChanged,
+                                style: GoogleFonts.inter(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                decoration: _inputDecoration(
+                                  hint: 'Enter location name',
+                                  suffixIcon: _isSearchingName
+                                      ? const Padding(
+                                          padding: EdgeInsets.all(12),
+                                          child: SizedBox(
+                                            width: 14,
+                                            height: 14,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation<Color>(
+                                                Color(0xFFBA8A55),
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.search_rounded,
+                                          size: 18,
+                                          color: Color(0xFF9E9589),
+                                        ),
+                                ),
+                              ),
+                              if (_namePredictions.isNotEmpty ||
+                                  _nameSearchNotice != null ||
+                                  _isSearchingName)
+                                _buildPredictionsDropdown(
+                                  predictions: _namePredictions,
+                                  isSearching: _isSearchingName,
+                                  notice: _nameSearchNotice,
+                                  onSelect: _selectNamePrediction,
+                                ),
+                            ],
                           ),
                         ),
                       ),
@@ -2005,16 +3006,49 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   _buildFormField(
                     label: 'STREET ADDRESS *',
                     errorText: _streetError,
-                    child: TextField(
-                      controller: _streetController,
-                      onChanged: (_) => setState(() => _streetError = null),
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                      ),
-                      decoration: _inputDecoration(
-                        hint: 'Enter street address',
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _streetController,
+                          onChanged: _onStreetAddressChanged,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          decoration: _inputDecoration(
+                            hint: 'Enter street address',
+                            suffixIcon: _isSearchingStreet
+                                ? const Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                          Color(0xFFBA8A55),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.place_outlined,
+                                    size: 18,
+                                    color: Color(0xFF9E9589),
+                                  ),
+                          ),
+                        ),
+                        if (_streetPredictions.isNotEmpty ||
+                            _streetSearchNotice != null ||
+                            _isSearchingStreet)
+                          _buildPredictionsDropdown(
+                            predictions: _streetPredictions,
+                            isSearching: _isSearchingStreet,
+                            notice: _streetSearchNotice,
+                            onSelect: _selectStreetPrediction,
+                          ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -2124,6 +3158,53 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       ],
                     ),
                   ),
+                  // Real Google Maps View + Coordinates & Verified / Manual Summary
+                  GoogleLocationMapView(
+                    latitude: _selectedLatitude,
+                    longitude: _selectedLongitude,
+                    placeName: _locationNameController.text.trim(),
+                    formattedAddress: _formattedAddress,
+                    streetAddress: _streetController.text.trim(),
+                    city: _cityController.text.trim(),
+                    postalCode: _postalController.text.trim(),
+                    state: _stateRegion,
+                    country: CountryCurrencyReference.countryNameFor(
+                      _selectedCountryCode,
+                    ),
+                    isVerified: _isGoogleVerified,
+                    interactive: true,
+                    onCoordinatesChanged: (newLatLng) {
+                      setState(() {
+                        _selectedLatitude = newLatLng.latitude;
+                        _selectedLongitude = newLatLng.longitude;
+                      });
+                    },
+                  ),
+
+                  if (_locationSaveError != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF1F0),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFFFA39E)),
+                      ),
+                      child: Text(
+                        _locationSaveError!,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFFCF1322),
+                        ),
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(height: 28),
 
                   // Bottom Action Row
@@ -2155,14 +3236,29 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       SizedBox(
                         height: 46,
                         child: ElevatedButton.icon(
-                          onPressed: _saveAndContinueStep1,
+                          onPressed: _isSavingLocationStep
+                              ? null
+                              : _saveAndContinueStep1,
                           iconAlignment: IconAlignment.end,
-                          icon: const Icon(
-                            Icons.arrow_forward_rounded,
-                            size: 16,
-                          ),
+                          icon: _isSavingLocationStep
+                              ? const SizedBox(
+                                  width: 14,
+                                  height: 14,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 16,
+                                ),
                           label: Text(
-                            'Save & Continue',
+                            _isSavingLocationStep
+                                ? 'Saving Location...'
+                                : 'Save & Continue',
                             style: GoogleFonts.inter(
                               fontSize: 14.5,
                               fontWeight: FontWeight.w600,
@@ -2290,21 +3386,169 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
+  Widget _buildPredictionsDropdown({
+    required List<PlacePrediction> predictions,
+    required ValueChanged<PlacePrediction> onSelect,
+    bool isSearching = false,
+    String? notice,
+  }) {
+    if (!isSearching && notice == null && predictions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFDCCFBE)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      constraints: const BoxConstraints(maxHeight: 220),
+      child: isSearching && predictions.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              child: Row(
+                children: [
+                  const SizedBox(
+                    width: 14,
+                    height: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFBA8A55),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Searching...',
+                    style: GoogleFonts.inter(
+                      fontSize: 12.5,
+                      color: const Color(0xFF7A7268),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          : notice != null && predictions.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.info_outline_rounded,
+                        size: 16,
+                        color: Color(0xFFBA8A55),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          notice,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            color: const Color(0xFF5E574E),
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.separated(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  itemCount: predictions.length,
+                  separatorBuilder: (context, index) => const Divider(
+                    color: Color(0xFFF2ECE1),
+                    height: 1,
+                  ),
+                  itemBuilder: (context, index) {
+                    final pred = predictions[index];
+                    return InkWell(
+                      onTap: () => onSelect(pred),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(top: 2),
+                              child: Icon(
+                                Icons.location_on_outlined,
+                                size: 16,
+                                color: Color(0xFFBA8A55),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    pred.mainText.isNotEmpty
+                                        ? pred.mainText
+                                        : pred.description,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF1E1C1A),
+                                    ),
+                                  ),
+                                  if (pred.secondaryText.isNotEmpty)
+                                    Text(
+                                      pred.secondaryText,
+                                      style: GoogleFonts.inter(
+                                        fontSize: 11.5,
+                                        color: const Color(0xFF7A7268),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+    );
+  }
+
   // ==========================================
   // STEP 3: COMMERCE (Channel Architecture)
   // ==========================================
   Widget _buildStep3Commerce() {
+    final progress = _repository.currentProgress;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 600;
+
     return ConstrainedBox(
       key: const ValueKey('step_3_commerce'),
       constraints: const BoxConstraints(maxWidth: 760),
       child: Container(
-        padding: const EdgeInsets.all(40),
+        padding: EdgeInsets.all(isMobile ? 20 : 40),
         decoration: _cardDecoration(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'STEP 3 OF 5 — CHANNEL ARCHITECTURE',
+              'STEP 4 OF 6 — COMMERCE',
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -2316,12 +3560,27 @@ class _OnboardingPageState extends State<OnboardingPage> {
             Text(
               'Configure how you sell',
               style: GoogleFonts.cormorantGaramond(
-                fontSize: 34,
+                fontSize: isMobile ? 28 : 34,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF161412),
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 6),
+            Text(
+              'Select the primary sales and fulfillment channels for your operations.',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF615B52),
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildCompactProgressBar(
+              progress.progressPercentage,
+              progress.completedMilestoneCount,
+              isMobile: isMobile,
+            ),
+            const SizedBox(height: 20),
             Text(
               'SELECT YOUR SALES CHANNELS',
               style: GoogleFonts.inter(
@@ -2461,6 +3720,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 color: const Color(0xFF5E574E),
               ),
             ),
+            if (_commerceSaveError != null) ...[
+              const SizedBox(height: 12),
+              Text(
+                _commerceSaveError!,
+                style: GoogleFonts.inter(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFFC84030),
+                ),
+              ),
+            ],
             const SizedBox(height: 28),
 
             // Action Row
@@ -2469,24 +3739,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
               child: SizedBox(
                 height: 46,
                 child: ElevatedButton.icon(
-                  onPressed: () async {
-                    if (_validateCommerceStep()) {
-                      await _repository.markStepComplete(
-                        3,
-                        data: {
-                          'selectedSalesChannels': _selectedSalesChannels,
-                          'paymentTerms': _paymentTerms,
-                        },
-                      );
-                      setState(() {
-                        _currentStep = 4;
-                      });
-                    }
-                  },
+                  key: const ValueKey('commerce_continue_button'),
+                  onPressed: _isSavingCommerce ? null : _saveCommerceAndContinue,
                   iconAlignment: IconAlignment.end,
-                  icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                  icon: _isSavingCommerce
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.arrow_forward_rounded, size: 16),
                   label: Text(
-                    'Continue to Inventory',
+                    _isSavingCommerce ? 'Saving...' : 'Continue to Inventory',
                     style: GoogleFonts.inter(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w600,
@@ -2581,17 +3848,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
   // STEP 4: INVENTORY INGESTION
   // ==========================================
   Widget _buildStep4Inventory() {
+    final progress = _repository.currentProgress;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 600;
+
     return ConstrainedBox(
       key: const ValueKey('step_4_inventory'),
       constraints: const BoxConstraints(maxWidth: 880),
       child: Container(
-        padding: const EdgeInsets.all(40),
+        padding: EdgeInsets.all(isMobile ? 20 : 40),
         decoration: _cardDecoration(),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'STEP 4 OF 5 — INVENTORY INGESTION',
+              'STEP 5 OF 6 — INVENTORY',
               style: GoogleFonts.inter(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -2603,12 +3874,27 @@ class _OnboardingPageState extends State<OnboardingPage> {
             Text(
               'How would you like to start?',
               style: GoogleFonts.cormorantGaramond(
-                fontSize: 34,
+                fontSize: isMobile ? 28 : 34,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF161412),
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 6),
+            Text(
+              'Choose how your initial catalog and stock units are brought into ThreadStock.',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: const Color(0xFF615B52),
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 12),
+            _buildCompactProgressBar(
+              progress.progressPercentage,
+              progress.completedMilestoneCount,
+              isMobile: isMobile,
+            ),
+            const SizedBox(height: 20),
 
             if (_inventorySelectionError != null) ...[
               Text(
@@ -2740,7 +4026,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     ElevatedButton.icon(
                       onPressed:
                           (_inventoryStartMethod != null &&
-                              !_isInitializingCatalog)
+                              !_isInitializingCatalog &&
+                              !_isSkippingToDashboard)
                           ? _handleInventoryContinue
                           : null,
                       iconAlignment: IconAlignment.end,
@@ -2776,14 +4063,25 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       ),
                     ),
                     ElevatedButton.icon(
-                      onPressed:
-                          _repository.currentProgress.isInventoryCompleted
-                          ? _continueFromInventoryStep
+                      onPressed: (!_isSkippingToDashboard &&
+                              !_isInitializingCatalog)
+                          ? _skipAndGoToDashboard
                           : null,
                       iconAlignment: IconAlignment.end,
-                      icon: const Icon(Icons.arrow_forward_rounded, size: 16),
+                      icon: _isSkippingToDashboard
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.arrow_forward_rounded, size: 16),
                       label: Text(
-                        'Continue to Team',
+                        _isSkippingToDashboard
+                            ? 'Completing…'
+                            : 'Skip & Go to Dashboard',
                         style: GoogleFonts.inter(fontWeight: FontWeight.w600),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -2924,11 +4222,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
   // STEP 5: TEAM (Invite Team)
   // ==========================================
   Widget _buildStep5Team() {
+    final progress = _repository.currentProgress;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 600;
+
     return TeamOnboardingView(
       key: const ValueKey('step_5_team'),
-      businessName: _businessNameController.text.trim().isNotEmpty
-          ? _businessNameController.text.trim()
-          : null,
+      progressBar: _buildCompactProgressBar(
+        progress.progressPercentage,
+        progress.completedMilestoneCount,
+        isMobile: isMobile,
+      ),
+      businessName: _currentBusinessDisplayName,
       coreNode: _configuredLocations.isNotEmpty
           ? _configuredLocations.first['name']
           : (_locationNameController.text.trim().isNotEmpty
@@ -2982,11 +4287,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
   // STEP 6: WORKSPACE READY (Summary)
   // ==========================================
   Widget _buildStep6Ready() {
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final isMobile = screenWidth < 600;
+
     return ConstrainedBox(
       key: const ValueKey('step_6_ready'),
       constraints: const BoxConstraints(maxWidth: 620),
       child: Container(
-        padding: const EdgeInsets.all(44),
+        padding: EdgeInsets.all(isMobile ? 24 : 44),
         decoration: _cardDecoration(),
         child: Column(
           children: [
@@ -3019,19 +4327,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
             // Title: Your workspace is ready (Editorial Serif: Cormorant Garamond)
             Text(
               'Your workspace is ready',
               textAlign: TextAlign.center,
               style: GoogleFonts.cormorantGaramond(
-                fontSize: 38,
+                fontSize: isMobile ? 30 : 38,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF161412),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               'Here is a summary of your setup.',
               style: GoogleFonts.inter(
@@ -3040,7 +4348,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 fontWeight: FontWeight.w400,
               ),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 12),
+            _buildCompactProgressBar(100, 6, isMobile: isMobile),
+            const SizedBox(height: 22),
 
             // Checklist Card
             Container(
@@ -3185,34 +4495,84 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget _buildBottomStepBar() {
     final progress = _repository.currentProgress;
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(_stepLabels.length * 2 - 1, (index) {
-        if (index.isOdd) {
-          // Divider line between steps
-          return Container(
-            margin: const EdgeInsets.symmetric(horizontal: 10),
-            width: 26,
-            height: 1.0,
-            color: const Color(0xFFD6CABD),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: List.generate(_stepLabels.length * 2 - 1, (index) {
+          // Milestone for current form step:
+          // On Welcome screen (_currentStep == 0):
+          // User has completed Login, but has NOT started Business setup yet.
+          // No form step is active/current on the Welcome screen.
+          // On Form steps (_currentStep >= 1):
+          // Form step 1 is Business (milestone 2), form step 2 is Location (milestone 3), etc.
+          final int? activeMilestone;
+          if (_currentStep == 0) {
+            activeMilestone = null;
+          } else {
+            activeMilestone = _currentStep + 1;
+          }
+
+          if (index.isOdd) {
+            // Connector line between step (index ~/ 2) and step (index ~/ 2 + 1)
+            final leftStepNumber = (index ~/ 2) + 1;
+            final rightStepNumber = leftStepNumber + 1;
+
+            final leftCompleted = progress.isMilestoneCompleted(leftStepNumber);
+            final rightCompleted = progress.isMilestoneCompleted(rightStepNumber);
+            final rightActive = !rightCompleted &&
+                activeMilestone != null &&
+                rightStepNumber == activeMilestone;
+
+            // Rules:
+            // completed -> completed: gold
+            // completed -> active: gold
+            // active -> upcoming: muted/light
+            // upcoming -> upcoming: muted/light
+            final isConnectorActive =
+                leftCompleted && (rightCompleted || rightActive);
+
+            return Container(
+              key: ValueKey('stepper_connector_${leftStepNumber}_$rightStepNumber'),
+              margin: const EdgeInsets.symmetric(horizontal: 8),
+              width: 22,
+              height: 1.5,
+              decoration: BoxDecoration(
+                color: isConnectorActive
+                    ? const Color(0xFFBA8A55)
+                    : const Color(0xFFD6CABD),
+                borderRadius: BorderRadius.circular(1),
+              ),
+            );
+          }
+
+          final stepIdx = index ~/ 2;
+          final stepNumber = stepIdx + 1; // 1 to 6
+          final isCompleted = progress.isMilestoneCompleted(stepNumber);
+
+          final isActive = !isCompleted && activeMilestone != null && stepNumber == activeMilestone;
+          final isLocked = stepNumber > (progress.completedMilestoneCount + 1);
+
+          VoidCallback? onTap;
+          if (!isLocked) {
+            if (stepNumber == 1) {
+              onTap = () => _goToStep(0);
+            } else {
+              onTap = () => _goToStep(stepNumber - 1);
+            }
+          }
+
+          return _buildStepBadge(
+            stepNumber: stepNumber,
+            label: _stepLabels[stepIdx],
+            isActive: isActive,
+            isCompleted: isCompleted,
+            isLocked: isLocked,
+            onTap: onTap,
           );
-        }
-
-        final stepIdx = index ~/ 2;
-        final stepNumber = stepIdx + 1;
-        final isActive = _currentStep > 0 && _currentStep == stepNumber;
-        final isCompleted = progress.isStepCompleted(stepNumber);
-        final isLocked = !progress.isStepAccessible(stepNumber);
-
-        return _buildStepBadge(
-          stepNumber: stepNumber,
-          label: _stepLabels[stepIdx],
-          isActive: isActive,
-          isCompleted: isCompleted,
-          isLocked: isLocked,
-          onTap: isLocked ? null : () => _goToStep(stepNumber),
-        );
-      }),
+        }),
+      ),
     );
   }
 
@@ -3226,13 +4586,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }) {
     // Circle background and border
     Color circleBg = Colors.transparent;
-    Color borderColor = isLocked
-        ? const Color(0xFFE5DACD)
-        : const Color(0xFFD6CABD);
+    Color borderColor =
+        isLocked ? const Color(0xFFE5DACD) : const Color(0xFFD6CABD);
     Widget circleContent;
 
-    if (isActive) {
-      // Active step: Camel/Gold filled circle with white number
+    if (isCompleted) {
+      // Completed step: champagne-gold filled circle with white check
+      circleBg = const Color(0xFFBA8A55);
+      borderColor = const Color(0xFFBA8A55);
+      circleContent = const Icon(
+        Icons.check_rounded,
+        size: 12,
+        color: Colors.white,
+      );
+    } else if (isActive) {
+      // Current step: gold filled circle with white number, stronger label
       circleBg = const Color(0xFFBA8A55);
       borderColor = const Color(0xFFBA8A55);
       circleContent = Text(
@@ -3243,17 +4611,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
           color: Colors.white,
         ),
       );
-    } else if (isCompleted && !isLocked) {
-      // Completed step: Emerald Green circle with checkmark
-      circleBg = const Color(0xFF275E43);
-      borderColor = const Color(0xFF275E43);
-      circleContent = const Icon(
-        Icons.check_rounded,
-        size: 12,
-        color: Colors.white,
-      );
     } else {
-      // Locked or upcoming step: subtle circle with step number
+      // Upcoming steps: very light border, muted gray text
+      circleBg = Colors.transparent;
+      borderColor =
+          isLocked ? const Color(0xFFE5DACD) : const Color(0xFFD6CABD);
       circleContent = Text(
         '$stepNumber',
         style: GoogleFonts.inter(
@@ -3262,6 +4624,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
           color: isLocked ? const Color(0xFFA59B8E) : const Color(0xFF6E665C),
         ),
       );
+    }
+
+    final Color labelColor;
+    final FontWeight labelWeight;
+    if (isActive) {
+      labelColor = const Color(0xFF1E1C1A);
+      labelWeight = FontWeight.w600;
+    } else if (isCompleted) {
+      labelColor = const Color(0xFF2E2A25);
+      labelWeight = FontWeight.w500;
+    } else {
+      labelColor = isLocked ? const Color(0xFFA59B8E) : const Color(0xFF6E665C);
+      labelWeight = FontWeight.w400;
     }
 
     return MouseRegion(
@@ -3297,14 +4672,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-                      color: isActive
-                          ? const Color(0xFF1E1C1A)
-                          : (isCompleted
-                                ? const Color(0xFF2E2A25)
-                                : (isLocked
-                                      ? const Color(0xFFA59B8E)
-                                      : const Color(0xFF6E665C))),
+                      fontWeight: labelWeight,
+                      color: labelColor,
                     ),
                   ),
                 ),
@@ -3333,9 +4702,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   // Common Input Decorator
-  InputDecoration _inputDecoration({required String hint, String? errorText}) {
+  InputDecoration _inputDecoration({
+    required String hint,
+    String? errorText,
+    Widget? suffixIcon,
+  }) {
     return InputDecoration(
       hintText: hint,
+      suffixIcon: suffixIcon,
       hintStyle: GoogleFonts.inter(
         color: const Color(0xFF9E9589).withOpacity(0.5),
         fontSize: 13.5,

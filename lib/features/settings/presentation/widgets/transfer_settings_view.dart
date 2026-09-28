@@ -55,18 +55,18 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
   // Routes data
   final List<TransferRouteItem> _routes = [
     TransferRouteItem(
-      fromLocation: 'Central Warehouse',
-      toLocation: 'Delhi Flagship Hub',
+      fromLocation: 'Main Warehouse',
+      toLocation: 'North Hub',
       defaultDays: 2,
     ),
     TransferRouteItem(
-      fromLocation: 'Central Warehouse',
-      toLocation: 'Mumbai Phoenix',
+      fromLocation: 'Main Warehouse',
+      toLocation: 'West Outlet',
       defaultDays: 3,
     ),
     TransferRouteItem(
-      fromLocation: 'Delhi Flagship Hub',
-      toLocation: 'Lucknow Regent',
+      fromLocation: 'North Hub',
+      toLocation: 'Regional Depot',
       defaultDays: 1,
     ),
   ];
@@ -145,7 +145,7 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
                 TextField(
                   controller: fromController,
                   decoration: InputDecoration(
-                    hintText: 'e.g. Central Warehouse',
+                    hintText: 'e.g. Primary Facility',
                     hintStyle: GoogleFonts.inter(
                       fontSize: 13,
                       color: const Color(0xFFA89F91),
@@ -345,18 +345,12 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Left Column: Default Transfer Workflow & Transit Time Defaults Per Route
-                      Expanded(
-                        flex: 52,
-                        child: _buildLeftColumn(),
-                      ),
+                      Expanded(flex: 52, child: _buildLeftColumn()),
 
                       const SizedBox(width: 24),
 
                       // Right Column: Transfer Approvals & Packing & Receiving
-                      Expanded(
-                        flex: 48,
-                        child: _buildRightColumn(),
-                      ),
+                      Expanded(flex: 48, child: _buildRightColumn()),
                     ],
                   ),
                 ],
@@ -444,7 +438,7 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
                     widget.onSelectSection!('purchasing_defaults');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Purchasing Defaults > Central Warehouse (Zone A)',
+                      'Settings > Purchasing Defaults',
                       'Configure buying, receiving and cost settings for your business.',
                     );
                   }
@@ -454,7 +448,7 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
                     widget.onSelectSection!('import_export');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Import / Export Center > Central Warehouse (Zone A)',
+                      'Settings > Import / Export Center',
                       'Import and export your business data with ease. Manage files, track history, and ensure data accuracy.',
                     );
                   }
@@ -464,7 +458,7 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
                     widget.onSelectSection!('api_webhooks');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > API & Webhooks > Central Warehouse (Zone A)',
+                      'Settings > API & Webhooks',
                       'Manage API access, configure webhooks, and integrate with external systems.',
                     );
                   }
@@ -474,7 +468,7 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
                     widget.onSelectSection!('audit_log');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > System Audit Log > Central Warehouse (Zone A)',
+                      'Settings > System Audit Log',
                       'Track all system changes, user actions, and important events across ThreadStock.',
                     );
                   }
@@ -505,7 +499,9 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
           color: isSelected ? const Color(0xFF7A481B) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF7A481B) : const Color(0xFFDFD4C5),
+            color: isSelected
+                ? const Color(0xFF7A481B)
+                : const Color(0xFFDFD4C5),
           ),
         ),
         child: Text(
@@ -679,7 +675,9 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
           color: isHighlighted ? const Color(0xFFB58E58) : Colors.white,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: isHighlighted ? const Color(0xFFB58E58) : const Color(0xFFDFD4C5),
+            color: isHighlighted
+                ? const Color(0xFFB58E58)
+                : const Color(0xFFDFD4C5),
           ),
           boxShadow: isHighlighted
               ? const [
@@ -886,7 +884,9 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
                             });
                             _showFeedback('Removed route');
                           } else {
-                            _showFeedback('Route options for ${_routes[i].toLocation}');
+                            _showFeedback(
+                              'Route options for ${_routes[i].toLocation}',
+                            );
                           }
                         },
                         itemBuilder: (ctx) => [
@@ -1276,10 +1276,7 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
           ),
         ),
         const SizedBox(width: 16),
-        _buildLuxuryToggle(
-          value: value,
-          onChanged: onChanged,
-        ),
+        _buildLuxuryToggle(value: value, onChanged: onChanged),
       ],
     );
   }
@@ -1297,11 +1294,7 @@ class _TransferSettingsViewState extends State<TransferSettingsView> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
-            Icons.info_outline,
-            size: 24,
-            color: Color(0xFF7A481B),
-          ),
+          const Icon(Icons.info_outline, size: 24, color: Color(0xFF7A481B)),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

@@ -24,7 +24,11 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -64,17 +68,11 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Left Document Canvas (73% flex)
-            Expanded(
-              flex: 73,
-              child: _buildDocumentCanvas(),
-            ),
+            Expanded(flex: 73, child: _buildDocumentCanvas()),
             const SizedBox(width: 24),
 
             // Right Sidebar Controls & Outline (27% flex)
-            Expanded(
-              flex: 27,
-              child: _buildSidebarPanel(),
-            ),
+            Expanded(flex: 27, child: _buildSidebarPanel()),
           ],
         );
       },
@@ -144,11 +142,17 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
             children: [
               // Pill Badge
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 9,
+                  vertical: 3.5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFDF4E7),
                   borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: const Color(0xFFF2DCBE), width: 1.0),
+                  border: Border.all(
+                    color: const Color(0xFFF2DCBE),
+                    width: 1.0,
+                  ),
                 ),
                 child: Text(
                   'THREADSTOCK AUTOMATED INTELLIGENCE',
@@ -176,7 +180,7 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
 
               // Period & Location Subtitle
               Text(
-                'Period: Sep 8 - Sep 14, 2024 • Delhi Flagship & Central Warehouse',
+                'Period: Sep 8 - Sep 14, 2024 • All Active Channels & Fulfillment Centers',
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
@@ -271,7 +275,7 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
               ),
               TextSpan(
                 text:
-                    ' target, driven primarily by a Sunday demand spike at the Delhi flagship location. General stock health is robust at ',
+                    ' target, driven primarily by a Sunday demand spike at primary retail locations. General stock health is robust at ',
               ),
               TextSpan(
                 text: '82%',
@@ -399,11 +403,17 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                 const SizedBox(height: 3),
                 if (badgeText != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE6F5EA),
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: const Color(0xFFC6E7CE), width: 1.0),
+                      border: Border.all(
+                        color: const Color(0xFFC6E7CE),
+                        width: 1.0,
+                      ),
                     ),
                     child: Text(
                       badgeText,
@@ -422,7 +432,9 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                         style: GoogleFonts.inter(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: isPositive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                          color: isPositive
+                              ? const Color(0xFF16A34A)
+                              : const Color(0xFFDC2626),
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -475,11 +487,17 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
             Expanded(
               flex: 62,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFAF8F5),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFEADBCA), width: 1.0),
+                  border: Border.all(
+                    color: const Color(0xFFEADBCA),
+                    width: 1.0,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -497,10 +515,34 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('30L', style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF8C8377))),
-                                Text('20L', style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF8C8377))),
-                                Text('10L', style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF8C8377))),
-                                Text('0', style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF8C8377))),
+                                Text(
+                                  '30L',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: const Color(0xFF8C8377),
+                                  ),
+                                ),
+                                Text(
+                                  '20L',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: const Color(0xFF8C8377),
+                                  ),
+                                ),
+                                Text(
+                                  '10L',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: const Color(0xFF8C8377),
+                                  ),
+                                ),
+                                Text(
+                                  '0',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 10,
+                                    color: const Color(0xFF8C8377),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -512,13 +554,41 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                _buildBar(day: 'Mon', fraction: 0.25, isHighlighted: false),
-                                _buildBar(day: 'Tue', fraction: 0.45, isHighlighted: false),
-                                _buildBar(day: 'Wed', fraction: 0.50, isHighlighted: false),
-                                _buildBar(day: 'Thu', fraction: 0.72, isHighlighted: false),
-                                _buildBar(day: 'Fri', fraction: 0.60, isHighlighted: false),
-                                _buildBar(day: 'Sat', fraction: 0.70, isHighlighted: false),
-                                _buildBar(day: 'Sun', fraction: 0.88, isHighlighted: true),
+                                _buildBar(
+                                  day: 'Mon',
+                                  fraction: 0.25,
+                                  isHighlighted: false,
+                                ),
+                                _buildBar(
+                                  day: 'Tue',
+                                  fraction: 0.45,
+                                  isHighlighted: false,
+                                ),
+                                _buildBar(
+                                  day: 'Wed',
+                                  fraction: 0.50,
+                                  isHighlighted: false,
+                                ),
+                                _buildBar(
+                                  day: 'Thu',
+                                  fraction: 0.72,
+                                  isHighlighted: false,
+                                ),
+                                _buildBar(
+                                  day: 'Fri',
+                                  fraction: 0.60,
+                                  isHighlighted: false,
+                                ),
+                                _buildBar(
+                                  day: 'Sat',
+                                  fraction: 0.70,
+                                  isHighlighted: false,
+                                ),
+                                _buildBar(
+                                  day: 'Sun',
+                                  fraction: 0.88,
+                                  isHighlighted: true,
+                                ),
                               ],
                             ),
                           ),
@@ -539,7 +609,10 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFFAF8F5),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFEADBCA), width: 1.0),
+                  border: Border.all(
+                    color: const Color(0xFFEADBCA),
+                    width: 1.0,
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,7 +646,7 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "The peak cycle recorded on D7 (Sunday) contributed 42% of Delhi flagship's total weekly volume. Sourcing streams remain consistent but demand represents an emerging regional trend.",
+                      "The peak cycle recorded on D7 (Sunday) contributed 42% of regional flagship's total weekly volume. Sourcing streams remain consistent but demand represents an emerging regional trend.",
                       style: GoogleFonts.inter(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
@@ -603,7 +676,9 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
           width: 28,
           height: 80 * fraction,
           decoration: BoxDecoration(
-            color: isHighlighted ? const Color(0xFFBA8A55) : const Color(0xFFEADBCA),
+            color: isHighlighted
+                ? const Color(0xFFBA8A55)
+                : const Color(0xFFEADBCA),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
           ),
         ),
@@ -613,7 +688,9 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
           style: GoogleFonts.inter(
             fontSize: 10.5,
             fontWeight: isHighlighted ? FontWeight.w700 : FontWeight.w500,
-            color: isHighlighted ? const Color(0xFF181513) : const Color(0xFF8C8377),
+            color: isHighlighted
+                ? const Color(0xFF181513)
+                : const Color(0xFF8C8377),
           ),
         ),
       ],
@@ -650,7 +727,10 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
             children: [
               // Header Row
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 decoration: const BoxDecoration(
                   border: Border(
                     bottom: BorderSide(color: Color(0xFFEADBCA), width: 1.0),
@@ -660,36 +740,79 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                   children: [
                     SizedBox(
                       width: 24,
-                      child: Text('#', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF8C8377))),
+                      child: Text(
+                        '#',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF8C8377),
+                        ),
+                      ),
                     ),
                     Expanded(
                       flex: 6,
-                      child: Text('Style Description', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF8C8377))),
+                      child: Text(
+                        'Style Description',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF8C8377),
+                        ),
+                      ),
                     ),
                     Expanded(
                       flex: 3,
-                      child: Text('Units Sold', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF8C8377))),
+                      child: Text(
+                        'Units Sold',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF8C8377),
+                        ),
+                      ),
                     ),
                     Expanded(
                       flex: 4,
-                      child: Text('Gross Revenue', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF8C8377))),
+                      child: Text(
+                        'Gross Revenue',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF8C8377),
+                        ),
+                      ),
                     ),
                     Expanded(
                       flex: 2,
-                      child: Text('Health', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF8C8377))),
+                      child: Text(
+                        'Health',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF8C8377),
+                        ),
+                      ),
                     ),
                     SizedBox(
                       width: 44,
-                      child: Text('Trend', textAlign: TextAlign.end, style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF8C8377))),
+                      child: Text(
+                        'Trend',
+                        textAlign: TextAlign.end,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF8C8377),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
 
-              // Row 1: Oxford Linen Shirt (Black)
+              // Row 1: Classic Linen Shirt (Black)
               _buildStyleRow(
                 rank: '1',
-                name: 'Oxford Linen Shirt (Black)',
+                name: 'Classic Linen Shirt (Black)',
                 units: '847 pcs',
                 revenue: '₹21,17,500',
                 health: '92%',
@@ -698,10 +821,10 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                 isLast: false,
               ),
 
-              // Row 2: Merino Wool Blazer (Navy)
+              // Row 2: Wool Tailored Blazer (Navy)
               _buildStyleRow(
                 rank: '2',
-                name: 'Merino Wool Blazer (Navy)',
+                name: 'Wool Tailored Blazer (Navy)',
                 units: '124 pcs',
                 revenue: '₹9,92,000',
                 health: '85%',
@@ -710,10 +833,10 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                 isLast: false,
               ),
 
-              // Row 3: Raw Denim Jeans (Indigo)
+              // Row 3: Classic Indigo Denim (Dark Wash)
               _buildStyleRow(
                 rank: '3',
-                name: 'Raw Denim Jeans (Indigo)',
+                name: 'Classic Indigo Denim (Dark Wash)',
                 units: '240 pcs',
                 revenue: '₹8,40,000',
                 health: '79%',
@@ -741,33 +864,55 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        border: isLast ? null : const Border(bottom: BorderSide(color: Color(0xFFF0E5D4), width: 1.0)),
+        border: isLast
+            ? null
+            : const Border(
+                bottom: BorderSide(color: Color(0xFFF0E5D4), width: 1.0),
+              ),
       ),
       child: Row(
         children: [
           SizedBox(
             width: 24,
-            child: Text(rank, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF5E574E))),
+            child: Text(
+              rank,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF5E574E),
+              ),
+            ),
           ),
           Expanded(
             flex: 6,
             child: Text(
               name,
-              style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF181513)),
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF181513),
+              ),
             ),
           ),
           Expanded(
             flex: 3,
             child: Text(
               units,
-              style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF5E574E)),
+              style: GoogleFonts.inter(
+                fontSize: 12.5,
+                color: const Color(0xFF5E574E),
+              ),
             ),
           ),
           Expanded(
             flex: 4,
             child: Text(
               revenue,
-              style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500, color: const Color(0xFF181513)),
+              style: GoogleFonts.inter(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+                color: const Color(0xFF181513),
+              ),
             ),
           ),
           Expanded(
@@ -777,10 +922,14 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: isHealthy ? const Color(0xFFE6F5EA) : const Color(0xFFFDF4E7),
+                  color: isHealthy
+                      ? const Color(0xFFE6F5EA)
+                      : const Color(0xFFFDF4E7),
                   borderRadius: BorderRadius.circular(4),
                   border: Border.all(
-                    color: isHealthy ? const Color(0xFFC6E7CE) : const Color(0xFFF2DCBE),
+                    color: isHealthy
+                        ? const Color(0xFFC6E7CE)
+                        : const Color(0xFFF2DCBE),
                     width: 1.0,
                   ),
                 ),
@@ -789,7 +938,9 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                   style: GoogleFonts.inter(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
-                    color: isHealthy ? const Color(0xFF257B39) : const Color(0xFFA86718),
+                    color: isHealthy
+                        ? const Color(0xFF257B39)
+                        : const Color(0xFFA86718),
                   ),
                 ),
               ),
@@ -800,9 +951,13 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
             child: Align(
               alignment: Alignment.centerRight,
               child: Icon(
-                isTrendUp ? Icons.trending_up_rounded : Icons.trending_flat_rounded,
+                isTrendUp
+                    ? Icons.trending_up_rounded
+                    : Icons.trending_flat_rounded,
                 size: 16,
-                color: isTrendUp ? const Color(0xFF16A34A) : const Color(0xFFA86718),
+                color: isTrendUp
+                    ? const Color(0xFF16A34A)
+                    : const Color(0xFFA86718),
               ),
             ),
           ),
@@ -859,11 +1014,12 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                     ),
                     children: const [
                       TextSpan(
-                        text: 'Oxford Linen (Black/M): ',
+                        text: 'Stock Monitor: ',
                         style: TextStyle(fontWeight: FontWeight.w700),
                       ),
                       TextSpan(
-                        text: 'Projected stockout in 4 days. Suggest transfer from Central Hub.',
+                        text:
+                            'Inventory levels tracked against current buffer thresholds.',
                       ),
                     ],
                   ),
@@ -873,10 +1029,15 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
 
               // Action Link
               InkWell(
-                onTap: widget.onNavigateToInventory ?? () => _showNotification('Opening Oxford Linen (Black/M) in inventory...'),
+                onTap:
+                    widget.onNavigateToInventory ??
+                    () => _showNotification('Opening inventory view...'),
                 borderRadius: BorderRadius.circular(4),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -983,7 +1144,9 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
 
         // Download PDF Button (Solid Caramel Bronze)
         InkWell(
-          onTap: () => _showNotification('Downloading Weekly Sales Summary PDF document...'),
+          onTap: () => _showNotification(
+            'Downloading Weekly Sales Summary PDF document...',
+          ),
           borderRadius: BorderRadius.circular(8),
           child: Container(
             width: double.infinity,
@@ -1002,7 +1165,11 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.download_rounded, size: 16, color: Colors.white),
+                const Icon(
+                  Icons.download_rounded,
+                  size: 16,
+                  color: Colors.white,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Download PDF Document',
@@ -1020,7 +1187,9 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
 
         // Share with Stakeholders Button (Outlined)
         InkWell(
-          onTap: () => _showNotification('Share link generated and copied to clipboard.'),
+          onTap: () => _showNotification(
+            'Share link generated and copied to clipboard.',
+          ),
           borderRadius: BorderRadius.circular(8),
           child: Container(
             width: double.infinity,
@@ -1040,7 +1209,11 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.ios_share_rounded, size: 15, color: Color(0xFF181513)),
+                const Icon(
+                  Icons.ios_share_rounded,
+                  size: 15,
+                  color: Color(0xFF181513),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Share with Stakeholders',
@@ -1058,7 +1231,9 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
 
         // Regenerate with Live Data Button (Tinted Outlined)
         InkWell(
-          onTap: () => _showNotification('Regenerating Weekly Sales Summary with live database metrics...'),
+          onTap: () => _showNotification(
+            'Regenerating Weekly Sales Summary with live database metrics...',
+          ),
           borderRadius: BorderRadius.circular(8),
           child: Container(
             width: double.infinity,
@@ -1071,7 +1246,11 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.refresh_rounded, size: 15, color: Color(0xFFA86718)),
+                const Icon(
+                  Icons.refresh_rounded,
+                  size: 15,
+                  color: Color(0xFFA86718),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Regenerate with Live Data',
@@ -1126,7 +1305,9 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
-                  color: isSelected ? const Color(0xFFA86718) : const Color(0xFF5E574E),
+                  color: isSelected
+                      ? const Color(0xFFA86718)
+                      : const Color(0xFF5E574E),
                 ),
               ),
             ),
@@ -1208,11 +1389,7 @@ class _WeeklySalesSummaryViewState extends State<WeeklySalesSummaryView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Gold vertical bar
-        Container(
-          width: 2.5,
-          height: 36,
-          color: const Color(0xFFBA8A55),
-        ),
+        Container(width: 2.5, height: 36, color: const Color(0xFFBA8A55)),
         const SizedBox(width: 14),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -101,8 +101,7 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
         id: 'whatsapp_commerce',
         title: 'WhatsApp Commerce',
         subtitle: 'Direct Integration',
-        description:
-            'ThreadStock automation catalog with chat order entry.',
+        description: 'ThreadStock automation catalog with chat order entry.',
         icon: Icons.chat_bubble_outline_rounded,
         status: ChannelStatus.active,
         lastSync: '1h ago',
@@ -126,8 +125,11 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -156,7 +158,8 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
             return Dialog(
               backgroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Container(
                 width: 480,
                 padding: const EdgeInsets.all(24),
@@ -176,8 +179,11 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded,
-                              size: 20, color: Color(0xFF7A7268)),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            size: 20,
+                            color: Color(0xFF7A7268),
+                          ),
                           onPressed: () => Navigator.pop(ctx),
                         ),
                       ],
@@ -193,38 +199,54 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                     const SizedBox(height: 18),
 
                     // Channel Type Dropdown
-                    Text('Channel Type',
-                        style: GoogleFonts.inter(
-                            fontSize: 12.5, fontWeight: FontWeight.w600)),
+                    Text(
+                      'Channel Type',
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
                       value: selectedType,
                       decoration: InputDecoration(
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Color(0xFFE2D8CC)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2D8CC),
+                          ),
                         ),
                       ),
                       items: const [
                         DropdownMenuItem(
-                            value: 'Shopify', child: Text('Shopify Online Store')),
+                          value: 'Shopify',
+                          child: Text('Shopify Online Store'),
+                        ),
                         DropdownMenuItem(
-                            value: 'WooCommerce', child: Text('WooCommerce Store')),
+                          value: 'WooCommerce',
+                          child: Text('WooCommerce Store'),
+                        ),
                         DropdownMenuItem(
-                            value: 'In-Store POS',
-                            child: Text('Physical POS Terminal Node')),
+                          value: 'In-Store POS',
+                          child: Text('Physical POS Terminal Node'),
+                        ),
                         DropdownMenuItem(
-                            value: 'WhatsApp',
-                            child: Text('WhatsApp Conversational Commerce')),
+                          value: 'WhatsApp',
+                          child: Text('WhatsApp Conversational Commerce'),
+                        ),
                         DropdownMenuItem(
-                            value: 'Instagram',
-                            child: Text('Instagram Social Discovery Catalog')),
+                          value: 'Instagram',
+                          child: Text('Instagram Social Discovery Catalog'),
+                        ),
                         DropdownMenuItem(
-                            value: 'Amazon', child: Text('Amazon Marketplace')),
+                          value: 'Amazon',
+                          child: Text('Amazon Marketplace'),
+                        ),
                       ],
                       onChanged: (val) {
                         if (val != null) setDlgState(() => selectedType = val);
@@ -233,9 +255,13 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                     const SizedBox(height: 16),
 
                     // Channel Name
-                    Text('Display Name',
-                        style: GoogleFonts.inter(
-                            fontSize: 12.5, fontWeight: FontWeight.w600)),
+                    Text(
+                      'Display Name',
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     TextField(
                       controller: nameController,
@@ -244,46 +270,60 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                         hintText: 'e.g. Bandra Flagship POS or Shopify US',
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Color(0xFFE2D8CC)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2D8CC),
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 16),
 
                     // Fulfillment Location
-                    Text('Fulfillment Location',
-                        style: GoogleFonts.inter(
-                            fontSize: 12.5, fontWeight: FontWeight.w600)),
+                    Text(
+                      'Fulfillment Location',
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     DropdownButtonFormField<String>(
                       value: selectedLocation,
                       decoration: InputDecoration(
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Color(0xFFE2D8CC)),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE2D8CC),
+                          ),
                         ),
                       ),
                       items: const [
                         DropdownMenuItem(
-                            value: 'All Nodes (Global)',
-                            child: Text('All Nodes (Global Inventory)')),
+                          value: 'All Nodes (Global)',
+                          child: Text('All Nodes (Global Inventory)'),
+                        ),
                         DropdownMenuItem(
-                            value: 'Central Warehouse (Zone A)',
-                            child: Text('Central Warehouse (Zone A)')),
+                          value: 'Primary Facility (Zone A)',
+                          child: Text('Primary Facility (Zone A)'),
+                        ),
                         DropdownMenuItem(
-                            value: 'Delhi Flagship Boutique',
-                            child: Text('Delhi Flagship Boutique')),
+                          value: 'Regional Retail Store',
+                          child: Text('Regional Retail Store'),
+                        ),
                         DropdownMenuItem(
-                            value: 'Mumbai Phoenix Node',
-                            child: Text('Mumbai Phoenix Node')),
+                          value: 'Mumbai Phoenix Node',
+                          child: Text('Mumbai Phoenix Node'),
+                        ),
                       ],
                       onChanged: (val) {
                         if (val != null) {
@@ -302,14 +342,20 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(color: Color(0xFFD8CEC1)),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 10),
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
-                          child: Text('Cancel',
-                              style: GoogleFonts.inter(
-                                  fontSize: 13,
-                                  color: const Color(0xFF1E1C1A))),
+                          child: Text(
+                            'Cancel',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: const Color(0xFF1E1C1A),
+                            ),
+                          ),
                         ),
                         const SizedBox(width: 10),
                         ElevatedButton(
@@ -328,32 +374,46 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                                   icon: selectedType.contains('POS')
                                       ? Icons.storefront_outlined
                                       : (selectedType.contains('Shopify') ||
-                                              selectedType.contains('Woo')
-                                          ? Icons.shopping_cart_outlined
-                                          : (selectedType.contains('WhatsApp')
-                                              ? Icons.chat_bubble_outline_rounded
-                                              : (selectedType.contains('Instagram')
-                                                  ? Icons.camera_alt_outlined
-                                                  : Icons.language_rounded))),
+                                                selectedType.contains('Woo')
+                                            ? Icons.shopping_cart_outlined
+                                            : (selectedType.contains('WhatsApp')
+                                                  ? Icons
+                                                        .chat_bubble_outline_rounded
+                                                  : (selectedType.contains(
+                                                          'Instagram',
+                                                        )
+                                                        ? Icons
+                                                              .camera_alt_outlined
+                                                        : Icons
+                                                              .language_rounded))),
                                   status: ChannelStatus.active,
                                   lastSync: 'Just now',
                                 ),
                               );
                             });
                             Navigator.pop(ctx);
-                            _showFeedback('Channel "$name" connected successfully');
+                            _showFeedback(
+                              'Channel "$name" connected successfully',
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF1E1C1A),
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 18, vertical: 10),
+                              horizontal: 18,
+                              vertical: 10,
+                            ),
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8)),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
-                          child: Text('Connect Channel',
-                              style: GoogleFonts.inter(
-                                  fontSize: 13, fontWeight: FontWeight.w600)),
+                          child: Text(
+                            'Connect Channel',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -373,8 +433,9 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
       builder: (ctx) {
         return Dialog(
           backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Container(
             width: 480,
             padding: const EdgeInsets.all(24),
@@ -394,8 +455,11 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded,
-                          size: 20, color: Color(0xFF7A7268)),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: Color(0xFF7A7268),
+                      ),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
@@ -420,7 +484,11 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                   ),
                   child: Row(
                     children: [
-                      Icon(channel.icon, color: const Color(0xFF7A481B), size: 24),
+                      Icon(
+                        channel.icon,
+                        color: const Color(0xFF7A481B),
+                        size: 24,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -429,19 +497,25 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                             Text(
                               channel.title,
                               style: GoogleFonts.inter(
-                                  fontSize: 13.5, fontWeight: FontWeight.w700),
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                             Text(
                               channel.subtitle,
                               style: GoogleFonts.inter(
-                                  fontSize: 12, color: const Color(0xFF7E766B)),
+                                fontSize: 12,
+                                color: const Color(0xFF7E766B),
+                              ),
                             ),
                           ],
                         ),
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: channel.status == ChannelStatus.active
                               ? const Color(0xFFE8F5E9)
@@ -474,19 +548,28 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Real-Time Stock Decrement',
-                              style: GoogleFonts.inter(
-                                  fontSize: 13, fontWeight: FontWeight.w600)),
                           Text(
-                              'Instantly deduct available units across other channels on order creation.',
-                              style: GoogleFonts.inter(
-                                  fontSize: 11.5,
-                                  color: const Color(0xFF7E766B))),
+                            'Real-Time Stock Decrement',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            'Instantly deduct available units across other channels on order creation.',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: const Color(0xFF7E766B),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.toggle_on_rounded,
-                        color: Color(0xFF5C3E21), size: 36),
+                    const Icon(
+                      Icons.toggle_on_rounded,
+                      color: Color(0xFF5C3E21),
+                      size: 36,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 14),
@@ -499,19 +582,28 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Auto-Publish New Collections',
-                              style: GoogleFonts.inter(
-                                  fontSize: 13, fontWeight: FontWeight.w600)),
                           Text(
-                              'Automatically push newly launched fabrics and garments to this catalog.',
-                              style: GoogleFonts.inter(
-                                  fontSize: 11.5,
-                                  color: const Color(0xFF7E766B))),
+                            'Auto-Publish New Collections',
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            'Automatically push newly launched fabrics and garments to this catalog.',
+                            style: GoogleFonts.inter(
+                              fontSize: 11.5,
+                              color: const Color(0xFF7E766B),
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.toggle_on_rounded,
-                        color: Color(0xFF5C3E21), size: 36),
+                    const Icon(
+                      Icons.toggle_on_rounded,
+                      color: Color(0xFF5C3E21),
+                      size: 36,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -524,19 +616,28 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFFD8CEC1)),
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
+                          horizontal: 16,
+                          vertical: 10,
+                        ),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      child: Text('Close',
-                          style: GoogleFonts.inter(
-                              fontSize: 13, color: const Color(0xFF1E1C1A))),
+                      child: Text(
+                        'Close',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: const Color(0xFF1E1C1A),
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 10),
                     ElevatedButton(
                       onPressed: () {
                         setState(() {
-                          final idx = _channels.indexWhere((c) => c.id == channel.id);
+                          final idx = _channels.indexWhere(
+                            (c) => c.id == channel.id,
+                          );
                           if (idx != -1) {
                             _channels[idx] = channel.copyWith(
                               status: ChannelStatus.active,
@@ -547,19 +648,27 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                         });
                         Navigator.pop(ctx);
                         _showFeedback(
-                            '${channel.title} configuration updated and synced.');
+                          '${channel.title} configuration updated and synced.',
+                        );
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1E1C1A),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 10),
+                          horizontal: 18,
+                          vertical: 10,
+                        ),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      child: Text('Save & Sync',
-                          style: GoogleFonts.inter(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
+                      child: Text(
+                        'Save & Sync',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -700,8 +809,9 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
             backgroundColor: const Color(0xFF1E1C1A),
             elevation: 0,
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
           ),
         ),
       ],
@@ -747,7 +857,9 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                           color: const Color(0xFFFAF2E6),
                           shape: BoxShape.circle,
                           border: Border.all(
-                              color: const Color(0xFFE8DDD0), width: 1.2),
+                            color: const Color(0xFFE8DDD0),
+                            width: 1.2,
+                          ),
                         ),
                         child: Icon(
                           channel.icon,
@@ -792,7 +904,9 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                           if (val == 'configure') {
                             _handleConfigure(channel);
                           } else if (val == 'sync') {
-                            _showFeedback('Triggered sync for ${channel.title}');
+                            _showFeedback(
+                              'Triggered sync for ${channel.title}',
+                            );
                           } else if (val == 'disconnect') {
                             setState(() {
                               _channels.removeWhere((c) => c.id == channel.id);
@@ -802,18 +916,28 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                         },
                         itemBuilder: (ctx) => [
                           const PopupMenuItem(
-                              value: 'configure', child: Text('Configure Settings')),
+                            value: 'configure',
+                            child: Text('Configure Settings'),
+                          ),
                           const PopupMenuItem(
-                              value: 'sync', child: Text('Force Sync Now')),
+                            value: 'sync',
+                            child: Text('Force Sync Now'),
+                          ),
                           const PopupMenuItem(
-                              value: 'disconnect',
-                              child: Text('Disconnect Channel',
-                                  style: TextStyle(color: Colors.red))),
+                            value: 'disconnect',
+                            child: Text(
+                              'Disconnect Channel',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
                         ],
                         child: const Padding(
                           padding: EdgeInsets.all(4),
-                          child: Icon(Icons.more_horiz_rounded,
-                              size: 18, color: Color(0xFF7E766B)),
+                          child: Icon(
+                            Icons.more_horiz_rounded,
+                            size: 18,
+                            color: Color(0xFF7E766B),
+                          ),
                         ),
                       ),
                     ],
@@ -891,9 +1015,12 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
                       side: const BorderSide(color: Color(0xFFE2D8CC)),
                       backgroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -926,10 +1053,12 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
 
   Widget _buildStatusPill(ChannelStatus status) {
     final isActive = status == ChannelStatus.active;
-    final dotColor =
-        isActive ? const Color(0xFF2E7D32) : const Color(0xFFB86B1D);
-    final bgColor =
-        isActive ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0);
+    final dotColor = isActive
+        ? const Color(0xFF2E7D32)
+        : const Color(0xFFB86B1D);
+    final bgColor = isActive
+        ? const Color(0xFFE8F5E9)
+        : const Color(0xFFFFF3E0);
     final label = isActive ? 'Active' : 'Pending';
 
     return Container(
@@ -944,10 +1073,7 @@ class _SalesChannelsViewState extends State<SalesChannelsView> {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              color: dotColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
           Text(

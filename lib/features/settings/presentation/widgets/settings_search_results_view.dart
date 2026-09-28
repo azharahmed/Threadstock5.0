@@ -116,9 +116,7 @@ class _SettingsSearchResultsViewState extends State<SettingsSearchResultsView> {
 
                 // Right Column: Search Results
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: _buildResultsColumn(),
-                  ),
+                  child: SingleChildScrollView(child: _buildResultsColumn()),
                 ),
               ],
             );
@@ -133,11 +131,31 @@ class _SettingsSearchResultsViewState extends State<SettingsSearchResultsView> {
   // ==========================================
   Widget _buildSubnavColumn({required bool isFullWidth}) {
     final navItems = [
-      {'id': 'general_settings', 'label': 'General Settings', 'icon': Icons.settings_outlined},
-      {'id': 'locations', 'label': 'Locations', 'icon': Icons.location_on_outlined},
-      {'id': 'roles_permissions', 'label': 'Roles & Permissions', 'icon': Icons.people_outline_rounded},
-      {'id': 'data_retention', 'label': 'Data Retention', 'icon': Icons.storage_rounded},
-      {'id': 'integrations', 'label': 'Integrations', 'icon': Icons.link_rounded},
+      {
+        'id': 'general_settings',
+        'label': 'General Settings',
+        'icon': Icons.settings_outlined,
+      },
+      {
+        'id': 'locations',
+        'label': 'Locations',
+        'icon': Icons.location_on_outlined,
+      },
+      {
+        'id': 'roles_permissions',
+        'label': 'Roles & Permissions',
+        'icon': Icons.people_outline_rounded,
+      },
+      {
+        'id': 'data_retention',
+        'label': 'Data Retention',
+        'icon': Icons.storage_rounded,
+      },
+      {
+        'id': 'integrations',
+        'label': 'Integrations',
+        'icon': Icons.link_rounded,
+      },
     ];
 
     return Column(
@@ -168,18 +186,11 @@ class _SettingsSearchResultsViewState extends State<SettingsSearchResultsView> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: const Color(0xFFEFE7DC),
-            width: 1.0,
-          ),
+          border: Border.all(color: const Color(0xFFEFE7DC), width: 1.0),
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              size: 18,
-              color: const Color(0xFF5A5248),
-            ),
+            Icon(icon, size: 18, color: const Color(0xFF5A5248)),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -293,10 +304,7 @@ class _SettingsSearchResultsViewState extends State<SettingsSearchResultsView> {
               decoration: BoxDecoration(
                 color: const Color(0xFFFAF4EC),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                  color: const Color(0xFFF0E5D4),
-                  width: 1.0,
-                ),
+                border: Border.all(color: const Color(0xFFF0E5D4), width: 1.0),
               ),
               child: Center(
                 child: Icon(
@@ -493,11 +501,7 @@ class _SettingsSearchResultsViewState extends State<SettingsSearchResultsView> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Gold vertical bar
-          Container(
-            width: 2.5,
-            height: 38,
-            color: const Color(0xFFBA8A55),
-          ),
+          Container(width: 2.5, height: 38, color: const Color(0xFFBA8A55)),
           const SizedBox(width: 14),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

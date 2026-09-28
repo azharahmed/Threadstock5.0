@@ -5,6 +5,7 @@ import '../../app/router/app_router.dart';
 import '../auth/auth_service.dart';
 import '../auth/authorization_service.dart';
 import '../../features/onboarding/data/onboarding_repository.dart';
+import '../../features/onboarding/domain/onboarding_completion_evaluator.dart';
 import 'current_business_service.dart';
 
 class BootstrapResult {
@@ -20,6 +21,8 @@ class BootstrapResult {
     required this.resumeStep,
   });
 
+  bool get isOnboardingComplete => isOnboardingCompleted;
+
   @override
   String toString() =>
       'BootstrapResult(initialRoute: $initialRoute, businessId: $businessId, isOnboardingCompleted: $isOnboardingCompleted, resumeStep: $resumeStep)';
@@ -28,21 +31,53 @@ class BootstrapResult {
 class AppBootstrapService {
   AppBootstrapService._();
 
+  static bool _isBootstrapping = false;
+  static bool _isBootstrapped = false;
+  static BootstrapResult? _lastResult;
+
+  static bool get isBootstrapped => _isBootstrapped;
+  static bool get isBootstrapping => _isBootstrapping;
+  static BootstrapResult? get lastResult => _lastResult;
+
+  /// Clears bootstrap session state on sign-out.
+  static void clearSession() {
+    _isBootstrapped = false;
+    _isBootstrapping = false;
+    _lastResult = null;
+  }
+
+  @visibleForTesting
+  static void resetForTesting() => clearSession();
+
+  @visibleForTesting
+  static void setLastResultForTesting(BootstrapResult? result) {
+    _lastResult = result;
+    if (result != null) {
+      _isBootstrapped = true;
+    }
+  }
+
+  @visibleForTesting
+  static void setIsBootstrappingForTesting(bool val) {
+    _isBootstrapping = val;
+  }
+
   static String routeForStep(int step) {
     switch (step) {
       case 0:
         return AppRoutes.onboardingWelcome;
       case 1:
-        return AppRoutes.onboardingBusiness;
       case 2:
-        return AppRoutes.onboardingLocation;
+        return AppRoutes.onboardingBusiness;
       case 3:
-        return AppRoutes.onboardingCommerce;
+        return AppRoutes.onboardingLocation;
       case 4:
-        return AppRoutes.onboardingInventory;
+        return AppRoutes.onboardingCommerce;
       case 5:
-        return AppRoutes.onboardingTeam;
+        return AppRoutes.onboardingInventory;
       case 6:
+        return AppRoutes.onboardingTeam;
+      case 7:
       default:
         return AppRoutes.overview;
     }
@@ -54,7 +89,7 @@ class AppBootstrapService {
   /// 2. If authenticated, query businesses/memberships for user using precedence:
   ///    - explicit persisted last_business_id (revalidated against Supabase)
   ///    - active memberships
-  ///    - owned completed business
+  ///    - owned completed business (prefer LaunchGrid / populated businesses)
   ///    - incomplete owned onboarding business
   /// 3. If no business found -> AppRoutes.onboardingBusiness
   /// 4. If business found: query onboarding status
@@ -63,6 +98,8 @@ class AppBootstrapService {
   ///
   /// CRITICAL: NEVER automatically creates an anonymous session or a business.
   static Future<BootstrapResult> bootstrap({SupabaseClient? client}) async {
+    _isBootstrapping = true;
+
     final sb = client ??
         (() {
           try {
@@ -81,12 +118,16 @@ class AppBootstrapService {
       debugPrint(
         '[AppBootstrapService] No active authenticated session. Routing to Login.',
       );
-      return const BootstrapResult(
+      final result = const BootstrapResult(
         initialRoute: AppRoutes.login,
         businessId: null,
         isOnboardingCompleted: false,
         resumeStep: 0,
       );
+      _lastResult = result;
+      _isBootstrapping = false;
+      _isBootstrapped = true;
+      return result;
     }
 
     debugPrint('[AppBootstrapService] Authenticated user active: ${user.id}');
@@ -101,12 +142,16 @@ class AppBootstrapService {
       debugPrint(
         '[AppBootstrapService] No accessible businesses found. Routing to onboarding.',
       );
-      return const BootstrapResult(
+      final result = const BootstrapResult(
         initialRoute: AppRoutes.onboarding,
         businessId: null,
         isOnboardingCompleted: false,
         resumeStep: 1,
       );
+      _lastResult = result;
+      _isBootstrapping = false;
+      _isBootstrapped = true;
+      return result;
     }
 
     debugPrint(
@@ -119,35 +164,58 @@ class AppBootstrapService {
       overrideClient: sb,
     );
 
-    // 3. Query onboarding status for that business
+    // 3. Authoritative onboarding status evaluation
     final onboardingRepo = OnboardingRepository.instance;
     final progress = await onboardingRepo.loadProgressForBusiness(
       resolvedBizId,
     );
+    final evaluation = await OnboardingCompletionEvaluator(client: sb)
+        .evaluateOnboardingState(resolvedBizId);
 
-    // 4. Route appropriately
-    if (progress.isOnboardingCompleted) {
+    // 4. Route appropriately based on authoritative evaluation
+    final bool isCompleted = evaluation.canEnterDashboard;
+    final String targetRoute;
+    final int effectiveStep;
+
+    if (isCompleted) {
+      targetRoute = AppRoutes.overview;
+      effectiveStep = 6;
       debugPrint(
         '[AppBootstrapService] Business $resolvedBizId onboarding is COMPLETE -> Overview.',
       );
-      return BootstrapResult(
-        initialRoute: AppRoutes.overview,
-        businessId: resolvedBizId,
-        isOnboardingCompleted: true,
-        resumeStep: 6,
-      );
     } else {
-      final firstIncomplete = progress.firstIncompleteStep;
-      final targetRoute = routeForStep(firstIncomplete);
+      effectiveStep = evaluation.firstIncompleteStep;
+      targetRoute = routeForStep(effectiveStep);
       debugPrint(
-        '[AppBootstrapService] Business $resolvedBizId onboarding IN-PROGRESS -> Step $firstIncomplete ($targetRoute).',
-      );
-      return BootstrapResult(
-        initialRoute: targetRoute,
-        businessId: resolvedBizId,
-        isOnboardingCompleted: false,
-        resumeStep: firstIncomplete,
+        '[AppBootstrapService] Business $resolvedBizId onboarding IN-PROGRESS -> Step $effectiveStep ($targetRoute).',
       );
     }
+
+    final result = BootstrapResult(
+      initialRoute: targetRoute,
+      businessId: resolvedBizId,
+      isOnboardingCompleted: isCompleted,
+      resumeStep: effectiveStep,
+    );
+
+    _lastResult = result;
+    _isBootstrapping = false;
+    _isBootstrapped = true;
+
+    // Requirement 6: Log diagnostic startup info
+    final currentBizName = businessService.currentBusiness?.legalName ??
+        progress.businessName ??
+        'Unknown';
+    debugPrint(
+      '[Bootstrap Diagnostics]\n'
+      'authUser: ${user.id}\n'
+      'currentBusiness:\n$resolvedBizId\n\n'
+      'businessName:\n$currentBizName\n\n'
+      'onboarding:\n${isCompleted ? "complete" : "in_progress"}\n\n'
+      'currentStep:\n$effectiveStep\n\n'
+      'route:\n$targetRoute',
+    );
+
+    return result;
   }
 }

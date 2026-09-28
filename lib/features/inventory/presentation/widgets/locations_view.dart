@@ -1,6 +1,9 @@
 // ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/business/current_business_service.dart';
+import '../../data/location_repository.dart';
 
 class LocationItem {
   const LocationItem({
@@ -63,82 +66,137 @@ class _LocationsViewState extends State<LocationsView> {
   String _selectedZone = 'All Zones';
   String _selectedSort = 'Sort by: Name';
   bool _isGridView = true;
+  bool _isLoading = true;
+  int _totalStockUnits = 0;
 
-  late final List<LocationItem> _locations;
+  List<LocationItem> _locations = const [];
 
   @override
   void initState() {
     super.initState();
-    _locations = const [
-      LocationItem(
-        id: 'LOC-SOHO',
-        name: 'SoHo Flagship Store',
-        type: 'Retail Store',
-        typeBg: Color(0xFFEFF6FF),
-        typeColor: Color(0xFF2563EB),
-        status: 'Active',
-        statusBg: Color(0xFFDCFCE7),
-        statusColor: Color(0xFF15803D),
-        address: '112 Greene St, New York, NY 10012',
-        city: 'New York',
-        totalStock: '1,842',
-        activeTransfers: '2 Inbound',
-        activeTransfersColor: Color(0xFFD97706),
-        imageAsset: 'assets/central_store.jpg',
-        isActive: true,
-      ),
-      LocationItem(
-        id: 'LOC-DELHI',
-        name: 'Delhi Hub Warehouse',
-        type: 'Warehouse',
-        typeBg: Color(0xFFF1F5F9),
-        typeColor: Color(0xFF475569),
-        status: 'Active',
-        statusBg: Color(0xFFDCFCE7),
-        statusColor: Color(0xFF15803D),
-        address: 'Okhla Industrial Area, Phase III, Delhi',
-        city: 'Delhi',
-        totalStock: '14,230',
-        activeTransfers: '0 Active',
-        activeTransfersColor: Color(0xFF6B7280),
-        imageAsset: 'assets/warehouse_building.jpg',
-        isActive: true,
-      ),
-      LocationItem(
-        id: 'LOC-MUMBAI',
-        name: 'Mumbai Phoenix Gallery',
-        type: 'Retail Store',
-        typeBg: Color(0xFFEFF6FF),
-        typeColor: Color(0xFF2563EB),
-        status: 'Active',
-        statusBg: Color(0xFFDCFCE7),
-        statusColor: Color(0xFF15803D),
-        address: 'Senapati Bapat Marg, Lower Parel, Mumbai',
-        city: 'Mumbai',
-        totalStock: '945',
-        activeTransfers: '4 Outbound',
-        activeTransfersColor: Color(0xFFD97706),
-        imageAsset: 'assets/central_store.jpg',
-        isActive: true,
-      ),
-      LocationItem(
-        id: 'LOC-VRINDAVAN',
-        name: 'Vrindavan Transit Depot',
-        type: 'Pop-up',
-        typeBg: Color(0xFFFEF3C7),
-        typeColor: Color(0xFFD97706),
-        status: 'Inactive',
-        statusBg: Color(0xFFFEE2E2),
-        statusColor: Color(0xFFDC2626),
-        address: 'VIP Road, Raman Reti, Vrindavan',
-        city: 'Vrindavan',
-        totalStock: '0',
-        activeTransfers: '0 Active',
-        activeTransfersColor: Color(0xFF6B7280),
-        imageAsset: 'assets/warehouse_building.jpg',
-        isActive: false,
-      ),
-    ];
+    _loadLocations();
+  }
+
+  Future<void> _loadLocations() async {
+    try {
+      final repo = LocationRepository();
+      final locations = await repo.getLocations(onlyActive: false);
+
+      // Query inventory_balances for per-location stock counts
+      final Map<String, int> stockByLocation = {};
+      int totalUnits = 0;
+      try {
+        final sb = Supabase.instance.client;
+        final businessId = CurrentBusinessService.instance.currentBusinessId;
+        if (businessId != null && businessId.isNotEmpty) {
+          final balances = await sb
+              .from('inventory_balances')
+              .select('location_id, available_qty')
+              .eq('business_id', businessId);
+          for (final b in (balances as List)) {
+            final locId = b['location_id'] as String?;
+            final qty = (b['available_qty'] as num?)?.toInt() ?? 0;
+            if (locId != null && qty > 0) {
+              stockByLocation[locId] = (stockByLocation[locId] ?? 0) + qty;
+              totalUnits += qty;
+            }
+          }
+        }
+      } catch (_) {}
+
+      final items = locations.map((loc) {
+        final stockQty = stockByLocation[loc.id] ?? 0;
+        return LocationItem(
+          id: loc.id,
+          name: loc.name,
+          type: _typeDisplayName(loc.locationType),
+          typeBg: _typeBg(loc.locationType),
+          typeColor: _typeColor(loc.locationType),
+          status: loc.status == 'active' ? 'Active' : 'Inactive',
+          statusBg: loc.status == 'active'
+              ? const Color(0xFFDCFCE7)
+              : const Color(0xFFFEE2E2),
+          statusColor: loc.status == 'active'
+              ? const Color(0xFF15803D)
+              : const Color(0xFFDC2626),
+          address: [
+            loc.streetAddress,
+            loc.city,
+            loc.postalCode,
+          ].where((s) => s != null && s.isNotEmpty).join(', '),
+          city: loc.city ?? '',
+          totalStock: _formatQty(stockQty),
+          activeTransfers: '0 Active',
+          activeTransfersColor: const Color(0xFF6B7280),
+          imageAsset: '',
+          isActive: loc.status == 'active',
+        );
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _locations = items;
+          _totalStockUnits = totalUnits;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _locations = const [];
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  static String _typeDisplayName(String t) {
+    switch (t.toLowerCase()) {
+      case 'retail':
+      case 'retail_store':
+        return 'Retail Store';
+      case 'popup':
+      case 'pop_up':
+        return 'Pop-up';
+      case 'distribution_center':
+        return 'Distribution Centre';
+      default:
+        return 'Warehouse';
+    }
+  }
+
+  static Color _typeBg(String t) {
+    switch (t.toLowerCase()) {
+      case 'retail':
+      case 'retail_store':
+        return const Color(0xFFEFF6FF);
+      case 'popup':
+      case 'pop_up':
+        return const Color(0xFFFEF3C7);
+      default:
+        return const Color(0xFFF1F5F9);
+    }
+  }
+
+  static Color _typeColor(String t) {
+    switch (t.toLowerCase()) {
+      case 'retail':
+      case 'retail_store':
+        return const Color(0xFF2563EB);
+      case 'popup':
+      case 'pop_up':
+        return const Color(0xFFD97706);
+      default:
+        return const Color(0xFF475569);
+    }
+  }
+
+  static String _formatQty(int n) {
+    if (n == 0) return '0';
+    return n.toString().replaceAllMapped(
+      RegExp(r'(\d+?)(?=(\d\d)+(\d)(?!\d))'),
+      (m) => '${m[1]},',
+    );
   }
 
   @override
@@ -150,10 +208,13 @@ class _LocationsViewState extends State<LocationsView> {
   List<LocationItem> get _filteredLocations {
     final q = _searchController.text.trim().toLowerCase();
     return _locations.where((loc) {
-      if (_selectedType != 'All Types' && loc.type != _selectedType) return false;
-      if (_selectedStatus != 'All Status' && loc.status != _selectedStatus) return false;
+      if (_selectedType != 'All Types' && loc.type != _selectedType)
+        return false;
+      if (_selectedStatus != 'All Status' && loc.status != _selectedStatus)
+        return false;
       if (q.isNotEmpty) {
-        final matches = loc.name.toLowerCase().contains(q) ||
+        final matches =
+            loc.name.toLowerCase().contains(q) ||
             loc.address.toLowerCase().contains(q) ||
             loc.city.toLowerCase().contains(q);
         if (!matches) return false;
@@ -176,10 +237,20 @@ class _LocationsViewState extends State<LocationsView> {
                 color: const Color(0xFFFBF4EB),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.add_business_rounded, color: Color(0xFF92400E), size: 20),
+              child: const Icon(
+                Icons.add_business_rounded,
+                color: Color(0xFF92400E),
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
-            Text('Add Inventory Node / Store', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text(
+              'Add Inventory Node / Store',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
         content: SizedBox(
@@ -191,24 +262,39 @@ class _LocationsViewState extends State<LocationsView> {
                 decoration: InputDecoration(
                   labelText: 'Location / Branch Name',
                   hintText: 'e.g. London Regent St Store',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 decoration: InputDecoration(
                   labelText: 'Street Address & Postal Code',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               TextField(
                 decoration: InputDecoration(
                   labelText: 'Node Type (Warehouse, Retail Store, Pop-up)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ],
@@ -217,14 +303,19 @@ class _LocationsViewState extends State<LocationsView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               Navigator.of(ctx).pop();
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('New inventory node registered across network.'),
+                  content: Text(
+                    'New inventory node registered across network.',
+                  ),
                   backgroundColor: Color(0xFF181513),
                   behavior: SnackBarBehavior.floating,
                 ),
@@ -233,7 +324,9 @@ class _LocationsViewState extends State<LocationsView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF181513),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Add Location'),
           ),
@@ -257,39 +350,67 @@ class _LocationsViewState extends State<LocationsView> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: const Color(0xFFFDE68A)),
               ),
-              child: const Icon(Icons.auto_awesome, color: Color(0xFFD97706), size: 20),
+              child: const Icon(
+                Icons.auto_awesome,
+                color: Color(0xFFD97706),
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
-            Text('Network Balancing Recommendations', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text(
+              'Network Balancing Recommendations',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
         content: SizedBox(
           width: 480,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'AI Network Topology Analysis indicates cross-docking opportunities:',
-                style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF4B5563), height: 1.4),
-              ),
-              const SizedBox(height: 14),
-              _buildInsightBullet(
-                'Delhi Hub to Mumbai Phoenix',
-                'Stock turn in Mumbai is 2.8x higher for Oxford Linen Shirts. Transferring 350 units from Delhi will reduce stockout risk by 91%.',
-              ),
-              const SizedBox(height: 10),
-              _buildInsightBullet(
-                'Vrindavan Transit Depot Re-activation',
-                'Pre-holiday regional footfall will spike in 12 days. Recommend scheduling a 400-unit replenishment batch.',
-              ),
-            ],
-          ),
+          child: _locations.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    'Add inventory locations to receive AI-powered network balancing insights.',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: const Color(0xFF4B5563),
+                    ),
+                  ),
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Add inventory data to unlock AI-powered cross-location rebalancing and transfer recommendations.',
+                      style: GoogleFonts.inter(
+                        fontSize: 13,
+                        color: const Color(0xFF4B5563),
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _buildInsightBullet(
+                      'Stock Velocity Analysis',
+                      'AI will compare sell-through rates across ${_locations.length} registered location(s) to identify rebalancing opportunities.',
+                    ),
+                    const SizedBox(height: 10),
+                    _buildInsightBullet(
+                      'Transfer Scheduling',
+                      'Once inventory data is recorded, automated transfer scheduling will prevent stockouts and reduce excess holding.',
+                    ),
+                  ],
+                ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Close', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            child: Text(
+              'Close',
+              style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+            ),
           ),
         ],
       ),
@@ -300,15 +421,33 @@ class _LocationsViewState extends State<LocationsView> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF16A34A), size: 18),
+        const Icon(
+          Icons.check_circle_outline_rounded,
+          color: Color(0xFF16A34A),
+          size: 18,
+        ),
         const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF111827))),
+              Text(
+                title,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF111827),
+                ),
+              ),
               const SizedBox(height: 2),
-              Text(desc, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280), height: 1.35)),
+              Text(
+                desc,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  color: const Color(0xFF6B7280),
+                  height: 1.35,
+                ),
+              ),
             ],
           ),
         ),
@@ -318,6 +457,17 @@ class _LocationsViewState extends State<LocationsView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 80),
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Color(0xFF8C5E33),
+          ),
+        ),
+      );
+    }
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
@@ -336,7 +486,10 @@ class _LocationsViewState extends State<LocationsView> {
           const SizedBox(height: 20),
 
           // 4. Location Cards Grid
-          if (_isGridView) _buildLocationCardsGrid() else _buildLocationSummaryCard(),
+          if (_isGridView)
+            _buildLocationCardsGrid()
+          else
+            _buildLocationSummaryCard(),
           const SizedBox(height: 24),
 
           // 5. Bottom Row: Network Map + Location Summary
@@ -349,17 +502,11 @@ class _LocationsViewState extends State<LocationsView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Network Map (~38%)
-                    Expanded(
-                      flex: 38,
-                      child: _buildNetworkMapCard(),
-                    ),
+                    Expanded(flex: 38, child: _buildNetworkMapCard()),
                     const SizedBox(width: 20),
 
                     // Location Summary Table (~62%)
-                    Expanded(
-                      flex: 62,
-                      child: _buildLocationSummaryCard(),
-                    ),
+                    Expanded(flex: 62, child: _buildLocationSummaryCard()),
                   ],
                 );
               }
@@ -420,9 +567,14 @@ class _LocationsViewState extends State<LocationsView> {
             backgroundColor: const Color(0xFF181513),
             foregroundColor: Colors.white,
             elevation: 0,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-            textStyle: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600),
+            textStyle: GoogleFonts.inter(
+              fontSize: 13.5,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ],
@@ -431,15 +583,17 @@ class _LocationsViewState extends State<LocationsView> {
 
   // 2. Top 4 Metric KPI Cards
   Widget _buildKpiCardsRow() {
+    final activeCount = _locations.where((l) => l.isActive).length;
     return Row(
       children: [
         Expanded(
           child: _buildKpiCard(
             icon: Icons.location_on_outlined,
             title: 'Total Registered Locations',
-            value: '4 nodes',
-            trend: '↑ 0%',
-            isTrendPositive: true,
+            value:
+                '${_locations.length} node${_locations.length == 1 ? '' : 's'}',
+            trend: '$activeCount active',
+            isTrendPositive: activeCount > 0,
             sparklineColor: const Color(0xFF16A34A),
           ),
         ),
@@ -447,10 +601,12 @@ class _LocationsViewState extends State<LocationsView> {
         Expanded(
           child: _buildKpiCard(
             icon: Icons.inventory_2_outlined,
-            title: 'Total SKUs Across Network',
-            value: '3,847 units',
-            trend: '↑ 12%',
-            isTrendPositive: true,
+            title: 'Total Units Across Network',
+            value: _totalStockUnits > 0
+                ? '${_formatQty(_totalStockUnits)} units'
+                : '—',
+            trend: _totalStockUnits > 0 ? 'In stock' : 'No stock recorded',
+            isTrendPositive: _totalStockUnits > 0,
             sparklineColor: const Color(0xFF16A34A),
           ),
         ),
@@ -459,10 +615,10 @@ class _LocationsViewState extends State<LocationsView> {
           child: _buildKpiCard(
             icon: Icons.sync_alt_rounded,
             title: 'Pending Network Transfers',
-            value: '6 orders',
-            trend: 'Active',
+            value: '—',
+            trend: 'No data yet',
             isTrendPositive: false,
-            trendColor: const Color(0xFFD97706),
+            trendColor: const Color(0xFF6B7280),
             sparklineColor: const Color(0xFFD97706),
           ),
         ),
@@ -471,9 +627,10 @@ class _LocationsViewState extends State<LocationsView> {
           child: _buildKpiCard(
             icon: Icons.storefront_outlined,
             title: 'Total Stock Value',
-            value: '₹18,42,000',
-            trend: '↑ 8%',
-            isTrendPositive: true,
+            value: '—',
+            trend: 'No valuation data',
+            isTrendPositive: false,
+            trendColor: const Color(0xFF6B7280),
             sparklineColor: const Color(0xFF16A34A),
           ),
         ),
@@ -515,7 +672,10 @@ class _LocationsViewState extends State<LocationsView> {
               Expanded(
                 child: Text(
                   title,
-                  style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280)),
+                  style: GoogleFonts.inter(
+                    fontSize: 11.5,
+                    color: const Color(0xFF6B7280),
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -531,7 +691,11 @@ class _LocationsViewState extends State<LocationsView> {
                 children: [
                   Text(
                     value,
-                    style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                    style: GoogleFonts.inter(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: const Color(0xFF111827),
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -539,7 +703,11 @@ class _LocationsViewState extends State<LocationsView> {
                     style: GoogleFonts.inter(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w600,
-                      color: trendColor ?? (isTrendPositive ? const Color(0xFF16A34A) : const Color(0xFFDC2626)),
+                      color:
+                          trendColor ??
+                          (isTrendPositive
+                              ? const Color(0xFF16A34A)
+                              : const Color(0xFFDC2626)),
                     ),
                   ),
                 ],
@@ -576,7 +744,11 @@ class _LocationsViewState extends State<LocationsView> {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               children: [
-                const Icon(Icons.search_rounded, size: 18, color: Color(0xFF9CA3AF)),
+                const Icon(
+                  Icons.search_rounded,
+                  size: 18,
+                  color: Color(0xFF9CA3AF),
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: TextField(
@@ -584,7 +756,10 @@ class _LocationsViewState extends State<LocationsView> {
                     style: GoogleFonts.inter(fontSize: 13),
                     decoration: const InputDecoration(
                       hintText: 'Search location, city or address...',
-                      hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
+                      hintStyle: TextStyle(
+                        color: Color(0xFF9CA3AF),
+                        fontSize: 13,
+                      ),
                       border: InputBorder.none,
                       isDense: true,
                     ),
@@ -601,7 +776,8 @@ class _LocationsViewState extends State<LocationsView> {
         _buildDropdown(
           value: _selectedType,
           items: const ['All Types', 'Retail Store', 'Warehouse', 'Pop-up'],
-          onChanged: (val) => setState(() => _selectedType = val ?? 'All Types'),
+          onChanged: (val) =>
+              setState(() => _selectedType = val ?? 'All Types'),
         ),
         const SizedBox(width: 8),
 
@@ -609,7 +785,8 @@ class _LocationsViewState extends State<LocationsView> {
         _buildDropdown(
           value: _selectedStatus,
           items: const ['All Status', 'Active', 'Inactive'],
-          onChanged: (val) => setState(() => _selectedStatus = val ?? 'All Status'),
+          onChanged: (val) =>
+              setState(() => _selectedStatus = val ?? 'All Status'),
         ),
         const SizedBox(width: 8),
 
@@ -617,7 +794,8 @@ class _LocationsViewState extends State<LocationsView> {
         _buildDropdown(
           value: _selectedZone,
           items: const ['All Zones', 'Zone A', 'Zone B'],
-          onChanged: (val) => setState(() => _selectedZone = val ?? 'All Zones'),
+          onChanged: (val) =>
+              setState(() => _selectedZone = val ?? 'All Zones'),
         ),
         const SizedBox(width: 10),
 
@@ -629,9 +807,14 @@ class _LocationsViewState extends State<LocationsView> {
           style: OutlinedButton.styleFrom(
             foregroundColor: const Color(0xFF374151),
             side: const BorderSide(color: Color(0xFFD1D5DB)),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            textStyle: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500),
+            textStyle: GoogleFonts.inter(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
         const SizedBox(width: 10),
@@ -639,8 +822,13 @@ class _LocationsViewState extends State<LocationsView> {
         // Sort by dropdown
         _buildDropdown(
           value: _selectedSort,
-          items: const ['Sort by: Name', 'Sort by: Stock', 'Sort by: Transfers'],
-          onChanged: (val) => setState(() => _selectedSort = val ?? 'Sort by: Name'),
+          items: const [
+            'Sort by: Name',
+            'Sort by: Stock',
+            'Sort by: Transfers',
+          ],
+          onChanged: (val) =>
+              setState(() => _selectedSort = val ?? 'Sort by: Name'),
         ),
         const SizedBox(width: 10),
 
@@ -660,13 +848,19 @@ class _LocationsViewState extends State<LocationsView> {
                   width: 38,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: _isGridView ? const Color(0xFFFBF4EB) : Colors.transparent,
-                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(7)),
+                    color: _isGridView
+                        ? const Color(0xFFFBF4EB)
+                        : Colors.transparent,
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(7),
+                    ),
                   ),
                   child: Icon(
                     Icons.grid_view_rounded,
                     size: 17,
-                    color: _isGridView ? const Color(0xFFB45309) : const Color(0xFF9CA3AF),
+                    color: _isGridView
+                        ? const Color(0xFFB45309)
+                        : const Color(0xFF9CA3AF),
                   ),
                 ),
               ),
@@ -677,13 +871,19 @@ class _LocationsViewState extends State<LocationsView> {
                   width: 38,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: !_isGridView ? const Color(0xFFFBF4EB) : Colors.transparent,
-                    borderRadius: const BorderRadius.horizontal(right: Radius.circular(7)),
+                    color: !_isGridView
+                        ? const Color(0xFFFBF4EB)
+                        : Colors.transparent,
+                    borderRadius: const BorderRadius.horizontal(
+                      right: Radius.circular(7),
+                    ),
                   ),
                   child: Icon(
                     Icons.format_list_bulleted_rounded,
                     size: 18,
-                    color: !_isGridView ? const Color(0xFFB45309) : const Color(0xFF9CA3AF),
+                    color: !_isGridView
+                        ? const Color(0xFFB45309)
+                        : const Color(0xFF9CA3AF),
                   ),
                 ),
               ),
@@ -710,9 +910,19 @@ class _LocationsViewState extends State<LocationsView> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF6B7280)),
-          style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w500, color: const Color(0xFF374151)),
-          items: items.map((i) => DropdownMenuItem(value: i, child: Text(i))).toList(),
+          icon: const Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 16,
+            color: Color(0xFF6B7280),
+          ),
+          style: GoogleFonts.inter(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF374151),
+          ),
+          items: items
+              .map((i) => DropdownMenuItem(value: i, child: Text(i)))
+              .toList(),
           onChanged: onChanged,
         ),
       ),
@@ -721,13 +931,84 @@ class _LocationsViewState extends State<LocationsView> {
 
   // 4. Location Cards Grid
   Widget _buildLocationCardsGrid() {
+    final filtered = _filteredLocations;
+    if (filtered.isEmpty) {
+      return _buildEmptyLocationsCard();
+    }
     return Row(
       children: [
-        for (int i = 0; i < _filteredLocations.length; i++) ...[
-          Expanded(child: _buildLocationCard(_filteredLocations[i])),
-          if (i < _filteredLocations.length - 1) const SizedBox(width: 16),
+        for (int i = 0; i < filtered.length; i++) ...[
+          Expanded(child: _buildLocationCard(filtered[i])),
+          if (i < filtered.length - 1) const SizedBox(width: 16),
         ],
       ],
+    );
+  }
+
+  Widget _buildEmptyLocationsCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 56, horizontal: 24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFBF4EB),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.storefront_outlined,
+              size: 26,
+              color: Color(0xFF92400E),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'No locations yet',
+            style: GoogleFonts.inter(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: const Color(0xFF111827),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Add your first store, warehouse, or distribution node to get started.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: const Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: widget.onAddLocation ?? _showAddLocationModal,
+            icon: const Icon(Icons.add_rounded, size: 16),
+            label: const Text('Add First Location'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF181513),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              textStyle: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -745,7 +1026,9 @@ class _LocationsViewState extends State<LocationsView> {
           Stack(
             children: [
               ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(11),
+                ),
                 child: SizedBox(
                   height: 100,
                   width: double.infinity,
@@ -754,7 +1037,11 @@ class _LocationsViewState extends State<LocationsView> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) => Container(
                       color: const Color(0xFFF1F5F9),
-                      child: const Icon(Icons.storefront_outlined, color: Color(0xFF94A3B8), size: 36),
+                      child: const Icon(
+                        Icons.storefront_outlined,
+                        color: Color(0xFF94A3B8),
+                        size: 36,
+                      ),
                     ),
                   ),
                 ),
@@ -771,20 +1058,40 @@ class _LocationsViewState extends State<LocationsView> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(color: loc.typeBg, borderRadius: BorderRadius.circular(4)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: loc.typeBg,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       child: Text(
                         loc.type,
-                        style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w600, color: loc.typeColor),
+                        style: GoogleFonts.inter(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: loc.typeColor,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                      decoration: BoxDecoration(color: loc.statusBg, borderRadius: BorderRadius.circular(4)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: loc.statusBg,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                       child: Text(
                         loc.status,
-                        style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w600, color: loc.statusColor),
+                        style: GoogleFonts.inter(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: loc.statusColor,
+                        ),
                       ),
                     ),
                   ],
@@ -793,18 +1100,29 @@ class _LocationsViewState extends State<LocationsView> {
 
                 Text(
                   loc.name,
-                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111827),
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    const Icon(Icons.location_on_outlined, size: 12, color: Color(0xFF9CA3AF)),
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 12,
+                      color: Color(0xFF9CA3AF),
+                    ),
                     const SizedBox(width: 3),
                     Expanded(
                       child: Text(
                         loc.address,
-                        style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280)),
+                        style: GoogleFonts.inter(
+                          fontSize: 11.5,
+                          color: const Color(0xFF6B7280),
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -821,18 +1139,34 @@ class _LocationsViewState extends State<LocationsView> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Total Stock', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280))),
+                        Text(
+                          'Total Stock',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: const Color(0xFF6B7280),
+                          ),
+                        ),
                         const SizedBox(height: 1),
                         Text(
                           '${loc.totalStock} items',
-                          style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                          style: GoogleFonts.inter(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF111827),
+                          ),
                         ),
                       ],
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text('Active Transfers', style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280))),
+                        Text(
+                          'Active Transfers',
+                          style: GoogleFonts.inter(
+                            fontSize: 11,
+                            color: const Color(0xFF6B7280),
+                          ),
+                        ),
                         const SizedBox(height: 1),
                         Text(
                           loc.activeTransfers,
@@ -857,9 +1191,14 @@ class _LocationsViewState extends State<LocationsView> {
                         style: OutlinedButton.styleFrom(
                           foregroundColor: const Color(0xFF374151),
                           side: const BorderSide(color: Color(0xFFD1D5DB)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 8),
-                          textStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
+                          textStyle: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                         child: const Text('View Details'),
                       ),
@@ -869,13 +1208,24 @@ class _LocationsViewState extends State<LocationsView> {
                       child: ElevatedButton(
                         onPressed: () => widget.onManageStock?.call(loc),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: loc.isActive ? const Color(0xFF181513) : Colors.white,
-                          foregroundColor: loc.isActive ? Colors.white : const Color(0xFF374151),
-                          side: loc.isActive ? null : const BorderSide(color: Color(0xFFD1D5DB)),
+                          backgroundColor: loc.isActive
+                              ? const Color(0xFF181513)
+                              : Colors.white,
+                          foregroundColor: loc.isActive
+                              ? Colors.white
+                              : const Color(0xFF374151),
+                          side: loc.isActive
+                              ? null
+                              : const BorderSide(color: Color(0xFFD1D5DB)),
                           elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 8),
-                          textStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                          textStyle: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         child: Text(loc.isActive ? 'Manage Stock' : 'Activate'),
                       ),
@@ -907,7 +1257,11 @@ class _LocationsViewState extends State<LocationsView> {
             children: [
               Text(
                 'Network Map',
-                style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                style: GoogleFonts.inter(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF111827),
+                ),
               ),
               Row(
                 children: [
@@ -931,7 +1285,9 @@ class _LocationsViewState extends State<LocationsView> {
                   height: 220,
                   width: double.infinity,
                   child: CustomPaint(
-                    painter: _NetworkTopologyMapPainter(),
+                    painter: _NetworkTopologyMapPainter(
+                      locationNames: _locations.map((l) => l.name).toList(),
+                    ),
                   ),
                 ),
               ),
@@ -949,16 +1305,34 @@ class _LocationsViewState extends State<LocationsView> {
                       InkWell(
                         onTap: () {},
                         child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                          child: Icon(Icons.add, size: 14, color: Color(0xFF374151)),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            size: 14,
+                            color: Color(0xFF374151),
+                          ),
                         ),
                       ),
-                      Container(width: 20, height: 1, color: const Color(0xFFE2E8F0)),
+                      Container(
+                        width: 20,
+                        height: 1,
+                        color: const Color(0xFFE2E8F0),
+                      ),
                       InkWell(
                         onTap: () {},
                         child: const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                          child: Icon(Icons.remove, size: 14, color: Color(0xFF374151)),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 4,
+                          ),
+                          child: Icon(
+                            Icons.remove,
+                            size: 14,
+                            color: Color(0xFF374151),
+                          ),
                         ),
                       ),
                     ],
@@ -975,9 +1349,19 @@ class _LocationsViewState extends State<LocationsView> {
   Widget _buildMapLegendItem(String label, Color color) {
     return Row(
       children: [
-        Container(width: 7, height: 7, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        Container(
+          width: 7,
+          height: 7,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
         const SizedBox(width: 4),
-        Text(label, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280))),
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: const Color(0xFF6B7280),
+          ),
+        ),
       ],
     );
   }
@@ -1000,15 +1384,30 @@ class _LocationsViewState extends State<LocationsView> {
               children: [
                 Text(
                   'Location Summary',
-                  style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+                  style: GoogleFonts.inter(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF111827),
+                  ),
                 ),
                 InkWell(
                   onTap: _showAiLocationInsightsModal,
                   child: Row(
                     children: [
-                      Text('View AI Locations', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFFB45309))),
+                      Text(
+                        'View AI Locations',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFB45309),
+                        ),
+                      ),
                       const SizedBox(width: 3),
-                      const Icon(Icons.arrow_forward_rounded, size: 13, color: Color(0xFFB45309)),
+                      const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 13,
+                        color: Color(0xFFB45309),
+                      ),
                     ],
                   ),
                 ),
@@ -1022,19 +1421,103 @@ class _LocationsViewState extends State<LocationsView> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
-                Expanded(flex: 30, child: Text('LOCATION', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 18, child: Text('TYPE', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 16, child: Text('CITY', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 16, child: Text('TOTAL STOCK', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 20, child: Text('ACTIVE TRANSFERS', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 14, child: Text('STATUS', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                const SizedBox(width: 24, child: Text('ACTIONS', textAlign: TextAlign.end, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: Color(0xFF6B7280)))),
+                Expanded(
+                  flex: 30,
+                  child: Text(
+                    'LOCATION',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 18,
+                  child: Text(
+                    'TYPE',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 16,
+                  child: Text(
+                    'CITY',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 16,
+                  child: Text(
+                    'TOTAL STOCK',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 20,
+                  child: Text(
+                    'ACTIVE TRANSFERS',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 14,
+                  child: Text(
+                    'STATUS',
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                const SizedBox(
+                  width: 24,
+                  child: Text(
+                    'ACTIONS',
+                    textAlign: TextAlign.end,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
           const Divider(height: 1, color: Color(0xFFF1F5F9)),
 
           // Table Rows
+          if (_locations.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Center(
+                child: Text(
+                  'No locations registered yet.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF6B7280),
+                  ),
+                ),
+              ),
+            ),
           for (final loc in _locations) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1042,7 +1525,14 @@ class _LocationsViewState extends State<LocationsView> {
                 children: [
                   Expanded(
                     flex: 30,
-                    child: Text(loc.name, style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF111827))),
+                    child: Text(
+                      loc.name,
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF111827),
+                      ),
+                    ),
                   ),
                   Expanded(
                     flex: 18,
@@ -1050,26 +1540,62 @@ class _LocationsViewState extends State<LocationsView> {
                         ? Align(
                             alignment: Alignment.centerLeft,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(color: loc.typeBg, borderRadius: BorderRadius.circular(4)),
-                              child: Text(loc.type, style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w600, color: loc.typeColor)),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: loc.typeBg,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                loc.type,
+                                style: GoogleFonts.inter(
+                                  fontSize: 10.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: loc.typeColor,
+                                ),
+                              ),
                             ),
                           )
-                        : Text(loc.type, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF4B5563))),
+                        : Text(
+                            loc.type,
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: const Color(0xFF4B5563),
+                            ),
+                          ),
                   ),
                   Expanded(
                     flex: 16,
-                    child: Text(loc.city, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF4B5563))),
+                    child: Text(
+                      loc.city,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: const Color(0xFF4B5563),
+                      ),
+                    ),
                   ),
                   Expanded(
                     flex: 16,
-                    child: Text(loc.totalStock, style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF111827))),
+                    child: Text(
+                      loc.totalStock,
+                      style: GoogleFonts.inter(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF111827),
+                      ),
+                    ),
                   ),
                   Expanded(
                     flex: 20,
                     child: Text(
                       loc.activeTransfers,
-                      style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: loc.activeTransfersColor),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: loc.activeTransfersColor,
+                      ),
                     ),
                   ),
                   Expanded(
@@ -1077,9 +1603,22 @@ class _LocationsViewState extends State<LocationsView> {
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(color: loc.statusBg, borderRadius: BorderRadius.circular(4)),
-                        child: Text(loc.status, style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w600, color: loc.statusColor)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: loc.statusBg,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          loc.status,
+                          style: GoogleFonts.inter(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                            color: loc.statusColor,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -1088,13 +1627,29 @@ class _LocationsViewState extends State<LocationsView> {
                     child: Align(
                       alignment: Alignment.centerRight,
                       child: PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_horiz_rounded, size: 16, color: Color(0xFF6B7280)),
+                        icon: const Icon(
+                          Icons.more_horiz_rounded,
+                          size: 16,
+                          color: Color(0xFF6B7280),
+                        ),
                         onSelected: (val) {
                           if (val == 'manage') widget.onManageStock?.call(loc);
                         },
                         itemBuilder: (_) => [
-                          PopupMenuItem(value: 'manage', child: Text('Manage Stock', style: GoogleFonts.inter(fontSize: 12.5))),
-                          PopupMenuItem(value: 'view', child: Text('View Details', style: GoogleFonts.inter(fontSize: 12.5))),
+                          PopupMenuItem(
+                            value: 'manage',
+                            child: Text(
+                              'Manage Stock',
+                              style: GoogleFonts.inter(fontSize: 12.5),
+                            ),
+                          ),
+                          PopupMenuItem(
+                            value: 'view',
+                            child: Text(
+                              'View Details',
+                              style: GoogleFonts.inter(fontSize: 12.5),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -1128,12 +1683,19 @@ class _LocationsViewState extends State<LocationsView> {
               children: [
                 Text(
                   'AI Location Insights',
-                  style: GoogleFonts.inter(fontSize: 14.5, fontWeight: FontWeight.w700, color: const Color(0xFF92400E)),
+                  style: GoogleFonts.inter(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF92400E),
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Optimize stock distribution, reduce transfer time, and prevent stockouts with AI-powered insights.',
-                  style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280)),
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    color: const Color(0xFF6B7280),
+                  ),
                 ),
               ],
             ),
@@ -1144,9 +1706,14 @@ class _LocationsViewState extends State<LocationsView> {
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFB45309),
               side: const BorderSide(color: Color(0xFFF59E0B)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              textStyle: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600),
+              textStyle: GoogleFonts.inter(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1177,7 +1744,14 @@ class _MiniSparklinePainter extends CustomPainter {
 
     final path = Path()
       ..moveTo(0, size.height * 0.7)
-      ..cubicTo(size.width * 0.3, size.height * 0.85, size.width * 0.6, size.height * 0.2, size.width, size.height * 0.1);
+      ..cubicTo(
+        size.width * 0.3,
+        size.height * 0.85,
+        size.width * 0.6,
+        size.height * 0.2,
+        size.width,
+        size.height * 0.1,
+      );
 
     canvas.drawPath(path, paint);
   }
@@ -1186,62 +1760,114 @@ class _MiniSparklinePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// Network Topology Map Painter
+// Network Topology Map Painter (dynamic – uses real location names)
 class _NetworkTopologyMapPainter extends CustomPainter {
+  const _NetworkTopologyMapPainter({this.locationNames = const []});
+  final List<String> locationNames;
+
+  // Fixed node positions (up to 6 locations)
+  static const _nodeOffsets = [
+    [0.55, 0.32],
+    [0.51, 0.65],
+    [0.80, 0.55],
+    [0.25, 0.55],
+    [0.70, 0.28],
+    [0.32, 0.28],
+  ];
+
   @override
   void paint(Canvas canvas, Size size) {
-    // Background map land tint
+    // Background
     final bgPaint = Paint()..color = const Color(0xFFF5F3EF);
     canvas.drawRect(Offset.zero & size, bgPaint);
 
-    // Stylized continent / land mass shapes
+    // Land masses
     final landPaint = Paint()..color = const Color(0xFFEBE6DC);
     final land1 = Path()
       ..moveTo(size.width * 0.1, size.height * 0.2)
-      ..quadraticBezierTo(size.width * 0.35, size.height * 0.1, size.width * 0.45, size.height * 0.35)
-      ..quadraticBezierTo(size.width * 0.4, size.height * 0.7, size.width * 0.2, size.height * 0.75)
+      ..quadraticBezierTo(
+        size.width * 0.35,
+        size.height * 0.1,
+        size.width * 0.45,
+        size.height * 0.35,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.4,
+        size.height * 0.7,
+        size.width * 0.2,
+        size.height * 0.75,
+      )
       ..close();
     canvas.drawPath(land1, landPaint);
-
     final land2 = Path()
       ..moveTo(size.width * 0.48, size.height * 0.2)
-      ..quadraticBezierTo(size.width * 0.75, size.height * 0.15, size.width * 0.85, size.height * 0.5)
-      ..quadraticBezierTo(size.width * 0.7, size.height * 0.85, size.width * 0.5, size.height * 0.7)
+      ..quadraticBezierTo(
+        size.width * 0.75,
+        size.height * 0.15,
+        size.width * 0.85,
+        size.height * 0.5,
+      )
+      ..quadraticBezierTo(
+        size.width * 0.7,
+        size.height * 0.85,
+        size.width * 0.5,
+        size.height * 0.7,
+      )
       ..close();
     canvas.drawPath(land2, landPaint);
 
-    // Node Positions
-    final delhi = Offset(size.width * 0.55, size.height * 0.32);
-    final vrindavan = Offset(size.width * 0.57, size.height * 0.42);
-    final mumbai = Offset(size.width * 0.51, size.height * 0.65);
-    final soho = Offset(size.width * 0.80, size.height * 0.62);
+    if (locationNames.isEmpty) {
+      final tp = TextPainter(
+        text: TextSpan(
+          text: 'Add locations to see network map',
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: const Color(0xFF9CA3AF),
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout(maxWidth: size.width);
+      tp.paint(
+        canvas,
+        Offset((size.width - tp.width) / 2, size.height / 2 - tp.height / 2),
+      );
+      return;
+    }
 
-    // Transfer Dashed Lines
-    final curvePaint = Paint()
-      ..color = const Color(0xFF64748B)
-      ..strokeWidth = 1.2
-      ..style = PaintingStyle.stroke;
+    final count = locationNames.length.clamp(0, _nodeOffsets.length);
+    final pts = List.generate(
+      count,
+      (i) => Offset(
+        size.width * _nodeOffsets[i][0],
+        size.height * _nodeOffsets[i][1],
+      ),
+    );
 
-    final path1 = Path()
-      ..moveTo(mumbai.dx, mumbai.dy)
-      ..quadraticBezierTo((mumbai.dx + delhi.dx) / 2 - 20, (mumbai.dy + delhi.dy) / 2, delhi.dx, delhi.dy);
-    canvas.drawPath(path1, curvePaint);
+    // Draw connections from hub (index 0) to all others
+    if (pts.length > 1) {
+      final curvePaint = Paint()
+        ..color = const Color(0xFF64748B)
+        ..strokeWidth = 1.2
+        ..style = PaintingStyle.stroke;
+      for (int i = 1; i < pts.length; i++) {
+        final from = pts[0];
+        final to = pts[i];
+        final path = Path()
+          ..moveTo(from.dx, from.dy)
+          ..quadraticBezierTo(
+            (from.dx + to.dx) / 2,
+            (from.dy + to.dy) / 2 - 20,
+            to.dx,
+            to.dy,
+          );
+        canvas.drawPath(path, curvePaint);
+      }
+    }
 
-    final path2 = Path()
-      ..moveTo(mumbai.dx, mumbai.dy)
-      ..quadraticBezierTo((mumbai.dx + vrindavan.dx) / 2 - 10, (mumbai.dy + vrindavan.dy) / 2, vrindavan.dx, vrindavan.dy);
-    canvas.drawPath(path2, curvePaint);
-
-    final path3 = Path()
-      ..moveTo(mumbai.dx, mumbai.dy)
-      ..quadraticBezierTo((mumbai.dx + soho.dx) / 2, (mumbai.dy + soho.dy) / 2 + 30, soho.dx, soho.dy);
-    canvas.drawPath(path3, curvePaint);
-
-    // Draw Nodes and Labels
-    _drawNode(canvas, delhi, 'Delhi', const Color(0xFF16A34A));
-    _drawNode(canvas, vrindavan, 'Vrindavan', const Color(0xFFDC2626));
-    _drawNode(canvas, mumbai, 'Mumbai', const Color(0xFF16A34A));
-    _drawNode(canvas, soho, 'New York (SoHo)', const Color(0xFF16A34A));
+    // Draw nodes
+    for (int i = 0; i < pts.length; i++) {
+      _drawNode(canvas, pts[i], locationNames[i], const Color(0xFF16A34A));
+    }
   }
 
   void _drawNode(Canvas canvas, Offset pt, String label, Color color) {
@@ -1250,14 +1876,17 @@ class _NetworkTopologyMapPainter extends CustomPainter {
       ..color = Colors.white
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
-
     canvas.drawCircle(pt, 5.5, fillPaint);
     canvas.drawCircle(pt, 5.5, ringPaint);
-
+    final display = label.length > 14 ? '${label.substring(0, 12)}…' : label;
     final tp = TextPainter(
       text: TextSpan(
-        text: '  $label',
-        style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: const Color(0xFF1E293B)),
+        text: '  $display',
+        style: GoogleFonts.inter(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: const Color(0xFF1E293B),
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
@@ -1265,5 +1894,6 @@ class _NetworkTopologyMapPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _NetworkTopologyMapPainter old) =>
+      old.locationNames != locationNames;
 }

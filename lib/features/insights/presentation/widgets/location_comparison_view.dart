@@ -26,8 +26,11 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -68,10 +71,7 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    flex: 58,
-                    child: _buildPerformanceMatrixCard(),
-                  ),
+                  Expanded(flex: 58, child: _buildPerformanceMatrixCard()),
                   const SizedBox(width: 20),
                   Expanded(
                     flex: 42,
@@ -137,31 +137,32 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
             setState(() => _selectedPeriod = val);
             _showFeedback('Period updated: $val');
           },
-          itemBuilder: (context) => [
-            'Past 30 Days: Oct 1 - Oct 31',
-            'Past 7 Days',
-            'This Quarter (Q4)',
-            'Year to Date (2024)',
-          ]
-              .map(
-                (p) => PopupMenuItem(
-                  value: p,
-                  height: 38,
-                  child: Text(
-                    p,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      fontWeight: p == _selectedPeriod
-                          ? FontWeight.w600
-                          : FontWeight.w400,
-                      color: p == _selectedPeriod
-                          ? const Color(0xFF8D6433)
-                          : const Color(0xFF1E1C1A),
+          itemBuilder: (context) =>
+              [
+                    'Past 30 Days: Oct 1 - Oct 31',
+                    'Past 7 Days',
+                    'This Quarter (Q4)',
+                    'Year to Date (2024)',
+                  ]
+                  .map(
+                    (p) => PopupMenuItem(
+                      value: p,
+                      height: 38,
+                      child: Text(
+                        p,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: p == _selectedPeriod
+                              ? FontWeight.w600
+                              : FontWeight.w400,
+                          color: p == _selectedPeriod
+                              ? const Color(0xFF8D6433)
+                              : const Color(0xFF1E1C1A),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              )
-              .toList(),
+                  )
+                  .toList(),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -207,11 +208,7 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
         if (isCompact) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              leftContent,
-              const SizedBox(height: 12),
-              rightContent,
-            ],
+            children: [leftContent, const SizedBox(height: 12), rightContent],
           );
         }
 
@@ -234,9 +231,9 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
   Widget _buildLocationCardsGrid() {
     final locations = const [
       _LocationCardData(
-        title: 'Central Warehouse',
+        title: 'Distribution Hub A',
         isPrimary: true,
-        imageAsset: 'Assets/warehouse_building.jpg',
+        imageAsset: '',
         revenue: '₹24.8L',
         revenueGrowth: '↑ 12%',
         isRevenuePositive: true,
@@ -247,9 +244,9 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
         stockValue: '₹82.5L',
       ),
       _LocationCardData(
-        title: 'MG Road Flagship',
+        title: 'Central Flagship',
         isPrimary: false,
-        imageAsset: 'Assets/central_store.jpg',
+        imageAsset: '',
         revenue: '₹12.6L',
         revenueGrowth: '↑ 6%',
         isRevenuePositive: true,
@@ -260,9 +257,9 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
         stockValue: '₹18.4L',
       ),
       _LocationCardData(
-        title: 'Indiranagar',
+        title: 'Secondary Store',
         isPrimary: false,
-        imageAsset: 'Assets/central_store.jpg',
+        imageAsset: '',
         revenue: '₹8.4L',
         revenueGrowth: '↑ 18%',
         isRevenuePositive: true,
@@ -273,9 +270,9 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
         stockValue: '₹12.2L',
       ),
       _LocationCardData(
-        title: 'Koramangala',
+        title: 'Boutique Outlet',
         isPrimary: false,
-        imageAsset: 'Assets/central_store.jpg',
+        imageAsset: '',
         revenue: '₹6.1L',
         revenueGrowth: '↓ 4%',
         isRevenuePositive: false,
@@ -391,7 +388,9 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
                           const SizedBox(width: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 5, vertical: 1.5),
+                              horizontal: 5,
+                              vertical: 1.5,
+                            ),
                             decoration: BoxDecoration(
                               color: const Color(0xFFE7F7ED),
                               borderRadius: BorderRadius.circular(4),
@@ -446,7 +445,9 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
                         const SizedBox(width: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 1),
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: data.isRevenuePositive
                                 ? const Color(0xFFE7F7ED)
@@ -516,7 +517,9 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
                         const SizedBox(width: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 1),
+                            horizontal: 4,
+                            vertical: 1,
+                          ),
                           decoration: BoxDecoration(
                             color: data.isUnitsPositive
                                 ? const Color(0xFFE7F7ED)
@@ -625,7 +628,9 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
                         .toList(),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(6),
@@ -681,7 +686,9 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
                             .toList(),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(6),
@@ -719,19 +726,19 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
             spacing: 16,
             runSpacing: 6,
             children: const [
-              _LegendItem(label: 'Central Warehouse', color: Color(0xFF3B82F6)),
-              _LegendItem(label: 'MG Road Flagship', color: Color(0xFFC89748)),
-              _LegendItem(label: 'Indiranagar', color: Color(0xFF10B981)),
-              _LegendItem(label: 'Koramangala', color: Color(0xFFEF4444)),
+              _LegendItem(
+                label: 'Distribution Hub A',
+                color: Color(0xFF3B82F6),
+              ),
+              _LegendItem(label: 'Central Flagship', color: Color(0xFFC89748)),
+              _LegendItem(label: 'Secondary Store', color: Color(0xFF10B981)),
+              _LegendItem(label: 'Boutique Outlet', color: Color(0xFFEF4444)),
             ],
           ),
           const SizedBox(height: 16),
 
           // Custom 4-Line Area Chart
-          SizedBox(
-            height: 200,
-            child: _MultiLocationTrendChart(),
-          ),
+          SizedBox(height: 200, child: _MultiLocationTrendChart()),
         ],
       ),
     );
@@ -769,10 +776,7 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
           const SizedBox(height: 16),
 
           // 4-Quadrant Scatter Matrix with labels & axes
-          SizedBox(
-            height: 215,
-            child: _PerformanceMatrixChart(),
-          ),
+          SizedBox(height: 215, child: _PerformanceMatrixChart()),
         ],
       ),
     );
@@ -823,7 +827,9 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
               ),
               InkWell(
                 onTap: () {
-                  _showFeedback('Viewing all AI inventory transfer recommendations...');
+                  _showFeedback(
+                    'Viewing all AI inventory transfer recommendations...',
+                  );
                 },
                 child: Text(
                   'View All',
@@ -839,25 +845,27 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
           ),
           const SizedBox(height: 14),
 
-          // Item 1: Oxford Linen Shirt (Black/M)
+          // Item 1: Apparel Line Item (Black/M)
           _buildTransferItem(
-            imageAsset: 'Assets/black_linen_shirt.jpg',
-            title: 'Oxford Linen Shirt (Black/M)',
-            route: 'Central Warehouse → MG Road Flagship',
-            reason: 'Reason: Delhi surge 42%',
+            imageAsset: '',
+            title: 'Apparel Line Item (Black/M)',
+            route: 'Distribution Hub A → Central Flagship',
+            reason: 'Reason: Regional surge 42%',
             onTransfer: () => _showFeedback(
-                'Initiating transfer: Oxford Linen Shirt to MG Road Flagship'),
+              'Initiating transfer: Apparel Line Item to Central Flagship',
+            ),
           ),
           const SizedBox(height: 10),
 
-          // Item 2: Merino Wool Blazer (Navy/L)
+          // Item 2: Outerwear Line Item (Navy/L)
           _buildTransferItem(
-            imageAsset: 'Assets/merino_wool_blazer.jpg',
-            title: 'Merino Wool Blazer (Navy/L)',
-            route: 'Central Warehouse → Indiranagar',
+            imageAsset: '',
+            title: 'Outerwear Line Item (Navy/L)',
+            route: 'Distribution Hub A → Secondary Store',
             reason: 'Reason: Low stock alert',
             onTransfer: () => _showFeedback(
-                'Initiating transfer: Merino Wool Blazer to Indiranagar'),
+              'Initiating transfer: Outerwear Line Item to Secondary Store',
+            ),
           ),
           const SizedBox(height: 14),
 
@@ -994,8 +1002,7 @@ class _LocationComparisonViewState extends State<LocationComparisonView> {
             onTap: onTransfer,
             borderRadius: BorderRadius.circular(6),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
               decoration: BoxDecoration(
                 color: const Color(0xFFC89748),
                 borderRadius: BorderRadius.circular(6),
@@ -1059,10 +1066,7 @@ class _LegendItem extends StatelessWidget {
         Container(
           width: 8,
           height: 8,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-          ),
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
         Text(
@@ -1096,7 +1100,7 @@ class _MultiLocationTrendChart extends StatelessWidget {
           'Oct 15',
           'Oct 20',
           'Oct 25',
-          'Oct 31'
+          'Oct 31',
         ];
         final yLabels = ['25L', '20L', '15L', '10L', '5L', '0'];
 
@@ -1118,14 +1122,16 @@ class _MultiLocationTrendChart extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: yLabels
-                    .map((label) => Text(
-                          label,
-                          style: GoogleFonts.inter(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF9E958A),
-                          ),
-                        ))
+                    .map(
+                      (label) => Text(
+                        label,
+                        style: GoogleFonts.inter(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF9E958A),
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -1151,14 +1157,16 @@ class _MultiLocationTrendChart extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: xLabels
-                    .map((label) => Text(
-                          label,
-                          style: GoogleFonts.inter(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF9E958A),
-                          ),
-                        ))
+                    .map(
+                      (label) => Text(
+                        label,
+                        style: GoogleFonts.inter(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF9E958A),
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -1223,11 +1231,7 @@ class _MultiLinePainter extends CustomPainter {
       return path;
     }
 
-    void drawSeries(
-      List<Offset> points,
-      Color color, {
-      bool drawFill = false,
-    }) {
+    void drawSeries(List<Offset> points, Color color, {bool drawFill = false}) {
       final path = buildSmoothPath(points);
 
       if (drawFill) {
@@ -1240,10 +1244,7 @@ class _MultiLinePainter extends CustomPainter {
           ..shader = LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              color.withOpacity(0.12),
-              color.withOpacity(0.0),
-            ],
+            colors: [color.withOpacity(0.12), color.withOpacity(0.0)],
           ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
           ..style = PaintingStyle.fill;
 
@@ -1335,14 +1336,16 @@ class _PerformanceMatrixChart extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: yTicks
-                    .map((t) => Text(
-                          t,
-                          style: GoogleFonts.inter(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w400,
-                            color: const Color(0xFF9E958A),
-                          ),
-                        ))
+                    .map(
+                      (t) => Text(
+                        t,
+                        style: GoogleFonts.inter(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w400,
+                          color: const Color(0xFF9E958A),
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),
@@ -1422,33 +1425,33 @@ class _PerformanceMatrixChart extends StatelessWidget {
                     color: const Color(0xFF3B82F6),
                   ),
 
-                  // 2. MG Road: Growth ~ +8%, Margin ~ 68%
+                  // 2. Central Flagship: Growth ~ +8%, Margin ~ 68%
                   _buildPlottedPoint(
                     plotWidth: plotWidth,
                     plotHeight: plotHeight,
                     growthPct: 8,
                     marginPct: 68,
-                    label: 'MG Road',
+                    label: 'Central Flagship',
                     color: const Color(0xFFC89748),
                   ),
 
-                  // 3. Indiranagar: Growth ~ +6%, Margin ~ 51%
+                  // 3. Secondary Store: Growth ~ +6%, Margin ~ 51%
                   _buildPlottedPoint(
                     plotWidth: plotWidth,
                     plotHeight: plotHeight,
                     growthPct: 5.5,
                     marginPct: 51,
-                    label: 'Indiranagar',
+                    label: 'Secondary Store',
                     color: const Color(0xFF10B981),
                   ),
 
-                  // 4. Koramangala: Growth ~ -10%, Margin ~ 28%
+                  // 4. Boutique Outlet: Growth ~ -10%, Margin ~ 28%
                   _buildPlottedPoint(
                     plotWidth: plotWidth,
                     plotHeight: plotHeight,
                     growthPct: -10,
                     marginPct: 28,
-                    label: 'Koramangala',
+                    label: 'Boutique Outlet',
                     color: const Color(0xFFEF4444),
                   ),
                 ],
@@ -1466,14 +1469,16 @@ class _PerformanceMatrixChart extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: xTicks
-                        .map((t) => Text(
-                              t,
-                              style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w400,
-                                color: const Color(0xFF9E958A),
-                              ),
-                            ))
+                        .map(
+                          (t) => Text(
+                            t,
+                            style: GoogleFonts.inter(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w400,
+                              color: const Color(0xFF9E958A),
+                            ),
+                          ),
+                        )
                         .toList(),
                   ),
                   const SizedBox(height: 1),

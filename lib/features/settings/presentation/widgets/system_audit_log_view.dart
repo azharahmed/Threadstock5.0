@@ -42,7 +42,7 @@ class SystemAuditLogView extends StatefulWidget {
 
 class _SystemAuditLogViewState extends State<SystemAuditLogView> {
   int _activeTabIndex = 4; // "Audit Log" is index 4
-  String _selectedWarehouse = 'Central Warehouse (Zone A)';
+  String _selectedWarehouse = 'All Locations';
 
   final List<String> _tabs = const [
     'Purchasing Defaults',
@@ -52,11 +52,7 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
     'Audit Log',
   ];
 
-  final List<String> _warehouses = const [
-    'Central Warehouse (Zone A)',
-    'Delhi Flagship (Zone B)',
-    'Mumbai Boutique (Zone C)',
-  ];
+  final List<String> _warehouses = const ['All Locations'];
 
   // Filters
   String _selectedDateRange = 'Past 7 Days';
@@ -74,8 +70,8 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
 
   final List<String> _userOptions = const [
     'All Users',
-    'Alex Mercer',
-    'Priya Sharma',
+    'Admin User',
+    'Store Manager',
     'System Daemon',
   ];
 
@@ -98,7 +94,7 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
   final List<AuditLogItem> _allLogs = const [
     AuditLogItem(
       timestamp: 'Oct 24, 2026, 11:24:02 AM',
-      user: 'Alex Mercer',
+      user: 'Admin User',
       action: AuditActionType.update,
       module: 'Purchasing',
       description: 'Changed default PO threshold from ₹40,000 to ₹50,000',
@@ -106,15 +102,15 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
     ),
     AuditLogItem(
       timestamp: 'Oct 24, 2026, 10:15:40 AM',
-      user: 'Priya Sharma',
+      user: 'Store Manager',
       action: AuditActionType.create,
       module: 'Transfers',
-      description: 'Initiated Transfer T-1084 from Zone A to Delhi flagship',
+      description: 'Initiated Transfer T-1084 from Zone A to Regional Store',
       ipAddress: '192.168.2.115',
     ),
     AuditLogItem(
       timestamp: 'Oct 23, 2026, 05:04:12 PM',
-      user: 'Alex Mercer',
+      user: 'Admin User',
       action: AuditActionType.delete,
       module: 'API & Webhooks',
       description: 'Deleted old production legacy webhook endpoint',
@@ -338,7 +334,7 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
                     widget.onSelectSection!('purchasing_defaults');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Purchasing Defaults > Central Warehouse (Zone A)',
+                      'Settings > Purchasing Defaults',
                       'Configure buying, receiving and cost settings for your business.',
                     );
                   }
@@ -347,7 +343,7 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
                     widget.onSelectSection!('transfer_settings');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Transfer Settings > Central Warehouse (Zone A)',
+                      'Settings > Transfer Settings',
                       'Configure stock transfer workflows, transit times and receiving preferences.',
                     );
                   }
@@ -356,7 +352,7 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
                     widget.onSelectSection!('import_export');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > Import / Export Center > Central Warehouse (Zone A)',
+                      'Settings > Import / Export Center',
                       'Import and export your business data with ease. Manage files, track history, and ensure data accuracy.',
                     );
                   }
@@ -365,7 +361,7 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
                     widget.onSelectSection!('api_webhooks');
                   } else {
                     widget.onSubNavChanged?.call(
-                      'Settings > API & Webhooks > Central Warehouse (Zone A)',
+                      'Settings > API & Webhooks',
                       'Manage API access, configure webhooks, and integrate with external systems.',
                     );
                   }
@@ -396,7 +392,9 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
           color: isSelected ? const Color(0xFF7A481B) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF7A481B) : const Color(0xFFDFD4C5),
+            color: isSelected
+                ? const Color(0xFF7A481B)
+                : const Color(0xFFDFD4C5),
           ),
         ),
         child: Text(
@@ -617,7 +615,9 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
               style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: isSel ? FontWeight.w600 : FontWeight.w400,
-                color: isSel ? const Color(0xFF7A481B) : const Color(0xFF181513),
+                color: isSel
+                    ? const Color(0xFF7A481B)
+                    : const Color(0xFF181513),
               ),
             ),
           );
@@ -679,7 +679,11 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
       height: 40,
       child: ElevatedButton.icon(
         onPressed: _exportCsv,
-        icon: const Icon(Icons.download_outlined, size: 16, color: Colors.white),
+        icon: const Icon(
+          Icons.download_outlined,
+          size: 16,
+          color: Colors.white,
+        ),
         label: Text(
           'Export CSV',
           style: GoogleFonts.inter(
@@ -1102,10 +1106,7 @@ class _SystemAuditLogViewState extends State<SystemAuditLogView> {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: dot,
-            ),
+            decoration: BoxDecoration(shape: BoxShape.circle, color: dot),
           ),
           const SizedBox(width: 6),
           Text(

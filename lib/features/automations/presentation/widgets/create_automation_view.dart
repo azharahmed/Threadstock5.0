@@ -21,14 +21,8 @@ class CreateAutomationView extends StatefulWidget {
 }
 
 class _CreateAutomationViewState extends State<CreateAutomationView> {
-  final TextEditingController _promptController = TextEditingController(
-    text:
-        '“If projected stock coverage of Classic White Oxford M drops below 14 days, check if Delhi Warehouse has excess surplus. If yes, generate an automatic transit dispatch through Vrindavan Express cargo. Notify team admin.”',
-  );
-
-  final TextEditingController _ruleNameController = TextEditingController(
-    text: 'Low Stock Replenishment Action',
-  );
+  final TextEditingController _promptController = TextEditingController();
+  final TextEditingController _ruleNameController = TextEditingController();
 
   String _triggerType = 'Stock Depletion Alert: Threshold';
   String _executionSchedule = 'Daily Stock Check Audit (08:00 AM)';
@@ -58,8 +52,12 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
         content: Row(
           children: [
             Icon(
-              isSuccess ? Icons.check_circle_outline_rounded : Icons.info_outline_rounded,
-              color: isSuccess ? const Color(0xFF16A34A) : const Color(0xFFD97706),
+              isSuccess
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.info_outline_rounded,
+              color: isSuccess
+                  ? const Color(0xFF16A34A)
+                  : const Color(0xFFD97706),
               size: 18,
             ),
             const SizedBox(width: 10),
@@ -115,7 +113,7 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Running dry simulation across 14-day stock projections for Classic White Oxford M at Central Warehouse (Zone A)...',
+              'Running dry simulation across active inventory rules for ${_ruleNameController.text.trim().isNotEmpty ? _ruleNameController.text.trim() : "Custom Automation"}...',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: const Color(0xFF475569),
@@ -132,11 +130,23 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
               ),
               child: Column(
                 children: [
-                  _buildSimStep('1. Trigger Evaluation', 'Condition met (Coverage = 9 days < 14 days)', true),
+                  _buildSimStep(
+                    '1. Trigger Evaluation',
+                    'Condition evaluated against inventory thresholds',
+                    true,
+                  ),
                   const SizedBox(height: 8),
-                  _buildSimStep('2. Regional Stock Check', 'Delhi Warehouse surplus verified (+140 units)', true),
+                  _buildSimStep(
+                    '2. Location Check',
+                    'Location inventory status verified',
+                    true,
+                  ),
                   const SizedBox(height: 8),
-                  _buildSimStep('3. Draft Dispatch', 'Simulated PO & Vrindavan Express dispatch route ready', true),
+                  _buildSimStep(
+                    '3. Draft Dispatch',
+                    'Simulated transfer & dispatch route prepared',
+                    true,
+                  ),
                 ],
               ),
             ),
@@ -146,7 +156,9 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
           ElevatedButton(
             onPressed: () {
               Navigator.of(ctx).pop();
-              _showNotification('Test Run passed successfully! All 3 conditions validated.');
+              _showNotification(
+                'Test Run passed successfully! All 3 conditions validated.',
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF181513),
@@ -251,17 +263,11 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Left Column (~65% width)
-                  Expanded(
-                    flex: 65,
-                    child: _buildLeftColumn(),
-                  ),
+                  Expanded(flex: 65, child: _buildLeftColumn()),
                   const SizedBox(width: 24),
 
                   // Right Column (~35% width, Configure Rule)
-                  SizedBox(
-                    width: 375,
-                    child: _buildRightColumn(),
-                  ),
+                  SizedBox(width: 375, child: _buildRightColumn()),
                 ],
               );
             },
@@ -329,7 +335,7 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
                       setState(() {
                         if (template == 'reorder') {
                           _promptController.text =
-                              '“If projected stock coverage of Classic White Oxford M drops below 14 days, check if Delhi Warehouse has excess surplus. If yes, generate an automatic transit dispatch through Vrindavan Express cargo. Notify team admin.”';
+                              '“If projected stock coverage of selected SKU drops below 14 days, check secondary locations for excess surplus. If available, generate an automatic transit dispatch request. Notify team admin.”';
                         } else if (template == 'markdown') {
                           _promptController.text =
                               '“When collection items remain unsold for 45 days, automatically draft a 20% seasonal markdown proposal. Notify merchandising lead.”';
@@ -393,7 +399,10 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
               // Text Area / Prompt Box
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(8),
@@ -408,10 +417,17 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
                     color: const Color(0xFF181513),
                     height: 1.5,
                   ),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     isDense: true,
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
+                    hintText:
+                        'e.g. If projected stock coverage drops below 14 days, alert store manager...',
+                    hintStyle: GoogleFonts.inter(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w400,
+                      color: const Color(0xFF94A3B8),
+                    ),
                   ),
                 ),
               ),
@@ -440,7 +456,9 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
                     ],
                   ),
                   InkWell(
-                    onTap: () => _showNotification('AI parsed prompt and updated the 3-step workflow.'),
+                    onTap: () => _showNotification(
+                      'AI parsed prompt and updated the 3-step workflow.',
+                    ),
                     borderRadius: BorderRadius.circular(6),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -500,7 +518,10 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
               onTap: () => _showNotification('Workflow editor mode activated.'),
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 7,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8),
@@ -569,7 +590,7 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
           conditionType: 'DISPATCH ACTION',
           title: 'Draft Transfer & Dispatch',
           description:
-              'Automate PO formulation and draft a transfer path through Vrindavan Express.',
+              'Automate PO formulation and draft a transfer path through available cargo carrier.',
           hasNext: false,
         ),
       ],
@@ -603,7 +624,10 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFFDF9),
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFF59E0B), width: 1.5),
+                    border: Border.all(
+                      color: const Color(0xFFF59E0B),
+                      width: 1.5,
+                    ),
                   ),
                   child: Center(
                     child: Text(
@@ -662,7 +686,11 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
                       border: Border.all(color: const Color(0xFFF1F5F9)),
                     ),
                     child: Center(
-                      child: Icon(icon, size: 19, color: const Color(0xFF181513)),
+                      child: Icon(
+                        icon,
+                        size: 19,
+                        color: const Color(0xFF181513),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -707,7 +735,10 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
 
                   // Pill Badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: badgeBg,
                       borderRadius: BorderRadius.circular(12),
@@ -784,10 +815,16 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
               fontWeight: FontWeight.w500,
               color: const Color(0xFF181513),
             ),
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               isDense: true,
               border: InputBorder.none,
               contentPadding: EdgeInsets.zero,
+              hintText: 'Enter automation rule name',
+              hintStyle: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFF94A3B8),
+              ),
             ),
           ),
         ),
@@ -811,20 +848,21 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
           ),
           color: Colors.white,
           onSelected: (val) => setState(() => _triggerType = val),
-          itemBuilder: (context) => [
-            'Stock Depletion Alert: Threshold',
-            'Lead Time Expiry Alert',
-            'Supplier Delayed Dispatch',
-            'Surplus Holding Buffer',
-          ]
-              .map(
-                (opt) => PopupMenuItem(
-                  value: opt,
-                  height: 36,
-                  child: Text(opt, style: GoogleFonts.inter(fontSize: 13)),
-                ),
-              )
-              .toList(),
+          itemBuilder: (context) =>
+              [
+                    'Stock Depletion Alert: Threshold',
+                    'Lead Time Expiry Alert',
+                    'Supplier Delayed Dispatch',
+                    'Surplus Holding Buffer',
+                  ]
+                  .map(
+                    (opt) => PopupMenuItem(
+                      value: opt,
+                      height: 36,
+                      child: Text(opt, style: GoogleFonts.inter(fontSize: 13)),
+                    ),
+                  )
+                  .toList(),
           child: Container(
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -920,20 +958,21 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
           ),
           color: Colors.white,
           onSelected: (val) => setState(() => _executionSchedule = val),
-          itemBuilder: (context) => [
-            'Daily Stock Check Audit (08:00 AM)',
-            'Real-Time on Stock Transaction',
-            'Twice Daily (08:00 AM, 06:00 PM)',
-            'Weekly Inventory Sync (Monday 09:00 AM)',
-          ]
-              .map(
-                (opt) => PopupMenuItem(
-                  value: opt,
-                  height: 36,
-                  child: Text(opt, style: GoogleFonts.inter(fontSize: 13)),
-                ),
-              )
-              .toList(),
+          itemBuilder: (context) =>
+              [
+                    'Daily Stock Check Audit (08:00 AM)',
+                    'Real-Time on Stock Transaction',
+                    'Twice Daily (08:00 AM, 06:00 PM)',
+                    'Weekly Inventory Sync (Monday 09:00 AM)',
+                  ]
+                  .map(
+                    (opt) => PopupMenuItem(
+                      value: opt,
+                      height: 36,
+                      child: Text(opt, style: GoogleFonts.inter(fontSize: 13)),
+                    ),
+                  )
+                  .toList(),
           child: Container(
             height: 40,
             padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -997,7 +1036,10 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
             children: _notifications
                 .map(
                   (role) => Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(6),
@@ -1038,7 +1080,8 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
 
         // Field 6: Advanced Options Collapsible
         InkWell(
-          onTap: () => setState(() => _isAdvancedOptionsOpen = !_isAdvancedOptionsOpen),
+          onTap: () =>
+              setState(() => _isAdvancedOptionsOpen = !_isAdvancedOptionsOpen),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1064,13 +1107,15 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
           const SizedBox(height: 8),
           _buildCheckboxOption(
             value: _autoCreateDraftPo,
-            onChanged: (val) => setState(() => _autoCreateDraftPo = val ?? false),
+            onChanged: (val) =>
+                setState(() => _autoCreateDraftPo = val ?? false),
             label: 'Auto-create draft PO',
             showInfo: true,
           ),
           _buildCheckboxOption(
             value: _sendEmailNotification,
-            onChanged: (val) => setState(() => _sendEmailNotification = val ?? false),
+            onChanged: (val) =>
+                setState(() => _sendEmailNotification = val ?? false),
             label: 'Send email notification',
           ),
           _buildCheckboxOption(
@@ -1080,7 +1125,8 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
           ),
           _buildCheckboxOption(
             value: _pauseRuleOnFailures,
-            onChanged: (val) => setState(() => _pauseRuleOnFailures = val ?? false),
+            onChanged: (val) =>
+                setState(() => _pauseRuleOnFailures = val ?? false),
             label: 'Pause rule on repeated failures (3 times)',
             showInfo: true,
           ),
@@ -1093,7 +1139,9 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
             if (widget.onSaveAndActivate != null) {
               widget.onSaveAndActivate!();
             } else {
-              _showNotification('Automation rule "${_ruleNameController.text}" activated successfully!');
+              _showNotification(
+                'Automation rule "${_ruleNameController.text}" activated successfully!',
+              );
             }
           },
           borderRadius: BorderRadius.circular(8),
@@ -1226,7 +1274,9 @@ class _CreateAutomationViewState extends State<CreateAutomationView> {
               value: value,
               onChanged: onChanged,
               activeColor: const Color(0xFF2563EB),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+              ),
               side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
             ),
           ),
@@ -1282,11 +1332,7 @@ class _DashedLinePainter extends CustomPainter {
 
     final x = size.width / 2;
     while (startY < size.height) {
-      canvas.drawLine(
-        Offset(x, startY),
-        Offset(x, startY + dashHeight),
-        paint,
-      );
+      canvas.drawLine(Offset(x, startY), Offset(x, startY + dashHeight), paint);
       startY += dashHeight + dashSpace;
     }
   }

@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/responsive/desktop_layout.dart';
+import '../../../../core/business/current_business_service.dart';
+import '../../data/sales_repository.dart';
+import 'sale_complete_modal.dart';
 
 class SaleDetailItem {
   final String title;
@@ -43,32 +46,7 @@ class _SaleDetailViewState extends State<SaleDetailView> {
   bool _isAddingNote = false;
   String? _savedNote;
 
-  final List<SaleDetailItem> _items = const [
-    SaleDetailItem(
-      title: 'Oxford Linen Shirt',
-      variant: 'Black • M',
-      sku: 'TS-10492',
-      imageAsset: 'Assets/oxford_linen_shirt_blue.jpg',
-      unitPrice: 2490,
-      quantity: 2,
-    ),
-    SaleDetailItem(
-      title: 'Raw Denim Jeans',
-      variant: 'Indigo • L',
-      sku: 'RDJ-22322',
-      imageAsset: 'Assets/raw_denim_jeans.jpg',
-      unitPrice: 3440,
-      quantity: 1,
-    ),
-    SaleDetailItem(
-      title: 'Silk Evening Dress',
-      variant: 'Red • S',
-      sku: 'SED-16166',
-      imageAsset: 'Assets/silk_evening_dress.jpg',
-      unitPrice: 5940,
-      quantity: 1,
-    ),
-  ];
+  final List<SaleDetailItem> _items = const [];
 
   @override
   void dispose() {
@@ -81,7 +59,11 @@ class _SaleDetailViewState extends State<SaleDetailView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Text(
               message,
@@ -114,6 +96,51 @@ class _SaleDetailViewState extends State<SaleDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.saleId.trim().isEmpty) {
+      return Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.receipt_long_outlined,
+                size: 56,
+                color: Color(0xFFC5B8A5),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'No Sale Selected',
+                style: GoogleFonts.cormorantGaramond(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF181513),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Select a sale record from the sales register to inspect its details.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: const Color(0xFF7A7268),
+                ),
+              ),
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                onPressed: widget.onBackToOverview,
+                icon: const Icon(Icons.arrow_back, size: 16),
+                label: const Text('Back to Sales Register'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF181513),
+                  side: const BorderSide(color: Color(0xFFDFD6C9)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: DesktopContentConstraint(
@@ -202,7 +229,7 @@ class _SaleDetailViewState extends State<SaleDetailView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Breadcrumb: Sales > Sale #TS-10482
+            // Breadcrumb: Sales > Sale ID
             Row(
               children: [
                 InkWell(
@@ -245,7 +272,8 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                 Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => _showFeedback('More options for sale ${widget.saleId}'),
+                    onTap: () =>
+                        _showFeedback('More options for sale ${widget.saleId}'),
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       width: 36,
@@ -270,7 +298,9 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                 Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => _showFeedback('Printing official invoice for ${widget.saleId}...'),
+                    onTap: () => _showFeedback(
+                      'Printing official invoice for ${widget.saleId}...',
+                    ),
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       height: 36,
@@ -345,7 +375,7 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                 const Text('•', style: TextStyle(color: Color(0xFF9E958A))),
                 const SizedBox(width: 6),
                 Text(
-                  'Central Store',
+                  'Primary Store',
                   style: GoogleFonts.inter(
                     fontSize: 13,
                     color: const Color(0xFF6B6358),
@@ -356,7 +386,7 @@ class _SaleDetailViewState extends State<SaleDetailView> {
             ),
             Container(width: 1, height: 14, color: const Color(0xFFDFD6C9)),
             Text(
-              'Cashier: Priya S.',
+              'Cashier: Staff',
               style: GoogleFonts.inter(
                 fontSize: 13,
                 color: const Color(0xFF6B6358),
@@ -498,130 +528,146 @@ class _SaleDetailViewState extends State<SaleDetailView> {
           ),
 
           // Table Rows
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _items.length,
-            separatorBuilder: (context, index) => const Divider(
-              height: 1,
-              color: Color(0xFFF1EAE0),
-            ),
-            itemBuilder: (context, index) {
-              final item = _items[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Product Column
-                    Expanded(
-                      flex: 5,
-                      child: Row(
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              color: const Color(0xFFF7F4EF),
-                              child: Image.asset(
-                                item.imageAsset,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) => const Icon(
-                                  Icons.image_outlined,
-                                  size: 22,
-                                  color: Colors.grey,
+          if (_items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Center(
+                child: Text(
+                  'No items recorded for this sale.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF7A7268),
+                  ),
+                ),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _items.length,
+              separatorBuilder: (context, index) =>
+                  const Divider(height: 1, color: Color(0xFFF1EAE0)),
+              itemBuilder: (context, index) {
+                final item = _items[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 14,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Product Column
+                      Expanded(
+                        flex: 5,
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(6),
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                color: const Color(0xFFF7F4EF),
+                                child: Image.asset(
+                                  item.imageAsset,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(
+                                        Icons.image_outlined,
+                                        size: 22,
+                                        color: Colors.grey,
+                                      ),
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  item.title,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 13.5,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF181513),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.title,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 13.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(0xFF181513),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  item.variant,
-                                  style: GoogleFonts.inter(
-                                    fontSize: 12,
-                                    color: const Color(0xFF7A7268),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    item.variant,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      color: const Color(0xFF7A7268),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
+                          ],
+                        ),
+                      ),
+
+                      // SKU Column
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          item.sku,
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: const Color(0xFF4A4237),
                           ),
-                        ],
-                      ),
-                    ),
-
-                    // SKU Column
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        item.sku,
-                        style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: const Color(0xFF4A4237),
                         ),
                       ),
-                    ),
 
-                    // Unit Price Column
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        '₹${_formatCurrency(item.unitPrice)}',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w500,
-                          color: const Color(0xFF181513),
+                      // Unit Price Column
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          '₹${_formatCurrency(item.unitPrice)}',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF181513),
+                          ),
                         ),
                       ),
-                    ),
 
-                    // Quantity Column
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        '${item.quantity}',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w600,
-                          color: const Color(0xFF181513),
+                      // Quantity Column
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          '${item.quantity}',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.inter(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF181513),
+                          ),
                         ),
                       ),
-                    ),
 
-                    // Total Column
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        '₹${_formatCurrency(item.totalPrice)}',
-                        textAlign: TextAlign.right,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF181513),
+                      // Total Column
+                      Expanded(
+                        flex: 3,
+                        child: Text(
+                          '₹${_formatCurrency(item.totalPrice)}',
+                          textAlign: TextAlign.right,
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF181513),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
+                    ],
+                  ),
+                );
+              },
+            ),
         ],
       ),
     );
@@ -661,9 +707,9 @@ class _SaleDetailViewState extends State<SaleDetailView> {
           // Timeline Step 1: Invoice Printed & Finalized
           _buildTimelineStep(
             title: 'Invoice Printed & Finalized',
-            timestamp: '10:44 AM • Priya S. (Cashier)',
+            timestamp: 'Staff Member',
             rightTagIcon: Icons.receipt_long_outlined,
-            rightTagLabel: 'Receipt #RCP-20260916-10482',
+            rightTagLabel: 'Receipt #${widget.saleId}',
             isFirst: true,
             isLast: false,
           ),
@@ -671,9 +717,9 @@ class _SaleDetailViewState extends State<SaleDetailView> {
           // Timeline Step 2: Payment authorized successfully
           _buildTimelineStep(
             title: 'Payment authorized successfully',
-            timestamp: '10:43 AM • UPI Payment Gateway (Ref: 20148812)',
+            timestamp: 'Payment Gateway',
             rightTagIcon: Icons.credit_card_outlined,
-            rightTagLabel: 'UPI •••• 4292',
+            rightTagLabel: 'Authorized',
             isFirst: false,
             isLast: false,
           ),
@@ -681,7 +727,7 @@ class _SaleDetailViewState extends State<SaleDetailView> {
           // Timeline Step 3: Transaction Initiated
           _buildTimelineStep(
             title: 'Transaction Initiated',
-            timestamp: '10:42 AM • Priya S. (Cashier)',
+            timestamp: 'Staff Member',
             rightTagIcon: Icons.description_outlined,
             rightTagLabel: 'Sale ${widget.saleId}',
             isFirst: false,
@@ -721,11 +767,7 @@ class _SaleDetailViewState extends State<SaleDetailView> {
               ),
             ),
             if (!isLast)
-              Container(
-                width: 2,
-                height: 36,
-                color: const Color(0xFFC3E6CB),
-              ),
+              Container(width: 2, height: 36, color: const Color(0xFFC3E6CB)),
           ],
         ),
         const SizedBox(width: 14),
@@ -830,7 +872,10 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                   onTap: () => setState(() => _isAddingNote = !_isAddingNote),
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(6),
@@ -878,7 +923,10 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                       TextField(
                         controller: _noteController,
                         maxLines: 3,
-                        style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF181513)),
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          color: const Color(0xFF181513),
+                        ),
                         decoration: InputDecoration(
                           hintText: 'Add a note to this sale...',
                           hintStyle: GoogleFonts.inter(
@@ -895,10 +943,14 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           TextButton(
-                            onPressed: () => setState(() => _isAddingNote = false),
+                            onPressed: () =>
+                                setState(() => _isAddingNote = false),
                             child: Text(
                               'Cancel',
-                              style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF7A7268)),
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: const Color(0xFF7A7268),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -906,8 +958,13 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF1E1C1A),
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
                             ),
                             onPressed: () {
                               setState(() {
@@ -918,7 +975,10 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                             },
                             child: Text(
                               'Save',
-                              style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ],
@@ -981,7 +1041,10 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                   onTap: () => _showFeedback('Editing customer profile...'),
                   borderRadius: BorderRadius.circular(6),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(6),
@@ -990,7 +1053,11 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.edit_outlined, size: 14, color: Color(0xFF332D26)),
+                        const Icon(
+                          Icons.edit_outlined,
+                          size: 14,
+                          color: Color(0xFF332D26),
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'Edit',
@@ -1018,14 +1085,10 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                   width: 52,
                   height: 52,
                   color: const Color(0xFFFAF7F2),
-                  child: Image.asset(
-                    'Assets/emma_carter.jpg',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.person,
-                      size: 28,
-                      color: Color(0xFF9E958A),
-                    ),
+                  child: const Icon(
+                    Icons.person,
+                    size: 28,
+                    color: Color(0xFF9E958A),
                   ),
                 ),
               ),
@@ -1038,7 +1101,7 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                       children: [
                         Flexible(
                           child: Text(
-                            'Emma Carter',
+                            'Walk-in Customer',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.inter(
@@ -1048,51 +1111,15 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFDF5E6),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: const Color(0xFFF0DEC0)),
-                          ),
-                          child: Text(
-                            'Regular Customer',
-                            style: GoogleFonts.inter(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF94672D),
-                            ),
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'emma.carter@gmail.com',
+                      'No contact details recorded',
                       style: GoogleFonts.inter(
                         fontSize: 12.5,
                         color: const Color(0xFF7A7268),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.phone_outlined,
-                          size: 13,
-                          color: Color(0xFF7A7268),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '+91 98765 43210',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: const Color(0xFF5A5248),
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
@@ -1104,17 +1131,17 @@ class _SaleDetailViewState extends State<SaleDetailView> {
           const SizedBox(height: 14),
 
           // Pricing Breakdown
-          _buildDetailSummaryRow(label: 'Subtotal', value: '₹11,870'),
+          _buildDetailSummaryRow(label: 'Subtotal', value: '₹0'),
           const SizedBox(height: 8),
           _buildDetailSummaryRow(
             label: 'Discount Applied',
-            value: '-₹1,200',
+            value: '₹0',
             valueColor: const Color(0xFF1E7E34),
           ),
           const SizedBox(height: 8),
-          _buildDetailSummaryRow(label: 'Tax (CGST 9%)', value: '₹757.80'),
+          _buildDetailSummaryRow(label: 'Tax (CGST 9%)', value: '₹0.00'),
           const SizedBox(height: 8),
-          _buildDetailSummaryRow(label: 'Tax (SGST 9%)', value: '₹757.80'),
+          _buildDetailSummaryRow(label: 'Tax (SGST 9%)', value: '₹0.00'),
           const SizedBox(height: 14),
           const Divider(height: 1, color: Color(0xFFEAE1D5)),
           const SizedBox(height: 12),
@@ -1132,7 +1159,7 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                 ),
               ),
               Text(
-                '₹11,890',
+                '₹0',
                 style: GoogleFonts.inter(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -1175,7 +1202,7 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Visa Ending 4292',
+                    'Payment Card / Digital',
                     style: GoogleFonts.inter(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
@@ -1239,7 +1266,11 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.print_outlined, size: 16, color: Colors.white),
+                    const Icon(
+                      Icons.print_outlined,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Print Receipt',
@@ -1260,7 +1291,7 @@ class _SaleDetailViewState extends State<SaleDetailView> {
           Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => _showFeedback('Receipt emailed to emma.carter@gmail.com'),
+              onTap: () => _showFeedback('Receipt emailed to customer'),
               borderRadius: BorderRadius.circular(8),
               child: Container(
                 width: double.infinity,
@@ -1274,7 +1305,11 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.email_outlined, size: 16, color: Color(0xFF332D26)),
+                    const Icon(
+                      Icons.email_outlined,
+                      size: 16,
+                      color: Color(0xFF332D26),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Email Receipt',
@@ -1309,7 +1344,11 @@ class _SaleDetailViewState extends State<SaleDetailView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.refresh_rounded, size: 16, color: Color(0xFFC0392B)),
+                    const Icon(
+                      Icons.refresh_rounded,
+                      size: 16,
+                      color: Color(0xFFC0392B),
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Return / Exchange Items',
@@ -1392,7 +1431,22 @@ class _SaleDetailViewState extends State<SaleDetailView> {
           _buildMoreActionTile(
             icon: Icons.description_outlined,
             title: 'View Invoice',
-            onTap: () => _showFeedback('Generating printable PDF invoice...'),
+            onTap: () async {
+              final businessId = CurrentBusinessService.instance.currentBusinessId ?? '';
+              if (businessId.isEmpty) {
+                _showFeedback('Please select a business first');
+                return;
+              }
+              final inv = await SalesRepository.instance.loadInvoiceData(
+                businessId: businessId,
+                saleId: widget.saleId,
+              );
+              if (inv != null && mounted) {
+                FullInvoicePreviewDialog.show(context: context, invoice: inv);
+              } else if (mounted) {
+                _showFeedback('Invoice record not found for ${widget.saleId}');
+              }
+            },
           ),
           const SizedBox(height: 8),
 
@@ -1408,7 +1462,9 @@ class _SaleDetailViewState extends State<SaleDetailView> {
           _buildMoreActionTile(
             icon: Icons.reply_rounded,
             title: 'Create Return',
-            onTap: () => _showFeedback('Initiating return order for ${widget.saleId}...'),
+            onTap: () => _showFeedback(
+              'Initiating return order for ${widget.saleId}...',
+            ),
           ),
         ],
       ),

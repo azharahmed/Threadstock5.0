@@ -41,8 +41,7 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
   @override
   void initState() {
     super.initState();
-    _storeUrlController =
-        TextEditingController(text: 'mystore.myshopify.com');
+    _storeUrlController = TextEditingController(text: 'mystore.myshopify.com');
   }
 
   @override
@@ -56,8 +55,11 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_outline_rounded,
-                color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_outline_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -84,7 +86,8 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
       _lastVerified = 'Just now';
     });
     _showFeedback(
-        'Connection to ${_storeUrlController.text} verified successfully (24ms latency).');
+      'Connection to ${_storeUrlController.text} verified successfully (24ms latency).',
+    );
   }
 
   void _showIntegrationGuideDialog() {
@@ -93,8 +96,9 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
       builder: (ctx) {
         return Dialog(
           backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Container(
             width: 540,
             padding: const EdgeInsets.all(24),
@@ -114,8 +118,11 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded,
-                          size: 20, color: Color(0xFF7A7268)),
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: Color(0xFF7A7268),
+                      ),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
@@ -132,17 +139,20 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                 _buildGuideStep(
                   stepNumber: '1',
                   title: 'Navigate to App Settings',
-                  desc: 'In Shopify Admin, go to Settings > Apps and sales channels > Develop apps.',
+                  desc:
+                      'In Shopify Admin, go to Settings > Apps and sales channels > Develop apps.',
                 ),
                 _buildGuideStep(
                   stepNumber: '2',
                   title: 'Configure Admin API Scopes',
-                  desc: 'Enable read_products, write_products, read_inventory, write_orders, and read_fulfillments.',
+                  desc:
+                      'Enable read_products, write_products, read_inventory, write_orders, and read_fulfillments.',
                 ),
                 _buildGuideStep(
                   stepNumber: '3',
                   title: 'Install App & Copy Access Token',
-                  desc: 'Install the app and paste the generated Admin API access token into ThreadStock.',
+                  desc:
+                      'Install the app and paste the generated Admin API access token into ThreadStock.',
                 ),
                 const SizedBox(height: 20),
                 Row(
@@ -154,13 +164,20 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                         backgroundColor: const Color(0xFF1E1C1A),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      child: Text('Got It',
-                          style: GoogleFonts.inter(
-                              fontSize: 13, fontWeight: FontWeight.w600)),
+                      child: Text(
+                        'Got It',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -234,8 +251,9 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           title: Text(
             'Documentation & Webhooks API',
             style: GoogleFonts.cormorantGaramond(
@@ -246,7 +264,10 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
           ),
           content: Text(
             'ThreadStock uses Shopify Webhooks (API version 2024-10) for instant event dispatching: products/create, products/update, orders/paid, and inventory_levels/update.',
-            style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6E665B)),
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: const Color(0xFF6E665B),
+            ),
           ),
           actions: [
             ElevatedButton(
@@ -255,10 +276,13 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                 backgroundColor: const Color(0xFF1E1C1A),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              child: Text('Close',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              child: Text(
+                'Close',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
             ),
           ],
         );
@@ -273,8 +297,9 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
       builder: (ctx) {
         return AlertDialog(
           backgroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           title: Text(
             'Contact Integration Support',
             style: GoogleFonts.cormorantGaramond(
@@ -290,7 +315,9 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
               Text(
                 'Need assistance aligning multi-location stock or custom Shopify liquid tags?',
                 style: GoogleFonts.inter(
-                    fontSize: 12.5, color: const Color(0xFF6E665B)),
+                  fontSize: 12.5,
+                  color: const Color(0xFF6E665B),
+                ),
               ),
               const SizedBox(height: 14),
               TextField(
@@ -300,7 +327,9 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                 decoration: InputDecoration(
                   hintText: 'Describe your question or issue...',
                   hintStyle: GoogleFonts.inter(
-                      fontSize: 12, color: const Color(0xFF9E958A)),
+                    fontSize: 12,
+                    color: const Color(0xFF9E958A),
+                  ),
                   isDense: true,
                   contentPadding: const EdgeInsets.all(12),
                   border: OutlineInputBorder(
@@ -314,23 +343,29 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancel',
-                  style: GoogleFonts.inter(color: const Color(0xFF7E766B))),
+              child: Text(
+                'Cancel',
+                style: GoogleFonts.inter(color: const Color(0xFF7E766B)),
+              ),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(ctx);
                 _showFeedback(
-                    'Support message sent. Our Shopify specialist will reply shortly.');
+                  'Support message sent. Our Shopify specialist will reply shortly.',
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1E1C1A),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
-              child: Text('Send Message',
-                  style: GoogleFonts.inter(fontWeight: FontWeight.w600)),
+              child: Text(
+                'Send Message',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+              ),
             ),
           ],
         );
@@ -432,8 +467,10 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0F7EA),
                   shape: BoxShape.circle,
-                  border:
-                      Border.all(color: const Color(0xFFD4E8C8), width: 1.2),
+                  border: Border.all(
+                    color: const Color(0xFFD4E8C8),
+                    width: 1.2,
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Stack(
@@ -624,11 +661,7 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
           shape: BoxShape.circle,
         ),
         alignment: Alignment.center,
-        child: const Icon(
-          Icons.check_rounded,
-          size: 14,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.check_rounded, size: 14, color: Colors.white),
       );
     } else if (isActive) {
       circleWidget = Container(
@@ -687,8 +720,9 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                 label,
                 style: GoogleFonts.inter(
                   fontSize: 12.5,
-                  fontWeight:
-                      (isActive || isCompleted) ? FontWeight.w700 : FontWeight.w500,
+                  fontWeight: (isActive || isCompleted)
+                      ? FontWeight.w700
+                      : FontWeight.w500,
                   color: (isActive || isCompleted)
                       ? const Color(0xFF181513)
                       : const Color(0xFF7E766B),
@@ -780,11 +814,16 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
           const SizedBox(height: 6),
           TextField(
             controller: _storeUrlController,
-            style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF181513)),
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: const Color(0xFF181513),
+            ),
             decoration: InputDecoration(
               isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 12,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: const BorderSide(color: Color(0xFFE2D8CC)),
@@ -795,7 +834,10 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide: const BorderSide(color: Color(0xFFBA8A55), width: 1.5),
+                borderSide: const BorderSide(
+                  color: Color(0xFFBA8A55),
+                  width: 1.5,
+                ),
               ),
             ),
           ),
@@ -831,8 +873,11 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
               child: DropdownButton<String>(
                 value: _syncDirection,
                 isExpanded: true,
-                icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                    size: 18, color: Color(0xFF181513)),
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Color(0xFF181513),
+                ),
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
@@ -890,8 +935,11 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
               child: DropdownButton<String>(
                 value: _syncFrequency,
                 isExpanded: true,
-                icon: const Icon(Icons.keyboard_arrow_down_rounded,
-                    size: 18, color: Color(0xFF181513)),
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: Color(0xFF181513),
+                ),
                 style: GoogleFonts.inter(
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
@@ -963,8 +1011,7 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                     _buildCheckboxRow(
                       label: 'SKU & Barcode',
                       value: _syncSkuBarcode,
-                      onChanged: (val) =>
-                          setState(() => _syncSkuBarcode = val),
+                      onChanged: (val) => setState(() => _syncSkuBarcode = val),
                     ),
                   ],
                 ),
@@ -1020,8 +1067,10 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Color(0xFFD8CEC1)),
                   backgroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 22,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -1040,14 +1089,17 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                 onPressed: () {
                   setState(() => _currentStep = 3);
                   _showFeedback(
-                      'Saved connection preferences. Navigating to Map Fields.');
+                    'Saved connection preferences. Navigating to Map Fields.',
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF6E3F16),
                   foregroundColor: Colors.white,
                   elevation: 0,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -1182,8 +1234,10 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Color(0xFFE2D8CC)),
                   backgroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(6),
                   ),
@@ -1194,8 +1248,9 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
                         height: 12,
                         child: CircularProgressIndicator(
                           strokeWidth: 1.8,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Color(0xFFBA8A55)),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Color(0xFFBA8A55),
+                          ),
                         ),
                       )
                     : Text(
@@ -1260,8 +1315,11 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
           // Last Verified + Success Badge
           Row(
             children: [
-              const Icon(Icons.access_time_rounded,
-                  size: 16, color: Color(0xFF7E766B)),
+              const Icon(
+                Icons.access_time_rounded,
+                size: 16,
+                color: Color(0xFF7E766B),
+              ),
               const SizedBox(width: 10),
               Text(
                 'Last Verified',
@@ -1282,8 +1340,10 @@ class _ShopifyConnectorViewState extends State<ShopifyConnectorView> {
               ),
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 7,
+                  vertical: 2.5,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE8F5E9),
                   borderRadius: BorderRadius.circular(10),

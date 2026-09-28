@@ -1,116 +1,43 @@
-// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-class DiscrepancyItem {
-  DiscrepancyItem({
-    required this.name,
-    required this.category,
-    required this.sku,
-    required this.sysQty,
-    required this.countedQty,
-    required this.imageAsset,
-    required this.reason,
-    required this.status,
-    this.isSelected = false,
-  });
-
-  final String name;
-  final String category;
-  final String sku;
-  final int sysQty;
-  final int countedQty;
-  final String imageAsset;
-  String reason;
-  String status;
-  bool isSelected;
-
-  int get variance => countedQty - sysQty;
-}
+import '../../../../core/auth/authorization_service.dart';
+import '../../data/stock_count_repository.dart';
+import '../../domain/models/stock_count.dart';
+import '../../domain/models/stock_count_line.dart';
 
 class StockCountReconciliationView extends StatefulWidget {
+  final VoidCallback? onBack;
+  final VoidCallback? onReconciliationCompleted;
+
   const StockCountReconciliationView({
     super.key,
-    this.onExportReport,
-    this.onApplyAdjustments,
+    this.onBack,
+    this.onReconciliationCompleted,
   });
 
-  final VoidCallback? onExportReport;
-  final VoidCallback? onApplyAdjustments;
-
   @override
-  State<StockCountReconciliationView> createState() =>
-      _StockCountReconciliationViewState();
+  State<StockCountReconciliationView> createState() => _StockCountReconciliationViewState();
 }
 
-class _StockCountReconciliationViewState
-    extends State<StockCountReconciliationView> {
-  int _selectedTabIndex = 0;
+class _StockCountReconciliationViewState extends State<StockCountReconciliationView> {
+  final StockCountRepository _stockCountRepo = StockCountRepository();
+
+  bool _isLoading = true;
+  bool _isSubmitting = false;
+  String? _errorMessage;
+
+  List<StockCount> _pendingCounts = [];
+  StockCount? _selectedCount;
+  List<StockCountLine> _lines = [];
+
+  final Map<String, int> _reconciledQuantities = {};
+  final Map<String, String> _reconcileNotes = {};
   final TextEditingController _searchController = TextEditingController();
-
-  late final List<DiscrepancyItem> _items;
-
-  final List<String> _tabs = [
-    'Discrepancies (23)',
-    'Pending Review (12)',
-    'Approved (8)',
-    'All Items',
-  ];
-
-  final List<String> _reasonOptions = [
-    'Theft',
-    'Damage',
-    'Unrecorded Inbound',
-    'Transfer Error',
-    'Miscount',
-    'Data Entry Error',
-  ];
 
   @override
   void initState() {
     super.initState();
-    _items = [
-      DiscrepancyItem(
-        name: 'Oxford Linen Shirt (Black/M)',
-        category: 'Shirts  •  Black / M',
-        sku: 'TS-10492-BM',
-        sysQty: 50,
-        countedQty: 48,
-        imageAsset: 'assets/oxford_linen_shirt.jpg',
-        reason: 'Theft',
-        status: 'Pending Action',
-      ),
-      DiscrepancyItem(
-        name: 'Merino Wool Blazer (Navy/L)',
-        category: 'Outerwear  •  Navy / L',
-        sku: 'TS-20788-NL',
-        sysQty: 18,
-        countedQty: 15,
-        imageAsset: 'assets/merino_wool_blazer.jpg',
-        reason: 'Damage',
-        status: 'Approved',
-      ),
-      DiscrepancyItem(
-        name: 'Silk Evening Dress (Red/S)',
-        category: 'Dresses  •  Red / S',
-        sku: 'TS-16166-RS',
-        sysQty: 8,
-        countedQty: 12,
-        imageAsset: 'assets/silk_evening_dress.jpg',
-        reason: 'Unrecorded Inbound',
-        status: 'Pending Action',
-      ),
-      DiscrepancyItem(
-        name: 'Raw Denim Jeans (Indigo/32)',
-        category: 'Denim  •  Indigo / 32',
-        sku: 'TS-22322-IND',
-        sysQty: 30,
-        countedQty: 27,
-        imageAsset: 'assets/raw_denim_jeans.jpg',
-        reason: 'Transfer Error',
-        status: 'Under Review',
-      ),
-    ];
+    _loadPendingCounts();
   }
 
   @override
@@ -119,959 +46,386 @@ class _StockCountReconciliationViewState
     super.dispose();
   }
 
-  int get _selectedCount => _items.where((i) => i.isSelected).length;
+  Future<void> _loadPendingCounts() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
-  List<DiscrepancyItem> get _filteredItems {
+    try {
+      final submitted = await _stockCountRepo.getStockCounts(status: 'submitted');
+      final inReconcile = await _stockCountRepo.getStockCounts(status: 'in_reconciliation');
+      final combined = [...submitted, ...inReconcile];
+
+      _pendingCounts = combined;
+      if (_pendingCounts.isNotEmpty) {
+        _selectedCount = _pendingCounts.first;
+        await _loadCountLines(_selectedCount!.id);
+      } else {
+        _selectedCount = null;
+        _lines = [];
+      }
+
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadCountLines(String countId) async {
+    final list = await _stockCountRepo.getStockCountLines(countId: countId);
+    _reconciledQuantities.clear();
+    _reconcileNotes.clear();
+    for (final line in list) {
+      // Reconciled quantity defaults to reconciled_qty ?? counted_qty ?? expected_qty
+      final r = line.reconciledQty ?? line.countedQty ?? line.expectedQty;
+      _reconciledQuantities[line.variantId] = r;
+      if (line.reason != null) {
+        _reconcileNotes[line.variantId] = line.reason!;
+      }
+    }
+    if (mounted) {
+      setState(() => _lines = list);
+    }
+  }
+
+  Future<void> _finalizeReconciliation() async {
+    final canAdjust = AuthorizationService.instance.can('inventory.adjust');
+    if (!canAdjust) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Access Denied: You do not have inventory.adjust permission.'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
+
+    if (_selectedCount == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm Physical Count Reconciliation'),
+        content: const Text(
+          'This will finalize the count session, update available balances server-side with concurrency safety, update last_counted_at, and post immutable reconciliation ledger entries. Proceed?',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Review Lines')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF181513), foregroundColor: Colors.white),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Finalize & Post'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    setState(() => _isSubmitting = true);
+
+    final linesPayload = _lines.map((l) {
+      final rQty = _reconciledQuantities[l.variantId] ?? l.expectedQty;
+      return {
+        'variant_id': l.variantId,
+        'reconciled_qty': rQty,
+        'reason': _reconcileNotes[l.variantId] ?? l.reason,
+      };
+    }).toList();
+
+    try {
+      final res = await _stockCountRepo.completeStockCount(
+        countId: _selectedCount!.id,
+        lines: linesPayload,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Stock count ${_selectedCount!.countNumber} finalized! '
+              '${res['reconciled_lines_count']} lines reconciled, '
+              '${res['adjusted_lines_count']} balance adjustments posted, '
+              '${res['zero_discrepancy_lines_count']} verified zero discrepancies.',
+            ),
+            backgroundColor: const Color(0xFF16A34A),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+        widget.onReconciliationCompleted?.call();
+        await _loadPendingCounts();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Reconciliation Failed: $e'),
+            backgroundColor: const Color(0xFFDC2626),
+            duration: const Duration(seconds: 5),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  List<StockCountLine> get _filteredLines {
     final q = _searchController.text.trim().toLowerCase();
-    if (q.isEmpty) return _items;
-    return _items.where((i) {
-      return i.name.toLowerCase().contains(q) ||
-          i.sku.toLowerCase().contains(q) ||
-          i.category.toLowerCase().contains(q);
+    if (q.isEmpty) return _lines;
+    return _lines.where((l) {
+      final sku = (l.variantSku ?? '').toLowerCase();
+      final name = (l.productName ?? '').toLowerCase();
+      return sku.contains(q) || name.contains(q);
     }).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Header Row: Title, Subtitle, and Top-Right Action Buttons
-          _buildHeader(),
-          const SizedBox(height: 18),
+    if (_isLoading) {
+      return const Center(child: Padding(padding: EdgeInsets.all(60), child: CircularProgressIndicator()));
+    }
 
-          // 2. Top Metrics Row (4 Cards)
-          _buildMetricsRow(),
-          const SizedBox(height: 20),
-
-          // 3. Main Card: Tabs, Search/Filters, Batch Actions Toolbar, Table, Pagination
-          _buildMainTableCard(),
-          const SizedBox(height: 20),
-
-          // 4. Bottom 2-Card Row: AI Auditor Insights & Reconciliation Progress
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 940;
-              if (isWide) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(flex: 58, child: _buildAiAuditorInsightsCard()),
-                    const SizedBox(width: 16),
-                    Expanded(flex: 42, child: _buildReconciliationProgressCard()),
-                  ],
-                );
-              }
-              return Column(
-                children: [
-                  _buildAiAuditorInsightsCard(),
-                  const SizedBox(height: 16),
-                  _buildReconciliationProgressCard(),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 32),
-        ],
-      ),
-    );
-  }
-
-  // 1. Header Row
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Stock Count Reconciliation',
-              style: GoogleFonts.inter(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF111827),
-                letterSpacing: -0.4,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Reconcile counted units with current ledger across all locations.',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFF6B7280),
-              ),
-            ),
-          ],
+    if (_errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(40),
+          child: Text('Error loading count lines: $_errorMessage', style: GoogleFonts.inter(color: Colors.red)),
         ),
-        Row(
-          children: [
-            OutlinedButton.icon(
-              onPressed: widget.onExportReport ??
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Exporting audit report as CSV / PDF...'),
-                        backgroundColor: Color(0xFF181513),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-              icon: const Icon(Icons.file_download_outlined, size: 16),
-              label: const Text('Export Audit Report'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF1F2937),
-                side: const BorderSide(color: Color(0xFFD1D5DB)),
-                backgroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w500),
-              ),
-            ),
-            const SizedBox(width: 12),
-            ElevatedButton(
-              onPressed: widget.onApplyAdjustments ??
-                  () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Reconciliation adjustments posted to inventory ledger.'),
-                        backgroundColor: Color(0xFF181513),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF181513),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
-              ),
-              child: const Text('Apply Adjustments'),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
+      );
+    }
 
-  // 2. Metrics Row (4 Cards)
-  Widget _buildMetricsRow() {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 1000;
-        final cardWidth = isWide ? (constraints.maxWidth - 48) / 4 : (constraints.maxWidth - 16) / 2;
+    final totalLines = _lines.length;
+    final discrepantLines = _lines.where((l) {
+      final r = _reconciledQuantities[l.variantId] ?? l.expectedQty;
+      return r != l.expectedQty;
+    }).length;
+    final matchedLines = totalLines - discrepantLines;
+    int netVariance = 0;
+    for (final l in _lines) {
+      final r = _reconciledQuantities[l.variantId] ?? l.expectedQty;
+      netVariance += (r - l.expectedQty);
+    }
 
-        return Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: [
-            // Card 1: Total Discrepancies
-            SizedBox(
-              width: cardWidth,
-              child: _buildMetricCard(
-                icon: Icons.inventory_2_outlined,
-                iconBg: const Color(0xFFFBF4EB),
-                iconColor: const Color(0xFFB45309),
-                title: 'Total Discrepancies',
-                value: '23 SKUs',
-                subWidget: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEE2E2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        '↑ 12%',
-                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w700, color: const Color(0xFFDC2626)),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Mini vertical bars
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        _buildMiniBar(6, const Color(0xFFFCA5A5)),
-                        const SizedBox(width: 3),
-                        _buildMiniBar(10, const Color(0xFFFCA5A5)),
-                        const SizedBox(width: 3),
-                        _buildMiniBar(14, const Color(0xFFFCA5A5)),
-                        const SizedBox(width: 3),
-                        _buildMiniBar(8, const Color(0xFFFCA5A5)),
-                        const SizedBox(width: 3),
-                        _buildMiniBar(18, const Color(0xFFEF4444)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Card 2: Shrinkage Value
-            SizedBox(
-              width: cardWidth,
-              child: _buildMetricCard(
-                icon: Icons.south_east_rounded,
-                iconBg: const Color(0xFFFEE2E2),
-                iconColor: const Color(0xFFDC2626),
-                title: 'Shrinkage Value',
-                value: '-₹1.48L',
-                subWidget: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFEF2F2),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: const Color(0xFFFECACA)),
-                      ),
-                      child: Text(
-                        'Cost Impact',
-                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFDC2626)),
-                      ),
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      width: 54,
-                      height: 16,
-                      child: CustomPaint(painter: _SparklinePainter(color: const Color(0xFFDC2626), isUp: false)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Card 3: Overage Value
-            SizedBox(
-              width: cardWidth,
-              child: _buildMetricCard(
-                icon: Icons.north_east_rounded,
-                iconBg: const Color(0xFFDCFCE7),
-                iconColor: const Color(0xFF15803D),
-                title: 'Overage Value',
-                value: '+₹27,360',
-                subWidget: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF0FDF4),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: const Color(0xFFBBF7D0)),
-                      ),
-                      child: Text(
-                        'Surplus Found',
-                        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF16A34A)),
-                      ),
-                    ),
-                    const Spacer(),
-                    SizedBox(
-                      width: 54,
-                      height: 16,
-                      child: CustomPaint(painter: _SparklinePainter(color: const Color(0xFF16A34A), isUp: true)),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // Card 4: Net Ledger Adjustment
-            SizedBox(
-              width: cardWidth,
-              child: _buildMetricCard(
-                icon: Icons.account_balance_wallet_outlined,
-                iconBg: const Color(0xFFFEF3C7),
-                iconColor: const Color(0xFFB45309),
-                title: 'Net Ledger Adjustment',
-                value: '-₹1.20L',
-                subWidget: Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFFBEB),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: const Color(0xFFFDE68A)),
-                    ),
-                    child: Text(
-                      'Post Adjustment',
-                      style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFFB45309)),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildMetricCard({
-    required IconData icon,
-    required Color iconBg,
-    required Color iconColor,
-    required String title,
-    required String value,
-    required Widget subWidget,
-  }) {
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
+      color: const Color(0xFFF9FAFB),
+      padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Row(
             children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(8),
+              if (widget.onBack != null) ...[
+                IconButton(
+                  onPressed: widget.onBack,
+                  icon: const Icon(Icons.arrow_back_rounded),
+                  tooltip: 'Back',
+                  color: const Color(0xFF374151),
                 ),
-                child: Icon(icon, size: 17, color: iconColor),
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280)),
-                  ),
-                  Text(
-                    value,
-                    style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          subWidget,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMiniBar(double height, Color color) {
-    return Container(
-      width: 4,
-      height: height,
-      decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
-    );
-  }
-
-  // 3. Main Table Card
-  Widget _buildMainTableCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        children: [
-          // Tabs + Search & Filters
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                // Tabs
-                Row(
-                  children: [
-                    for (int i = 0; i < _tabs.length; i++) ...[
-                      InkWell(
-                        onTap: () => setState(() => _selectedTabIndex = i),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(
-                                color: _selectedTabIndex == i ? const Color(0xFFB45309) : Colors.transparent,
-                                width: 2.5,
-                              ),
-                            ),
-                          ),
-                          child: Text(
-                            _tabs[i],
-                            style: GoogleFonts.inter(
-                              fontSize: 12.5,
-                              fontWeight: _selectedTabIndex == i ? FontWeight.w700 : FontWeight.w500,
-                              color: _selectedTabIndex == i ? const Color(0xFFB45309) : const Color(0xFF6B7280),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                  ],
-                ),
-
-                // Search & Filter buttons
-                Row(
-                  children: [
-                    Container(
-                      width: 210,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFD1D5DB)),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.search_rounded, size: 15, color: Color(0xFF9CA3AF)),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: TextField(
-                              controller: _searchController,
-                              style: GoogleFonts.inter(fontSize: 12),
-                              decoration: const InputDecoration(
-                                hintText: 'Search items, SKU or variant...',
-                                hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 11.5),
-                                border: InputBorder.none,
-                                isDense: true,
-                              ),
-                              onChanged: (_) => setState(() {}),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.tune_rounded, size: 14),
-                      label: const Text('Filters'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF374151),
-                        side: const BorderSide(color: Color(0xFFD1D5DB)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        minimumSize: Size.zero,
-                        textStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ],
-                ),
+                const SizedBox(width: 8),
               ],
-            ),
-          ),
-          const Divider(height: 1, color: Color(0xFFE2E8F0)),
-
-          // Batch Actions Toolbar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.flag_outlined, size: 14, color: Color(0xFF374151)),
-                      label: const Text('Bulk Resolve as Damaged'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF374151),
-                        side: const BorderSide(color: Color(0xFFD1D5DB)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        minimumSize: Size.zero,
-                        textStyle: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      onPressed: () {},
-                      icon: const Icon(Icons.person_add_alt_1_outlined, size: 14, color: Color(0xFF374151)),
-                      label: const Text('Approve System Inventory Override'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF374151),
-                        side: const BorderSide(color: Color(0xFFD1D5DB)),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        minimumSize: Size.zero,
-                        textStyle: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500),
-                      ),
+                    Text('Stock Count Reconciliation', style: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
+                    const SizedBox(height: 4),
+                    Text(
+                      _selectedCount != null
+                          ? 'Reconciling Count ${_selectedCount!.countNumber} • Location: ${_selectedCount!.locationName ?? 'Store'} • Status: ${_selectedCount!.status}'
+                          : 'No pending stock count submissions awaiting reconciliation.',
+                      style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6B7280)),
                     ),
                   ],
                 ),
-                Text(
-                  '$_selectedCount items selected',
-                  style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF9CA3AF)),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
-
-          // Table Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              children: [
-                InkWell(
-                  onTap: () {
-                    final allSelected = _items.every((i) => i.isSelected);
-                    setState(() {
-                      for (final i in _items) {
-                        i.isSelected = !allSelected;
-                      }
-                    });
-                  },
-                  child: SizedBox(
-                    width: 20,
-                    child: Icon(
-                      _items.every((i) => i.isSelected)
-                          ? Icons.check_box_rounded
-                          : Icons.check_box_outline_blank,
-                      size: 16,
-                      color: const Color(0xFFCBD5E1),
-                    ),
-                  ),
+              ),
+              if (_selectedCount != null) ...[
+                OutlinedButton(
+                  onPressed: _loadPendingCounts,
+                  child: const Text('Refresh'),
                 ),
                 const SizedBox(width: 10),
-                Expanded(flex: 30, child: Text('Product Name', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 15, child: Text('SKU', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 10, child: Center(child: Text('Sys Qty', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                Expanded(flex: 10, child: Center(child: Text('Counted', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                Expanded(flex: 10, child: Center(child: Text('Variance', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                Expanded(flex: 22, child: Text('Reason for Discrepancy', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)))),
-                Expanded(flex: 16, child: Center(child: Text('Audit Status', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                Expanded(flex: 8, child: Center(child: Text('Actions', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
+                ElevatedButton.icon(
+                  onPressed: _isSubmitting ? null : _finalizeReconciliation,
+                  icon: _isSubmitting
+                      ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : const Icon(Icons.check_circle_outline_rounded, size: 16),
+                  label: const Text('Apply Adjustments & Finalize'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF181513),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          if (_selectedCount == null) ...[
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.inventory_rounded, size: 64, color: Colors.grey.shade400),
+                    const SizedBox(height: 16),
+                    Text('No Counts Awaiting Reconciliation', style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, color: const Color(0xFF374151))),
+                    const SizedBox(height: 6),
+                    Text('Once an active physical count is submitted by inventory staff, it will appear here for management approval.', style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6B7280))),
+                  ],
+                ),
+              ),
+            ),
+          ] else ...[
+            // Metrics Row (Honest Data)
+            Row(
+              children: [
+                _buildStatCard('Tracked Items', '$totalLines SKUs', Icons.inventory_2_outlined, const Color(0xFF475569)),
+                const SizedBox(width: 12),
+                _buildStatCard('Matched Items', '$matchedLines SKUs', Icons.check_circle_outline_rounded, const Color(0xFF16A34A)),
+                const SizedBox(width: 12),
+                _buildStatCard('Discrepant Items', '$discrepantLines SKUs', Icons.warning_amber_rounded, const Color(0xFFDC2626)),
+                const SizedBox(width: 12),
+                _buildStatCard(
+                  'Net Quantity Variance',
+                  '${netVariance > 0 ? '+' : ''}$netVariance units',
+                  Icons.trending_up_rounded,
+                  netVariance < 0 ? const Color(0xFFDC2626) : (netVariance > 0 ? const Color(0xFF16A34A) : const Color(0xFF6B7280)),
+                ),
               ],
             ),
-          ),
-          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+            const SizedBox(height: 16),
 
-          // Table Rows
-          for (final item in _filteredItems) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                children: [
-                  InkWell(
-                    onTap: () => setState(() => item.isSelected = !item.isSelected),
-                    child: SizedBox(
-                      width: 20,
-                      child: Icon(
-                        item.isSelected ? Icons.check_box_rounded : Icons.check_box_outline_blank,
-                        size: 16,
-                        color: item.isSelected ? const Color(0xFFB45309) : const Color(0xFFCBD5E1),
+            // Search Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE5E7EB))),
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Search SKU or product name...',
+                  prefixIcon: Icon(Icons.search, size: 18),
+                  border: InputBorder.none,
+                  isDense: true,
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Discrepancy & Line Table
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFFE5E7EB))),
+                child: ListView.separated(
+                  itemCount: _filteredLines.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFF3F4F6)),
+                  itemBuilder: (ctx, i) {
+                    final line = _filteredLines[i];
+                    final reconciled = _reconciledQuantities[line.variantId] ?? line.expectedQty;
+                    final variance = reconciled - line.expectedQty;
+
+                    return ListTile(
+                      title: Text(line.productName ?? 'Product', style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w600)),
+                      subtitle: Text(
+                        'SKU: ${line.variantSku ?? '-'} | Expected: ${line.expectedQty} | Physically Counted: ${line.countedQty ?? 'Uncounted'}',
+                        style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280)),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-
-                  // Product Details with Thumbnail
-                  Expanded(
-                    flex: 30,
-                    child: Row(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: Image.asset(
-                            item.imageAsset,
-                            width: 34,
-                            height: 34,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => Container(
-                              width: 34,
-                              height: 34,
-                              color: const Color(0xFFF1F5F9),
-                              child: const Icon(Icons.checkroom_rounded, size: 16, color: Color(0xFF94A3B8)),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: variance == 0
+                                  ? const Color(0xFFDCFCE7)
+                                  : (variance < 0 ? const Color(0xFFFEE2E2) : const Color(0xFFFEF3C7)),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Variance: ${variance > 0 ? '+' : ''}$variance',
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: variance == 0
+                                    ? const Color(0xFF15803D)
+                                    : (variance < 0 ? const Color(0xFFDC2626) : const Color(0xFFD97706)),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          const SizedBox(width: 14),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                item.name,
-                                style: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                item.category,
-                                style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280)),
+                              Text('Approved Reconciled Qty', style: GoogleFonts.inter(fontSize: 10, color: const Color(0xFF6B7280))),
+                              const SizedBox(height: 2),
+                              SizedBox(
+                                width: 70,
+                                height: 32,
+                                child: TextFormField(
+                                  key: ValueKey('${line.variantId}_$reconciled'),
+                                  initialValue: '$reconciled',
+                                  textAlign: TextAlign.center,
+                                  keyboardType: TextInputType.number,
+                                  decoration: InputDecoration(
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(6)),
+                                    isDense: true,
+                                  ),
+                                  onChanged: (val) {
+                                    final parsed = int.tryParse(val);
+                                    if (parsed != null && parsed >= 0) {
+                                      setState(() => _reconciledQuantities[line.variantId] = parsed);
+                                    }
+                                  },
+                                ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // SKU
-                  Expanded(
-                    flex: 15,
-                    child: Text(
-                      item.sku,
-                      style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF4B5563)),
-                    ),
-                  ),
-
-                  // Sys Qty
-                  Expanded(
-                    flex: 10,
-                    child: Center(
-                      child: Text(
-                        '${item.sysQty}',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
+                        ],
                       ),
-                    ),
-                  ),
-
-                  // Counted
-                  Expanded(
-                    flex: 10,
-                    child: Center(
-                      child: Text(
-                        '${item.countedQty}',
-                        style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF111827)),
-                      ),
-                    ),
-                  ),
-
-                  // Variance
-                  Expanded(
-                    flex: 10,
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: item.variance < 0 ? const Color(0xFFFEE2E2) : const Color(0xFFDCFCE7),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          item.variance > 0 ? '+${item.variance}' : '${item.variance}',
-                          style: GoogleFonts.inter(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: item.variance < 0 ? const Color(0xFFDC2626) : const Color(0xFF16A34A),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Reason for Discrepancy Dropdown
-                  Expanded(
-                    flex: 22,
-                    child: Container(
-                      height: 30,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(color: const Color(0xFFD1D5DB)),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: item.reason,
-                          isDense: true,
-                          icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFF6B7280)),
-                          style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF374151), fontWeight: FontWeight.w500),
-                          items: _reasonOptions.map((r) {
-                            return DropdownMenuItem<String>(
-                              value: r,
-                              child: Text(r),
-                            );
-                          }).toList(),
-                          onChanged: (newReason) {
-                            if (newReason != null) {
-                              setState(() => item.reason = newReason);
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-
-                  // Audit Status
-                  Expanded(
-                    flex: 16,
-                    child: Center(
-                      child: _buildStatusPill(item.status),
-                    ),
-                  ),
-
-                  // Actions
-                  Expanded(
-                    flex: 8,
-                    child: Center(
-                      child: IconButton(
-                        icon: const Icon(Icons.more_horiz_rounded, size: 16, color: Color(0xFF9CA3AF)),
-                        onPressed: () {},
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                      ),
-                    ),
-                  ),
-                ],
+                    );
+                  },
+                ),
               ),
             ),
-            const Divider(height: 1, color: Color(0xFFF1F5F9)),
           ],
-
-          // Footer Pagination
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Showing 1–4 of 23 discrepancy items', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280))),
-                Row(
-                  children: [
-                    Container(
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
-                      child: const Icon(Icons.chevron_left_rounded, size: 16, color: Color(0xFF94A3B8)),
-                    ),
-                    const SizedBox(width: 4),
-                    Container(
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(color: const Color(0xFFFBF4EB), borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFD97706))),
-                      alignment: Alignment.center,
-                      child: Text('1', style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w700, color: const Color(0xFFB45309))),
-                    ),
-                    const SizedBox(width: 4),
-                    _buildPageNum('2'),
-                    const SizedBox(width: 4),
-                    _buildPageNum('3'),
-                    const SizedBox(width: 4),
-                    _buildPageNum('4'),
-                    const SizedBox(width: 4),
-                    _buildPageNum('5'),
-                    const SizedBox(width: 4),
-                    Text('...', style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF94A3B8))),
-                    const SizedBox(width: 4),
-                    Container(
-                      width: 26,
-                      height: 26,
-                      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
-                      child: const Icon(Icons.chevron_right_rounded, size: 16, color: Color(0xFF94A3B8)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildPageNum(String num) {
-    return Container(
-      width: 26,
-      height: 26,
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(4), border: Border.all(color: const Color(0xFFE2E8F0))),
-      alignment: Alignment.center,
-      child: Text(num, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280))),
-    );
-  }
-
-  Widget _buildStatusPill(String status) {
-    Color bg = const Color(0xFFFFFBEB);
-    Color text = const Color(0xFFB45309);
-
-    if (status == 'Approved') {
-      bg = const Color(0xFFDCFCE7);
-      text = const Color(0xFF15803D);
-    } else if (status == 'Under Review') {
-      bg = const Color(0xFFFEE2E2);
-      text = const Color(0xFFDC2626);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        status,
-        style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: text),
-      ),
-    );
-  }
-
-  // 4A. AI Auditor Insights Card
-  Widget _buildAiAuditorInsightsCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFDE68A)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFBF4EB),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFFB45309), size: 18),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
+  Widget _buildStatCard(String label, String value, IconData icon, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: const Color(0xFFE5E7EB))),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 12),
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'AI Auditor Insights',
-                  style: GoogleFonts.inter(fontSize: 13.5, fontWeight: FontWeight.w700, color: const Color(0xFF92400E)),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Top discrepancies are linked to Denim and Outerwear categories. Consider verifying recent transfers and damaged items.',
-                  style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280), height: 1.3),
-                ),
+                Text(label, style: GoogleFonts.inter(fontSize: 11.5, color: const Color(0xFF6B7280))),
+                Text(value, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
               ],
             ),
-          ),
-          const SizedBox(width: 12),
-          OutlinedButton(
-            onPressed: () {},
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFFB45309),
-              side: const BorderSide(color: Color(0xFFFDE68A)),
-              backgroundColor: const Color(0xFFFFFBEB).withOpacity(0.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              textStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: const [
-                Text('View AI Insights'),
-                SizedBox(width: 4),
-                Icon(Icons.arrow_forward_rounded, size: 13),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
-
-  // 4B. Reconciliation Progress Card
-  Widget _buildReconciliationProgressCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Reconciliation Progress',
-                style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
-              ),
-              Text(
-                '64% Complete',
-                style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w700, color: const Color(0xFFB45309)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: 0.64,
-              backgroundColor: const Color(0xFFF1F5F9),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFB45309)),
-              minHeight: 6,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildProgressStat('23', 'Discrepancies', const Color(0xFF111827)),
-              const SizedBox(width: 16),
-              _buildProgressStat('12', 'Pending', const Color(0xFFDC2626)),
-              const SizedBox(width: 16),
-              _buildProgressStat('8', 'Approved', const Color(0xFF15803D)),
-              const Spacer(),
-              _buildProgressStat('847', 'Items Counted', const Color(0xFF111827)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressStat(String val, String label, Color valColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(val, style: GoogleFonts.inter(fontSize: 15, fontWeight: FontWeight.w700, color: valColor)),
-        Text(label, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280))),
-      ],
-    );
-  }
-}
-
-class _SparklinePainter extends CustomPainter {
-  _SparklinePainter({required this.color, required this.isUp});
-  final Color color;
-  final bool isUp;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1.6
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-    if (isUp) {
-      path.moveTo(0, size.height * 0.85);
-      path.lineTo(size.width * 0.25, size.height * 0.7);
-      path.lineTo(size.width * 0.5, size.height * 0.75);
-      path.lineTo(size.width * 0.75, size.height * 0.35);
-      path.lineTo(size.width, size.height * 0.15);
-    } else {
-      path.moveTo(0, size.height * 0.2);
-      path.lineTo(size.width * 0.25, size.height * 0.35);
-      path.lineTo(size.width * 0.5, size.height * 0.3);
-      path.lineTo(size.width * 0.75, size.height * 0.7);
-      path.lineTo(size.width, size.height * 0.85);
-    }
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _SparklinePainter oldDelegate) =>
-      oldDelegate.color != color || oldDelegate.isUp != isUp;
 }

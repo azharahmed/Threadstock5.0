@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/auth/auth_service.dart';
+import '../../core/business/current_business_service.dart';
+import '../../core/config/app_preferences_service.dart';
 import '../../features/ai_studio/presentation/pages/ai_studio_page.dart';
 import '../../features/auth/presentation/pages/accept_invitation_page.dart';
 import '../../features/auth/presentation/pages/check_email_page.dart';
@@ -12,12 +14,15 @@ import '../../features/automations/presentation/pages/automations_page.dart';
 import '../../features/insights/presentation/pages/insights_page.dart';
 import '../../features/inventory/presentation/pages/inventory_page.dart';
 import '../../features/onboarding/data/onboarding_repository.dart';
+import '../../features/onboarding/domain/models/onboarding_progress.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/purchasing/presentation/pages/purchasing_page.dart';
 import '../../features/sales/presentation/pages/sales_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/transfers/presentation/pages/transfers_page.dart';
+import '../../core/business/app_bootstrap_service.dart';
+import '../shell/app_loading_shell.dart';
 import '../shell/app_shell.dart';
 
 class AppRoutes {
@@ -92,94 +97,157 @@ class AppRouter {
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     final repository = _activeRepository;
-    final progress = repository.currentProgress;
     final isAuthed = _isUserAuthenticated;
     final routeName = settings.name ?? AppRoutes.login;
 
-    // 1. PUBLIC ROUTES
-    if (routeName == AppRoutes.login) {
-      if (isAuthed) {
-        if (progress.isOnboardingCompleted) {
-          return MaterialPageRoute(
-            settings: const RouteSettings(name: AppRoutes.overview),
-            builder: (_) => const AppShell(),
-          );
-        } else {
-          final resumeStep = progress.firstIncompleteStep;
-          return MaterialPageRoute(
-            settings: RouteSettings(name: _routeForStep(resumeStep)),
-            builder: (_) => OnboardingPage(
-              initialStep: resumeStep,
-              repository: repository,
-            ),
-          );
-        }
-      }
-      return MaterialPageRoute(
-        settings: settings,
-        builder: (_) => const LoginPage(),
-      );
-    }
-
-    if (routeName == AppRoutes.signup) {
-      if (isAuthed) {
-        if (progress.isOnboardingCompleted) {
-          return MaterialPageRoute(
-            settings: const RouteSettings(name: AppRoutes.overview),
-            builder: (_) => const AppShell(),
-          );
-        } else {
-          final resumeStep = progress.firstIncompleteStep;
-          return MaterialPageRoute(
-            settings: RouteSettings(name: _routeForStep(resumeStep)),
-            builder: (_) => OnboardingPage(
-              initialStep: resumeStep,
-              repository: repository,
-            ),
-          );
-        }
-      }
-      return MaterialPageRoute(
-        settings: settings,
-        builder: (_) => const SignupPage(),
-      );
-    }
-
-    if (routeName == AppRoutes.forgotPassword) {
-      return MaterialPageRoute(
-        settings: settings,
-        builder: (_) => const ForgotPasswordPage(),
-      );
-    }
-
-    if (routeName == AppRoutes.checkEmail) {
-      final emailArg = settings.arguments as String?;
-      return MaterialPageRoute(
-        settings: settings,
-        builder: (_) => CheckEmailPage(email: emailArg),
-      );
-    }
-
-    if (routeName == AppRoutes.acceptInvite) {
-      final token = settings.arguments is String ? settings.arguments as String : null;
-      return MaterialPageRoute(
-        settings: settings,
-        builder: (_) => AcceptInvitationPage(initialToken: token),
-      );
-    }
-
-    // 2. AUTH GUARD: UNTOUCHABLE BOUNDARY
-    // Any other route requires an active authenticated session
+    // 1. PUBLIC ROUTES (for unauthenticated users)
     if (!isAuthed) {
+      if (routeName == AppRoutes.login) {
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const LoginPage(),
+        );
+      }
+
+      if (routeName == AppRoutes.signup) {
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const SignupPage(),
+        );
+      }
+
+      if (routeName == AppRoutes.forgotPassword) {
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => const ForgotPasswordPage(),
+        );
+      }
+
+      if (routeName == AppRoutes.checkEmail) {
+        final emailArg = settings.arguments as String?;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => CheckEmailPage(email: emailArg),
+        );
+      }
+
+      if (routeName == AppRoutes.acceptInvite) {
+        final token =
+            settings.arguments is String ? settings.arguments as String : null;
+        return MaterialPageRoute(
+          settings: settings,
+          builder: (_) => AcceptInvitationPage(initialToken: token),
+        );
+      }
+
+      // Any other route requires an active authenticated session
       return MaterialPageRoute(
         settings: const RouteSettings(name: AppRoutes.login),
         builder: (_) => const LoginPage(),
       );
     }
 
-    // 3. ONBOARDING GUARD & STEPS FOR AUTHENTICATED USERS
+    // 2. AUTHENTICATED USER: BOOTSTRAP ORDER GUARD
+    // Requirement 1: The app must NOT render an onboarding page until authoritative
+    // bootstrap is finished. Show splash/loading shell while bootstrap is in progress.
+    if (_testRepository == null &&
+        (!AppBootstrapService.isBootstrapped ||
+            AppBootstrapService.isBootstrapping)) {
+      return MaterialPageRoute(
+        settings: settings,
+        builder: (_) => AppLoadingShell(targetRoute: routeName),
+      );
+    }
+
+    // 3. AUTHORITATIVE COMPLETION RESOLUTION
+    final rawProgress = repository.currentProgress;
+    final activeBizId = CurrentBusinessService.instance.currentBusinessId ??
+        AppPreferencesService.instance.currentBusinessId;
+    final progressIsForActiveBusiness = activeBizId == null ||
+        activeBizId.isEmpty ||
+        rawProgress.businessId == null ||
+        rawProgress.businessId!.isEmpty ||
+        rawProgress.businessId == activeBizId;
+    var progress = progressIsForActiveBusiness
+        ? rawProgress
+        : const OnboardingProgress();
+
+    if (!progress.isOnboardingCompleted &&
+        activeBizId != null &&
+        activeBizId.isNotEmpty &&
+        _testRepository == null) {
+      final cached = repository.loadProgressSync();
+      if (cached.businessId == activeBizId && cached.isOnboardingCompleted) {
+        progress = cached;
+      }
+    }
+
+    // Database status is authoritative: status == 'complete' wins over stale local state.
+    // However, location is MANDATORY: a business with completed business profile but
+    // missing location MUST NOT enter the dashboard.
+    final bool isLocationMissing =
+        progress.isBusinessCompleted && !progress.isLocationCompleted;
+    final isBusinessComplete = !isLocationMissing &&
+        (progress.isOnboardingCompleted ||
+            (_testRepository == null &&
+                activeBizId != null &&
+                activeBizId.isNotEmpty &&
+                repository.isBusinessComplete(activeBizId)) ||
+            (AppBootstrapService.lastResult != null &&
+                AppBootstrapService.lastResult!.isOnboardingComplete));
+
+    if (isBusinessComplete && !progress.isOnboardingCompleted) {
+      progress = progress.copyWith(
+        isOnboardingCompleted: true,
+        isBusinessCompleted: true,
+        isLocationCompleted: true,
+        isCommerceCompleted: true,
+        isInventoryCompleted: true,
+        isTeamCompleted: true,
+      );
+    }
+
+    // 4. ROUTER GUARD FOR ALL ONBOARDING ROUTES
+    // Requirement 4: If user directly reaches ANY onboarding route and current business
+    // status is complete, redirect/replace to /overview BEFORE rendering onboarding page.
+    final isOnboardingRoute = routeName == AppRoutes.onboarding ||
+        routeName == AppRoutes.onboardingWelcome ||
+        routeName == AppRoutes.onboardingBusiness ||
+        routeName == AppRoutes.onboardingLocation ||
+        routeName == AppRoutes.onboardingCommerce ||
+        routeName == AppRoutes.onboardingInventory ||
+        routeName == AppRoutes.onboardingTeam ||
+        routeName == AppRoutes.onboardingComplete;
+
+    if (isOnboardingRoute && isBusinessComplete) {
+      return MaterialPageRoute(
+        settings: const RouteSettings(name: AppRoutes.overview),
+        builder: (_) => const AppShell(),
+      );
+    }
+
+    // Authenticated user landing on login/signup
+    if (routeName == AppRoutes.login || routeName == AppRoutes.signup) {
+      if (isBusinessComplete) {
+        return MaterialPageRoute(
+          settings: const RouteSettings(name: AppRoutes.overview),
+          builder: (_) => const AppShell(),
+        );
+      } else {
+        final resumeStep = progress.firstIncompleteStep;
+        return MaterialPageRoute(
+          settings: RouteSettings(name: _routeForStep(resumeStep)),
+          builder: (_) => OnboardingPage(
+            initialStep: _milestoneToViewStep(resumeStep),
+            repository: repository,
+          ),
+        );
+      }
+    }
+
+    // Onboarding step router guard
     MaterialPageRoute<dynamic> guardedOnboardingStep(int targetStep) {
-      if (progress.isOnboardingCompleted) {
+      if (isBusinessComplete) {
         return MaterialPageRoute(
           settings: const RouteSettings(name: AppRoutes.overview),
           builder: (_) => const AppShell(),
@@ -193,7 +261,7 @@ class AppRouter {
             arguments: settings.arguments,
           ),
           builder: (_) => OnboardingPage(
-            initialStep: fallbackStep,
+            initialStep: _milestoneToViewStep(fallbackStep),
             repository: repository,
             enforceStepPrerequisites: true,
           ),
@@ -212,7 +280,7 @@ class AppRouter {
 
     switch (routeName) {
       case AppRoutes.onboardingWelcome:
-        if (progress.isOnboardingCompleted) {
+        if (isBusinessComplete) {
           return MaterialPageRoute(
             settings: const RouteSettings(name: AppRoutes.overview),
             builder: (_) => const AppShell(),
@@ -225,18 +293,18 @@ class AppRouter {
         );
 
       case AppRoutes.onboarding:
-        if (progress.isOnboardingCompleted) {
+        if (isBusinessComplete) {
           return MaterialPageRoute(
             settings: const RouteSettings(name: AppRoutes.overview),
             builder: (_) => const AppShell(),
           );
         }
         final resumeStep = progress.firstIncompleteStep;
-        if (resumeStep > 1) {
+        if (resumeStep > 2) {
           return MaterialPageRoute(
             settings: RouteSettings(name: _routeForStep(resumeStep)),
             builder: (_) =>
-                OnboardingPage(initialStep: resumeStep, repository: repository),
+                OnboardingPage(initialStep: _milestoneToViewStep(resumeStep), repository: repository),
           );
         }
         return MaterialPageRoute(
@@ -263,7 +331,7 @@ class AppRouter {
       case AppRoutes.onboardingComplete:
         return guardedOnboardingStep(6);
 
-      // 4. PROTECTED APP SHELL & DASHBOARD
+      // 5. PROTECTED APP SHELL & DASHBOARD
       case AppRoutes.overview:
       case '/':
       case AppRoutes.inventory:
@@ -277,12 +345,19 @@ class AppRouter {
       case AppRoutes.profile:
       default:
         // Guard: merchant must complete onboarding before reaching dashboard
-        if (!progress.isOnboardingCompleted) {
+        if (!isBusinessComplete) {
+          // Requirement 7: Never default to onboarding with unknown/loading state
+          if (activeBizId == null && _testRepository == null) {
+            return MaterialPageRoute(
+              settings: settings,
+              builder: (_) => AppLoadingShell(targetRoute: routeName),
+            );
+          }
           final firstIncomplete = progress.firstIncompleteStep;
           return MaterialPageRoute(
             settings: RouteSettings(name: _routeForStep(firstIncomplete)),
             builder: (_) => OnboardingPage(
-              initialStep: firstIncomplete,
+              initialStep: _milestoneToViewStep(firstIncomplete),
               repository: repository,
             ),
           );
@@ -350,22 +425,31 @@ class AppRouter {
     }
   }
 
+  static int _milestoneToViewStep(int milestone) {
+    if (milestone <= 1) return 0;
+    if (milestone == 2) return 1; // Business
+    if (milestone == 3) return 2; // Location
+    if (milestone == 4) return 3; // Commerce
+    if (milestone == 5) return 4; // Inventory
+    if (milestone == 6) return 5; // Team
+    return 6; // Ready / Overview
+  }
+
   static String _routeForStep(int step) {
     switch (step) {
       case 1:
-        return AppRoutes.onboardingBusiness;
       case 2:
-        return AppRoutes.onboardingLocation;
-      case 3:
-        return AppRoutes.onboardingCommerce;
-      case 4:
-        return AppRoutes.onboardingInventory;
-      case 5:
-        return AppRoutes.onboardingTeam;
-      case 6:
-        return AppRoutes.onboardingComplete;
-      default:
         return AppRoutes.onboardingBusiness;
+      case 3:
+        return AppRoutes.onboardingLocation;
+      case 4:
+        return AppRoutes.onboardingCommerce;
+      case 5:
+        return AppRoutes.onboardingInventory;
+      case 6:
+        return AppRoutes.onboardingTeam;
+      default:
+        return AppRoutes.overview;
     }
   }
 }

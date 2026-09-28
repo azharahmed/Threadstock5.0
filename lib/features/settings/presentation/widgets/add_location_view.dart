@@ -6,11 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../core/responsive/desktop_layout.dart';
 
 class AddLocationView extends StatefulWidget {
-  const AddLocationView({
-    super.key,
-    this.onCancel,
-    this.onCreated,
-  });
+  const AddLocationView({super.key, this.onCancel, this.onCreated});
 
   final VoidCallback? onCancel;
   final ValueChanged<String>? onCreated;
@@ -27,9 +23,15 @@ class _AddLocationViewState extends State<AddLocationView> {
 
   // Physical Address & Localization
   final TextEditingController _streetController = TextEditingController();
-  final TextEditingController _cityController = TextEditingController(text: 'Bengaluru');
-  final TextEditingController _stateController = TextEditingController(text: 'Karnataka');
-  final TextEditingController _postalCodeController = TextEditingController(text: '560066');
+  final TextEditingController _cityController = TextEditingController(
+    text: 'Bengaluru',
+  );
+  final TextEditingController _stateController = TextEditingController(
+    text: 'Karnataka',
+  );
+  final TextEditingController _postalCodeController = TextEditingController(
+    text: '560066',
+  );
   String _country = 'India (IN)';
   String _timezone = 'IST (GMT+5:30)';
 
@@ -63,7 +65,11 @@ class _AddLocationViewState extends State<AddLocationView> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Color(0xFFBA8A55), size: 18),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Color(0xFFBA8A55),
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
@@ -165,7 +171,10 @@ class _AddLocationViewState extends State<AddLocationView> {
                 onTap: widget.onCancel,
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
@@ -191,7 +200,10 @@ class _AddLocationViewState extends State<AddLocationView> {
                 onTap: _handleCreate,
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF181513),
                     borderRadius: BorderRadius.circular(8),
@@ -232,7 +244,7 @@ class _AddLocationViewState extends State<AddLocationView> {
           Expanded(
             child: _buildInputField(
               label: 'Location Name',
-              hint: 'e.g. Bangalore Whitefield Store',
+              hint: 'e.g. Downtown Flagship',
               controller: _nameController,
             ),
           ),
@@ -362,30 +374,35 @@ class _AddLocationViewState extends State<AddLocationView> {
         children: [
           _buildToggleRow(
             title: 'Allow Direct Sales',
-            subtitle: 'Enable Point of Sale checkouts and customer billing from this node',
+            subtitle:
+                'Enable Point of Sale checkouts and customer billing from this node',
             value: _allowDirectSales,
             onChanged: (val) => setState(() => _allowDirectSales = val),
             isLast: false,
           ),
           _buildToggleRow(
             title: 'Allow Inventory Receiving',
-            subtitle: 'Authorise staff to check in incoming stock from suppliers directly',
+            subtitle:
+                'Authorise staff to check in incoming stock from suppliers directly',
             value: _allowInventoryReceiving,
             onChanged: (val) => setState(() => _allowInventoryReceiving = val),
             isLast: false,
           ),
           _buildToggleRow(
             title: 'Allow Internal Transfers',
-            subtitle: 'Allow logistics transfers to send and receive inventory from other zones',
+            subtitle:
+                'Allow logistics transfers to send and receive inventory from other zones',
             value: _allowInternalTransfers,
             onChanged: (val) => setState(() => _allowInternalTransfers = val),
             isLast: false,
           ),
           _buildToggleRow(
             title: 'Allow Scheduled Stock Counts',
-            subtitle: 'Enable periodic barcode cycle audits for operational safety',
+            subtitle:
+                'Enable periodic barcode cycle audits for operational safety',
             value: _allowScheduledStockCounts,
-            onChanged: (val) => setState(() => _allowScheduledStockCounts = val),
+            onChanged: (val) =>
+                setState(() => _allowScheduledStockCounts = val),
             isLast: true,
           ),
         ],
@@ -506,10 +523,7 @@ class _AddLocationViewState extends State<AddLocationView> {
   // ========================================================
   // REUSABLE CARD WRAPPER
   // ========================================================
-  Widget _buildCardWrapper({
-    required String title,
-    required Widget child,
-  }) {
+  Widget _buildCardWrapper({required String title, required Widget child}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -631,13 +645,21 @@ class _AddLocationViewState extends State<AddLocationView> {
                     opt,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                      color: isSelected ? const Color(0xFF1E1C1A) : const Color(0xFF4A4237),
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.w400,
+                      color: isSelected
+                          ? const Color(0xFF1E1C1A)
+                          : const Color(0xFF4A4237),
                     ),
                   ),
                   if (isSelected) ...[
                     const Spacer(),
-                    const Icon(Icons.check_rounded, size: 16, color: Color(0xFFBA8A55)),
+                    const Icon(
+                      Icons.check_rounded,
+                      size: 16,
+                      color: Color(0xFFBA8A55),
+                    ),
                   ],
                 ],
               ),

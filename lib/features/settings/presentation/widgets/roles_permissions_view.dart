@@ -83,10 +83,7 @@ class ModulePermission {
 class RolesPermissionsView extends StatefulWidget {
   final Function(String title, String subtitle)? onSubNavChanged;
 
-  const RolesPermissionsView({
-    super.key,
-    this.onSubNavChanged,
-  });
+  const RolesPermissionsView({super.key, this.onSubNavChanged});
 
   @override
   State<RolesPermissionsView> createState() => _RolesPermissionsViewState();
@@ -95,7 +92,8 @@ class RolesPermissionsView extends StatefulWidget {
 class _RolesPermissionsViewState extends State<RolesPermissionsView> {
   final TextEditingController _roleSearchController = TextEditingController();
   int _selectedRoleIndex = 2; // Store Manager by default
-  int _selectedTab = 0; // 0: Permissions, 1: Users (3), 2: Locations (1), 3: Activity Log
+  int _selectedTab =
+      0; // 0: Permissions, 1: Users (3), 2: Locations (1), 3: Activity Log
 
   late final List<RoleProfileItem> _roles;
   late final List<ModulePermission> _modules;
@@ -227,7 +225,13 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
   List<RoleProfileItem> get _filteredRoles {
     final q = _roleSearchController.text.trim().toLowerCase();
     if (q.isEmpty) return _roles;
-    return _roles.where((r) => r.name.toLowerCase().contains(q) || r.subtitle.toLowerCase().contains(q)).toList();
+    return _roles
+        .where(
+          (r) =>
+              r.name.toLowerCase().contains(q) ||
+              r.subtitle.toLowerCase().contains(q),
+        )
+        .toList();
   }
 
   void _showCreateRoleModal() {
@@ -240,11 +244,24 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: const Color(0xFFFBF4EB), borderRadius: BorderRadius.circular(8)),
-              child: const Icon(Icons.admin_panel_settings_outlined, color: Color(0xFF92400E), size: 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFBF4EB),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Icon(
+                Icons.admin_panel_settings_outlined,
+                color: Color(0xFF92400E),
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
-            Text('Create Custom Access Role', style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text(
+              'Create Custom Access Role',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ],
         ),
         content: SizedBox(
@@ -256,7 +273,9 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                 decoration: InputDecoration(
                   labelText: 'Role Name',
                   hintText: 'e.g. Regional Supervisor',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -265,7 +284,9 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                 decoration: InputDecoration(
                   labelText: 'Description',
                   hintText: 'Describe responsibilities and module scope...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
             ],
@@ -274,7 +295,10 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('Cancel', style: GoogleFonts.inter(color: const Color(0xFF64748B))),
+            child: Text(
+              'Cancel',
+              style: GoogleFonts.inter(color: const Color(0xFF64748B)),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -290,7 +314,9 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF181513),
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Create Role'),
           ),
@@ -316,16 +342,11 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Left Column: Roles list (~28%)
-                    SizedBox(
-                      width: 290,
-                      child: _buildRolesListColumn(),
-                    ),
+                    SizedBox(width: 290, child: _buildRolesListColumn()),
                     const SizedBox(width: 20),
 
                     // Right Column: Active Role Profile (~72%)
-                    Expanded(
-                      child: _buildRoleDetailColumn(),
-                    ),
+                    Expanded(child: _buildRoleDetailColumn()),
                   ],
                 );
               }
@@ -351,7 +372,7 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
   }
 
   // ========================================================
-  // LEFT COLUMN: Atelier OS Access Roles list
+  // LEFT COLUMN: ThreadStock Access Roles list
   // ========================================================
   Widget _buildRolesListColumn() {
     return Column(
@@ -359,13 +380,21 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
       children: [
         // Title & Subtitle
         Text(
-          'Atelier OS Access Roles',
-          style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: const Color(0xFF111827)),
+          'ThreadStock Access Roles',
+          style: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: const Color(0xFF111827),
+          ),
         ),
         const SizedBox(height: 3),
         Text(
           'Manage roles and control permissions across your organization.',
-          style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280), height: 1.3),
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            color: const Color(0xFF6B7280),
+            height: 1.3,
+          ),
         ),
         const SizedBox(height: 14),
 
@@ -380,9 +409,14 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
               foregroundColor: const Color(0xFFB45309),
               side: const BorderSide(color: Color(0xFFFDE68A)),
               backgroundColor: const Color(0xFFFFFBEB).withOpacity(0.5),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               padding: const EdgeInsets.symmetric(vertical: 10),
-              textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+              textStyle: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ),
@@ -399,7 +433,11 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Row(
             children: [
-              const Icon(Icons.search_rounded, size: 16, color: Color(0xFF9CA3AF)),
+              const Icon(
+                Icons.search_rounded,
+                size: 16,
+                color: Color(0xFF9CA3AF),
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextField(
@@ -407,7 +445,10 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                   style: GoogleFonts.inter(fontSize: 12.5),
                   decoration: const InputDecoration(
                     hintText: 'Search roles...',
-                    hintStyle: TextStyle(color: Color(0xFF9CA3AF), fontSize: 12.5),
+                    hintStyle: TextStyle(
+                      color: Color(0xFF9CA3AF),
+                      fontSize: 12.5,
+                    ),
                     border: InputBorder.none,
                     isDense: true,
                   ),
@@ -449,7 +490,9 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
             Icon(
               role.icon,
               size: 18,
-              color: isSelected ? const Color(0xFFD97706) : const Color(0xFF4B5563),
+              color: isSelected
+                  ? const Color(0xFFD97706)
+                  : const Color(0xFF4B5563),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -460,14 +503,19 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                     role.name,
                     style: GoogleFonts.inter(
                       fontSize: 13,
-                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                       color: const Color(0xFF111827),
                     ),
                   ),
                   const SizedBox(height: 1),
                   Text(
                     role.subtitle,
-                    style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF6B7280)),
+                    style: GoogleFonts.inter(
+                      fontSize: 11,
+                      color: const Color(0xFF6B7280),
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
@@ -523,7 +571,10 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                 const SizedBox(height: 3),
                 Text(
                   'Allows location-specific retail, transfer and analytics controls.',
-                  style: GoogleFonts.inter(fontSize: 13, color: const Color(0xFF6B7280)),
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: const Color(0xFF6B7280),
+                  ),
                 ),
               ],
             ),
@@ -533,7 +584,9 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                   onPressed: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('Permissions for ${activeRole.name} saved.'),
+                        content: Text(
+                          'Permissions for ${activeRole.name} saved.',
+                        ),
                         backgroundColor: const Color(0xFF181513),
                         behavior: SnackBarBehavior.floating,
                       ),
@@ -543,9 +596,17 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                     backgroundColor: const Color(0xFF181513),
                     foregroundColor: Colors.white,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                    textStyle: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    textStyle: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   child: const Text('Save Changes'),
                 ),
@@ -557,7 +618,11 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: const Color(0xFFD1D5DB)),
                   ),
-                  child: const Icon(Icons.more_vert_rounded, size: 18, color: Color(0xFF6B7280)),
+                  child: const Icon(
+                    Icons.more_vert_rounded,
+                    size: 18,
+                    color: Color(0xFF6B7280),
+                  ),
                 ),
               ],
             ),
@@ -612,11 +677,16 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
             InkWell(
               onTap: () => setState(() => _selectedTab = i),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   border: Border(
                     bottom: BorderSide(
-                      color: _selectedTab == i ? const Color(0xFFB45309) : Colors.transparent,
+                      color: _selectedTab == i
+                          ? const Color(0xFFB45309)
+                          : Colors.transparent,
                       width: 2.5,
                     ),
                   ),
@@ -625,8 +695,12 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                   tabs[i],
                   style: GoogleFonts.inter(
                     fontSize: 13,
-                    fontWeight: _selectedTab == i ? FontWeight.w700 : FontWeight.w500,
-                    color: _selectedTab == i ? const Color(0xFF92400E) : const Color(0xFF6B7280),
+                    fontWeight: _selectedTab == i
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                    color: _selectedTab == i
+                        ? const Color(0xFF92400E)
+                        : const Color(0xFF6B7280),
                   ),
                 ),
               ),
@@ -657,13 +731,65 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                   flex: 50,
                   child: Text(
                     'Access Modules',
-                    style: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280)),
+                    style: GoogleFonts.inter(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFF6B7280),
+                    ),
                   ),
                 ),
-                Expanded(flex: 12, child: Center(child: Text('View', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                Expanded(flex: 12, child: Center(child: Text('Create', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                Expanded(flex: 12, child: Center(child: Text('Edit', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
-                Expanded(flex: 12, child: Center(child: Text('Delete', style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: const Color(0xFF6B7280))))),
+                Expanded(
+                  flex: 12,
+                  child: Center(
+                    child: Text(
+                      'View',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 12,
+                  child: Center(
+                    child: Text(
+                      'Create',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 12,
+                  child: Center(
+                    child: Text(
+                      'Edit',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 12,
+                  child: Center(
+                    child: Text(
+                      'Delete',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -682,7 +808,10 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                         Container(
                           width: 32,
                           height: 32,
-                          decoration: BoxDecoration(color: mod.iconBg, shape: BoxShape.circle),
+                          decoration: BoxDecoration(
+                            color: mod.iconBg,
+                            shape: BoxShape.circle,
+                          ),
                           child: Icon(mod.icon, size: 16, color: mod.iconColor),
                         ),
                         const SizedBox(width: 10),
@@ -690,9 +819,22 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(mod.title, style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: const Color(0xFF111827))),
+                              Text(
+                                mod.title,
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF111827),
+                                ),
+                              ),
                               const SizedBox(height: 1),
-                              Text(mod.subtitle, style: GoogleFonts.inter(fontSize: 11, color: const Color(0xFF9CA3AF))),
+                              Text(
+                                mod.subtitle,
+                                style: GoogleFonts.inter(
+                                  fontSize: 11,
+                                  color: const Color(0xFF9CA3AF),
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -701,10 +843,42 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                   ),
 
                   // 4 Permission Toggles
-                  Expanded(flex: 12, child: Center(child: _buildSwitch(mod.canView, (v) => setState(() => mod.canView = v)))),
-                  Expanded(flex: 12, child: Center(child: _buildSwitch(mod.canCreate, (v) => setState(() => mod.canCreate = v)))),
-                  Expanded(flex: 12, child: Center(child: _buildSwitch(mod.canEdit, (v) => setState(() => mod.canEdit = v)))),
-                  Expanded(flex: 12, child: Center(child: _buildSwitch(mod.canDelete, (v) => setState(() => mod.canDelete = v)))),
+                  Expanded(
+                    flex: 12,
+                    child: Center(
+                      child: _buildSwitch(
+                        mod.canView,
+                        (v) => setState(() => mod.canView = v),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 12,
+                    child: Center(
+                      child: _buildSwitch(
+                        mod.canCreate,
+                        (v) => setState(() => mod.canCreate = v),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 12,
+                    child: Center(
+                      child: _buildSwitch(
+                        mod.canEdit,
+                        (v) => setState(() => mod.canEdit = v),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 12,
+                    child: Center(
+                      child: _buildSwitch(
+                        mod.canDelete,
+                        (v) => setState(() => mod.canDelete = v),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -746,7 +920,14 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Role Information', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
+              Text(
+                'Role Information',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF111827),
+                ),
+              ),
               OutlinedButton.icon(
                 onPressed: () {},
                 icon: const Icon(Icons.edit_outlined, size: 13),
@@ -754,10 +935,18 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF374151),
                   side: const BorderSide(color: Color(0xFFD1D5DB)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   minimumSize: Size.zero,
-                  textStyle: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500),
+                  textStyle: GoogleFonts.inter(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
@@ -765,7 +954,10 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
           const SizedBox(height: 12),
 
           _buildInfoRow('Role Name', role.name, isBold: true),
-          _buildInfoRow('Description', 'Allows location-specific retail, transfer and analytics controls.'),
+          _buildInfoRow(
+            'Description',
+            'Allows location-specific retail, transfer and analytics controls.',
+          ),
           _buildInfoRow('Typical Users', 'Store Managers, Assistant Managers'),
           _buildInfoRow('Default Locations', 'Assigned per location'),
           _buildInfoRow('Created', 'Jan 12, 2027, 10:24 AM'),
@@ -783,7 +975,13 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
         children: [
           SizedBox(
             width: 115,
-            child: Text(label, style: GoogleFonts.inter(fontSize: 12, color: const Color(0xFF6B7280))),
+            child: Text(
+              label,
+              style: GoogleFonts.inter(
+                fontSize: 12,
+                color: const Color(0xFF6B7280),
+              ),
+            ),
           ),
           Expanded(
             child: Text(
@@ -803,9 +1001,36 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
   // 4B. Assigned Users Card
   Widget _buildAssignedUsersCard() {
     final users = [
-      {'initials': 'MB', 'bg': const Color(0xFFDBEAFE), 'color': const Color(0xFF1D4ED8), 'name': 'Marcus Brody', 'email': 'm.brody@threadstock.com', 'status': 'Active', 'sBg': const Color(0xFFDCFCE7), 'sColor': const Color(0xFF15803D)},
-      {'initials': 'DP', 'bg': const Color(0xFFF3E8FF), 'color': const Color(0xFF7E22CE), 'name': 'Devendra Patel', 'email': 'd.patel@suratdenim.in', 'status': 'Pending', 'sBg': const Color(0xFFFEF3C7), 'sColor': const Color(0xFFD97706)},
-      {'initials': 'RS', 'bg': const Color(0xFFDCFCE7), 'color': const Color(0xFF15803D), 'name': 'Riya Sharma', 'email': 'r.sharma@threadstock.com', 'status': 'Active', 'sBg': const Color(0xFFDCFCE7), 'sColor': const Color(0xFF15803D)},
+      {
+        'initials': 'MB',
+        'bg': const Color(0xFFDBEAFE),
+        'color': const Color(0xFF1D4ED8),
+        'name': 'Marcus Brody',
+        'email': 'm.brody@threadstock.com',
+        'status': 'Active',
+        'sBg': const Color(0xFFDCFCE7),
+        'sColor': const Color(0xFF15803D),
+      },
+      {
+        'initials': 'DP',
+        'bg': const Color(0xFFF3E8FF),
+        'color': const Color(0xFF7E22CE),
+        'name': 'Devendra Patel',
+        'email': 'd.patel@suratdenim.in',
+        'status': 'Pending',
+        'sBg': const Color(0xFFFEF3C7),
+        'sColor': const Color(0xFFD97706),
+      },
+      {
+        'initials': 'RS',
+        'bg': const Color(0xFFDCFCE7),
+        'color': const Color(0xFF15803D),
+        'name': 'Riya Sharma',
+        'email': 'r.sharma@threadstock.com',
+        'status': 'Active',
+        'sBg': const Color(0xFFDCFCE7),
+        'sColor': const Color(0xFF15803D),
+      },
     ];
 
     return Container(
@@ -821,7 +1046,14 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Assigned Users (3)', style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF111827))),
+              Text(
+                'Assigned Users (3)',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFF111827),
+                ),
+              ),
               OutlinedButton.icon(
                 onPressed: () {},
                 icon: const Icon(Icons.person_add_outlined, size: 13),
@@ -829,10 +1061,18 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                 style: OutlinedButton.styleFrom(
                   foregroundColor: const Color(0xFF374151),
                   side: const BorderSide(color: Color(0xFFD1D5DB)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   minimumSize: Size.zero,
-                  textStyle: GoogleFonts.inter(fontSize: 11.5, fontWeight: FontWeight.w500),
+                  textStyle: GoogleFonts.inter(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
@@ -849,7 +1089,11 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                     backgroundColor: u['bg'] as Color,
                     child: Text(
                       u['initials'] as String,
-                      style: GoogleFonts.inter(fontSize: 10.5, fontWeight: FontWeight.w700, color: u['color'] as Color),
+                      style: GoogleFonts.inter(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: u['color'] as Color,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -857,18 +1101,48 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(u['name'] as String, style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600, color: const Color(0xFF111827))),
-                        Text(u['email'] as String, style: GoogleFonts.inter(fontSize: 10.5, color: const Color(0xFF9CA3AF))),
+                        Text(
+                          u['name'] as String,
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF111827),
+                          ),
+                        ),
+                        Text(
+                          u['email'] as String,
+                          style: GoogleFonts.inter(
+                            fontSize: 10.5,
+                            color: const Color(0xFF9CA3AF),
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                    decoration: BoxDecoration(color: u['sBg'] as Color, borderRadius: BorderRadius.circular(4)),
-                    child: Text(u['status'] as String, style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.w600, color: u['sColor'] as Color)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 1.5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: u['sBg'] as Color,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      u['status'] as String,
+                      style: GoogleFonts.inter(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: u['sColor'] as Color,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 6),
-                  const Icon(Icons.more_horiz_rounded, size: 16, color: Color(0xFF9CA3AF)),
+                  const Icon(
+                    Icons.more_horiz_rounded,
+                    size: 16,
+                    color: Color(0xFF9CA3AF),
+                  ),
                 ],
               ),
             ),
@@ -897,7 +1171,11 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
               color: Color(0xFFFBF4EB),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.verified_user_outlined, color: Color(0xFFD97706), size: 20),
+            child: const Icon(
+              Icons.verified_user_outlined,
+              color: Color(0xFFD97706),
+              size: 20,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -906,12 +1184,19 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
               children: [
                 Text(
                   'Permission Best Practices',
-                  style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, color: const Color(0xFF92400E)),
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF92400E),
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Review and restrict access based on the principle of least privilege. Keep your data and operations secure.',
-                  style: GoogleFonts.inter(fontSize: 12.5, color: const Color(0xFF6B7280)),
+                  style: GoogleFonts.inter(
+                    fontSize: 12.5,
+                    color: const Color(0xFF6B7280),
+                  ),
                 ),
               ],
             ),
@@ -922,9 +1207,14 @@ class _RolesPermissionsViewState extends State<RolesPermissionsView> {
             style: OutlinedButton.styleFrom(
               foregroundColor: const Color(0xFFB45309),
               side: const BorderSide(color: Color(0xFFF59E0B)),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              textStyle: GoogleFonts.inter(fontSize: 12.5, fontWeight: FontWeight.w600),
+              textStyle: GoogleFonts.inter(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

@@ -33,8 +33,9 @@ class InventoryRulesView extends StatefulWidget {
 class _InventoryRulesViewState extends State<InventoryRulesView> {
   final TextEditingController _globalThresholdController =
       TextEditingController(text: '10');
-  final TextEditingController _safetyStockController =
-      TextEditingController(text: '15');
+  final TextEditingController _safetyStockController = TextEditingController(
+    text: '15',
+  );
 
   String _reorderMethodology = 'Average Daily Sales + Lead Time';
   String _stockValuationMethod = 'FIFO (First-In, First-Out)';
@@ -165,8 +166,10 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
                   style: GoogleFonts.inter(fontSize: 13),
                   decoration: InputDecoration(
                     hintText: 'e.g., Knitwear & Sweaters',
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Color(0xFFDFD4C5)),
@@ -196,8 +199,10 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
                   keyboardType: TextInputType.number,
                   style: GoogleFonts.inter(fontSize: 13),
                   decoration: InputDecoration(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Color(0xFFDFD4C5)),
@@ -249,7 +254,9 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
                         backgroundColor: const Color(0xFF1E1C1A),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 10),
+                          horizontal: 18,
+                          vertical: 10,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -306,18 +313,12 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Left Column: Low Stock Thresholds & Reorder Calculations (58% flex)
-                      Expanded(
-                        flex: 58,
-                        child: _buildLeftColumn(),
-                      ),
+                      Expanded(flex: 58, child: _buildLeftColumn()),
 
                       const SizedBox(width: 24),
 
                       // Right Column: Additional Inventory Settings (42% flex)
-                      Expanded(
-                        flex: 42,
-                        child: _buildRightColumn(),
-                      ),
+                      Expanded(flex: 42, child: _buildRightColumn()),
                     ],
                   ),
                 ],
@@ -531,8 +532,10 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
               children: [
                 // Table Header Row
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: const BoxDecoration(
                     color: Color(0xFFFAF7F2),
                     borderRadius: BorderRadius.only(
@@ -598,8 +601,10 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
               ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFFDFD4C5)),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 10,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -611,10 +616,13 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
     );
   }
 
-  Widget _buildOverrideRow(CategoryThresholdOverride override,
-      {required bool isLast}) {
-    final controller =
-        TextEditingController(text: override.threshold.toString());
+  Widget _buildOverrideRow(
+    CategoryThresholdOverride override, {
+    required bool isLast,
+  }) {
+    final controller = TextEditingController(
+      text: override.threshold.toString(),
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -622,9 +630,7 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
         color: Colors.white,
         border: isLast
             ? null
-            : const Border(
-                bottom: BorderSide(color: Color(0xFFEFE8DE)),
-              ),
+            : const Border(bottom: BorderSide(color: Color(0xFFEFE8DE))),
       ),
       child: Row(
         children: [
@@ -673,7 +679,8 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
                     if (num != null) {
                       setState(() => override.threshold = num);
                       _showFeedback(
-                          '${override.category} threshold updated to $num');
+                        '${override.category} threshold updated to $num',
+                      );
                     }
                   },
                 ),
@@ -710,7 +717,9 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
                 child: Text(
                   'Reset to Default (10)',
                   style: GoogleFonts.inter(
-                      fontSize: 13, color: const Color(0xFF181513)),
+                    fontSize: 13,
+                    color: const Color(0xFF181513),
+                  ),
                 ),
               ),
               PopupMenuItem(
@@ -718,7 +727,9 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
                 child: Text(
                   'Remove Override',
                   style: GoogleFonts.inter(
-                      fontSize: 13, color: const Color(0xFF9E4738)),
+                    fontSize: 13,
+                    color: const Color(0xFF9E4738),
+                  ),
                 ),
               ),
             ],
@@ -822,15 +833,9 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    flex: 6,
-                    child: _buildReorderMethodologyField(),
-                  ),
+                  Expanded(flex: 6, child: _buildReorderMethodologyField()),
                   const SizedBox(width: 18),
-                  Expanded(
-                    flex: 4,
-                    child: _buildSafetyStockField(),
-                  ),
+                  Expanded(flex: 4, child: _buildSafetyStockField()),
                 ],
               );
             },
@@ -1129,7 +1134,8 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
                 onChanged: (val) {
                   setState(() => _allowNegativeInventory = val);
                   _showFeedback(
-                      'Negative inventory ${val ? "enabled" : "disabled"}');
+                    'Negative inventory ${val ? "enabled" : "disabled"}',
+                  );
                 },
               ),
             ],
@@ -1205,7 +1211,8 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
                 onChanged: (val) {
                   setState(() => _batchLotTracking = val);
                   _showFeedback(
-                      'Batch & lot tracking ${val ? "enabled" : "disabled"}');
+                    'Batch & lot tracking ${val ? "enabled" : "disabled"}',
+                  );
                 },
               ),
             ],
@@ -1246,7 +1253,8 @@ class _InventoryRulesViewState extends State<InventoryRulesView> {
                 onChanged: (val) {
                   setState(() => _enforceExpirySafeguards = val);
                   _showFeedback(
-                      'Expiry safeguards ${val ? "enforced" : "disabled"}');
+                    'Expiry safeguards ${val ? "enforced" : "disabled"}',
+                  );
                 },
               ),
             ],
